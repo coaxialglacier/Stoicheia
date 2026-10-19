@@ -1,0 +1,6 @@
+{
+  "id": "argument",
+  "name": "Argument",
+  "first": "A value given to a parameter in a call. Its type must be the type of that parameter.",
+  "parts": []
+}

@@ -1,0 +1,55 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "ui-ideas",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8765",
+        "--directory",
+        "ui-ideas"
+      ],
+      "port": 8765
+    },
+    {
+      "name": "ui-ideas-2",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "python3 -m http.server ${PORT:-8768} --directory ui-ideas"
+      ],
+      "port": 8768
+    },
+    {
+      "name": "ui-ideas-3",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8767",
+        "--directory",
+        "ui-ideas"
+      ],
+      "port": 8767
+    },
+    {
+      "name": "ui-ideas-library",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "python3 -m http.server ${PORT:-8771} --directory ui-ideas"
+      ],
+      "port": 8771
+    },
+    {
+      "name": "stoicheia-server",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "library/server.js"
+      ],
+      "port": 8772
+    }
+  ]
+}

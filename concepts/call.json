@@ -1,0 +1,9 @@
+{
+  "id": "call",
+  "name": "Call",
+  "first": "A function's name followed by parentheses, which runs the function with the arguments inside them.",
+  "parts": [
+    "argument-label",
+    "argument"
+  ]
+}

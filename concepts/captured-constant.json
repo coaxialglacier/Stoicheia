@@ -1,0 +1,6 @@
+{
+  "id": "captured-constant",
+  "name": "Captured constant",
+  "first": "A constant from outside a closure's braces, such as a parameter of the function around it, that the body uses. The body can read it, but not change it.",
+  "parts": []
+}

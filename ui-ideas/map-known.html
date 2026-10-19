@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Library Map · From What You Know</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+  .wrap { padding: 76px 26px 80px; max-width: 1560px; margin: 0 auto; position: relative; }
+  .lead { display: flex; align-items: flex-end; justify-content: space-between; gap: 30px; margin: 4px 0 18px; }
+  .lead h1 { margin: 0 0 4px; font-size: 26px; font-weight: 600; letter-spacing: -0.01em; }
+  .lead p { margin: 0; font-family: ui-serif, "New York", Georgia, serif; font-size: 16px; color: var(--muted); max-width: 720px; line-height: 1.5; }
+
+  /* One row for each area, and one column for each distance from what you know. */
+  .grid { display: grid; grid-template-columns: 130px 170px repeat(4, minmax(200px, 1fr)); gap: 0; position: relative; }
+  .ch { position: sticky; top: 52px; z-index: 3; padding: 12px 12px 10px; background: color-mix(in srgb, var(--bg) 94%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line-2); }
+  .ch .t { font-size: 13.5px; font-weight: 600; }
+  .ch .s { font-size: 11.5px; color: var(--faint); margin-top: 1px; }
+  .ch.c1 .t { color: var(--concept); }
+  .rh { padding: 16px 12px; font: 600 10.5px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); border-bottom: 1px solid var(--line); }
+  .cell { padding: 12px 10px; border-bottom: 1px solid var(--line); border-left: 1px solid var(--line); display: flex; flex-direction: column; gap: 9px; align-items: stretch; }
+  .cell.c0 { background: rgba(236, 233, 225, 0.015); }
+  .cell.c1 { background: color-mix(in srgb, var(--concept) 4%, transparent); }
+  .cell .icard { width: 100%; }
+  .grid.hovering .icard { opacity: 0.25; }
+  .grid.hovering .icard.lit { opacity: 1; }
+  .icard .knowbtn2 { margin-top: 8px; font: 600 9.5px var(--mono); letter-spacing: 0.06em; color: var(--faint); background: none; border: 1px solid var(--line-2); border-radius: 6px; padding: 2px 7px; cursor: pointer; }
+  .icard .knowbtn2:hover { color: var(--fact); border-color: color-mix(in srgb, var(--fact) 60%, transparent); }
+  svg#hl { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; z-index: 2; }
+
+  .drawer { position: fixed; right: 0; top: 52px; bottom: 0; width: 400px; z-index: 12; padding: 26px 26px 40px; overflow: auto; background: var(--bg-deep); border-left: 1px solid var(--line-2);
+    box-shadow: -30px 0 80px -30px rgba(0, 0, 0, 0.8); transform: translateX(100%); transition: transform 0.35s var(--ease); }
+  .drawer.open { transform: none; }
+  .drawer .x { position: absolute; right: 14px; top: 12px; }
+</style>
+</head>
+<body class="dots">
+<div class="top">
+  <a class="back" href="index.html">← Home</a>
+  <span class="title">Library Map · From What You Know</span>
+  <span class="grow"></span>
+</div>
+
+<div class="wrap">
+  <div class="lead"><div><h1>Every idea, placed by how much you need first</h1>
+    <p>Each column counts the ideas you would learn before this one. Ideas further to the right need more first. Hover a card to see what it needs, numbered in the order a study teaches them.</p></div>
+    <div class="maplegend"><span><span class="sdot"></span>Needs ideas first</span><span><span class="sdot ready"></span>Ready</span><span><span class="sdot studying"></span>Studying</span><span><span class="sdot known"></span>Known</span></div></div>
+  <div class="grid" id="grid"></div>
+  <svg id="hl"></svg>
+</div>
+<aside class="drawer ipanel" id="drawer"></aside>
+
+<div class="note" style="top:auto;bottom:18px">
+  <p><b>From What You Know.</b> The map is arranged around you: what you know on the left, what you can study now next to it, and ideas that need more first further right.</p>
+  <p>Click a card for its connections and reasons. Click <b>I know this</b> on a card, and every idea that needed it moves left.</p>
+</div>
+
+<script src="shared.js"></script>
+<script src="home-data.js"></script>
+<script src="map-core.js"></script>
+<script>
+  const COLS = [
+    { t: 'You know', s: 'Never taught again' },
+    { t: 'Ready now', s: 'You know all it needs' },
+    { t: 'One idea first', s: 'Its study teaches one idea first' },
+    { t: 'Two ideas first', s: 'Its study teaches two first' },
+    { t: 'Three or more first', s: 'More to learn before it' },
+  ];
+  const col = id => KNOWN.has(id) ? 0 : Math.min(4, distance(id) + 1);
+  const grid = document.getElementById('grid');
+  const hl = document.getElementById('hl');
+
+  function render(animate) {
+    // Each card's place before the change, so it can move to its new place instead of jumping.
+    const before = {};
+    if (animate) grid.querySelectorAll('.icard').forEach(c => before[c.dataset.id] = c.getBoundingClientRect());
+    let h = '<div class="ch"></div>' + COLS.map((c, i) => `<div class="ch c${i}"><div class="t">${c.t}</div><div class="s">${c.s}</div></div>`).join('');
+    AREAS.forEach(a => {
+      h += `<div class="rh">${a.name}</div>`;
+      COLS.forEach((c, i) => {
+        const ids = areaOrder(a.id).filter(id => col(id) === i).sort((x, y) => distance(x) - distance(y));
+        h += `<div class="cell c${i}">${ids.map(id => i === 0 ? ideaCard(id, { small: true })
+          : ideaCard(id, { badge: STUDYING.id === id ? 'Studying' : '' }).replace(/<\/div>\s*$/, `<button class="knowbtn2" data-know="${id}">✓ I know this</button></div>`)).join('')}</div>`;
+      });
+    });
+    grid.innerHTML = h;
+    if (animate) grid.querySelectorAll('.icard').forEach(c => {
+      const b = before[c.dataset.id]; if (!b) return;
+      const r = c.getBoundingClientRect();
+      const dx = b.left - r.left, dy = b.top - r.top;
+      if (dx || dy) c.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], { duration: 600, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' });
+    });
+  }
+
+  // Hovering a card: lines to each idea it needs, and a number on each idea it needs that you do not know, in teaching order.
+  function hover(id) {
+    hl.innerHTML = '';
+    grid.classList.toggle('hovering', !!id);
+    grid.querySelectorAll('.icard').forEach(c => { c.classList.remove('lit'); const b = c.querySelector('.ic-badge.order'); if (b) b.remove(); });
+    if (!id) return;
+    const order = unknownNeeds(id);
+    const lit = new Set([id, ...allNeeds(id)]);
+    grid.querySelectorAll('.icard').forEach(c => c.classList.toggle('lit', lit.has(c.dataset.id)));
+    order.forEach((n, i) => {
+      const c = grid.querySelector(`.icard[data-id="${n}"] .ic-top`);
+      if (c) c.insertAdjacentHTML('beforeend', `<span class="ic-badge order">${i + 1}</span>`);
+    });
+    const base = hl.getBoundingClientRect();
+    [...lit].forEach(a => IDEAS[a].deps.filter(d => lit.has(d)).forEach(d => {
+      const A = grid.querySelector(`.icard[data-id="${a}"]`), D = grid.querySelector(`.icard[data-id="${d}"]`);
+      if (!A || !D) return;
+      const ra = A.getBoundingClientRect(), rd = D.getBoundingClientRect();
+      const known = KNOWN.has(d);
+      curve(hl, { x: rd.right - base.left, y: rd.top + 16 - base.top }, { x: ra.left - base.left, y: ra.top + 16 - base.top },
+        known ? KIND_COLOR.known : KIND_COLOR.concept, KIND_COLOR.concept, { horizontal: true, op: 0.85, width: 1.6, dash: known ? '4 4' : '', travel: known ? 0 : 1.8 });
+    }));
+  }
+  grid.addEventListener('mouseover', e => { const c = e.target.closest('.icard'); hover(c ? c.dataset.id : null); });
+  grid.addEventListener('mouseleave', () => hover(null));
+
+  const drawer = document.getElementById('drawer');
+  function openPanel(id) {
+    drawer.innerHTML = `<button class="btn x" data-close>×</button>${ideaPanel(id)}${KNOWN.has(id) ? '' : `<div style="margin-top:10px"><button class="btn" data-know="${id}">✓ I know this</button></div>`}`;
+    drawer.classList.add('open');
+  }
+
+  const kl = knownList(Object.fromEntries(Object.entries(IDEAS).map(([id, I]) => [id, I.name])), KNOWN, () => { render(true); hover(null); });
+  document.addEventListener('click', e => {
+    const k = e.target.closest('[data-know]');
+    if (k) { e.stopPropagation(); drawer.classList.remove('open'); kl.add(k.dataset.know); return; }
+    if (e.target.closest('[data-close]')) { drawer.classList.remove('open'); return; }
+    const s = e.target.closest('[data-start]');
+    if (s) { startStudy(s.dataset.start, s); return; }
+    const g = e.target.closest('[data-go]') || e.target.closest('.icard');
+    if (g) openPanel(g.dataset.go || g.dataset.id);
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') drawer.classList.remove('open'); });
+  render(false);
+  if (location.search.includes('preview')) setTimeout(() => hover('cycle'), 300);
+</script>
+</body>
+</html>

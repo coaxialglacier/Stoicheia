@@ -1,0 +1,766 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Graph and Page</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+  body { overflow: hidden; }
+
+  /* ---------- The graph, on the left ---------- */
+  .side { position: fixed; left: 0; top: 52px; bottom: 0; width: 420px; padding: 22px 22px 28px; background: var(--bg-deep); border-right: 1px solid var(--line); overflow: auto; }
+  .side .lead { font-size: 14px; color: var(--muted); line-height: 1.55; margin: 0 0 18px; }
+  .side .lead b { color: var(--text); font-weight: 600; }
+  .gwrap { position: relative; margin: 0 auto; }
+  .gwrap svg { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+  /* One section for each level, with the code at the top and memory below it. */
+  .gsec { position: absolute; left: 0; border: 1px dashed var(--line-3); border-radius: 14px; }
+  .gsec-k { position: absolute; left: 12px; top: 10px; font: 600 9.5px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); white-space: nowrap; }
+  .gsec-k b { color: var(--muted); font-weight: 700; }
+  .gn { position: absolute; width: 110px; min-height: 50px; padding: 8px 10px; border-radius: 10px; cursor: pointer; font-size: 12.5px; font-weight: 600; line-height: 1.3;
+    border: 1px solid color-mix(in srgb, var(--concept) 40%, transparent); background: color-mix(in srgb, var(--concept) 9%, var(--panel));
+    transition: left 0.5s var(--ease), top 0.5s var(--ease), box-shadow 0.3s, border-color 0.3s, opacity 0.3s; animation: rise 0.35s var(--ease) both; }
+  .gn:hover { border-color: var(--concept); }
+  .gn .o { display: block; font: 600 9.5px var(--mono); letter-spacing: 0.1em; color: var(--concept); margin-bottom: 3px; }
+  .gn.read { opacity: 0.6; }
+  .gn.read .o::after { content: " · read"; color: var(--faint); }
+  .gn.on { border-color: var(--concept); opacity: 1; box-shadow: 0 0 0 1px var(--concept), 0 0 26px -6px var(--concept); background: color-mix(in srgb, var(--concept) 20%, var(--panel)); }
+  .gn.root { border-color: color-mix(in srgb, var(--concept) 70%, transparent); }
+  /* A concept the reader knows: grey, dashed, and no number, because it is not in the teaching order. */
+  .gn.known { border: 1px dashed color-mix(in srgb, var(--known) 80%, transparent); background: transparent; color: var(--muted); font-weight: 500; opacity: 0.7; }
+  .gn.known .o { color: var(--known); }
+  .gn.known:hover { opacity: 1; border-color: var(--muted); }
+  .gn.known.on { opacity: 1; border-color: var(--muted); box-shadow: 0 0 26px -6px var(--known); background: color-mix(in srgb, var(--known) 10%, transparent); }
+  .legend { margin-top: 16px; font-size: 12px; color: var(--faint); line-height: 1.5; }
+
+  /* ---------- The page, on the right ---------- */
+  .main { position: fixed; left: 420px; right: 0; top: 52px; bottom: 0; overflow: auto; scroll-behavior: smooth; }
+  .note { top: auto; bottom: 18px; }
+  .page { max-width: 1280px; margin: 0 auto; padding: 30px 40px 120px; }
+  .crumb { font: 600 10.5px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); margin-bottom: 14px; }
+  .crumb b { color: var(--concept); }
+  .crumb b.k { color: var(--muted); }
+  .v-head { display: flex; align-items: flex-start; gap: 16px; }
+  .v-head .knowbtn { margin-left: auto; margin-top: 10px; }
+  /* The views of the concept on the page. A view that comes later in the order shows its number. */
+  .tabs { display: flex; flex-wrap: wrap; gap: 2px; margin: 16px 0 26px; border-bottom: 1px solid var(--line); }
+  .tab { padding: 9px 14px 10px; font-size: 13px; font-weight: 600; color: var(--muted); background: none; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; cursor: pointer; }
+  .tab:hover { color: var(--text); }
+  .tab.on { color: var(--text); border-bottom-color: var(--concept); }
+  .tab .tn { font: 700 10px var(--mono); color: var(--concept); margin-left: 7px; padding: 1px 6px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--concept) 45%, transparent); }
+  .view { animation: rise 0.35s var(--ease); }
+  .page.still .view { animation: none; }
+  .pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 34px; padding-top: 20px; border-top: 1px solid var(--line); }
+  .pager button { max-width: 48%; text-align: left; padding: 12px 16px; border-radius: 12px; cursor: pointer; background: var(--panel); border: 1px solid var(--line-2); color: var(--text); }
+  .pager button:hover { border-color: var(--line-3); }
+  .pager button small { display: block; font: 600 10px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); margin-bottom: 2px; }
+  .pager button.next { margin-left: auto; text-align: right; border-color: color-mix(in srgb, var(--concept) 45%, transparent); }
+  /* Printed output, inside a sentence. */
+  .lesson samp { font-family: var(--mono); font-size: 0.84em; color: #f6d7cb; background: color-mix(in srgb, var(--step) 14%, transparent); padding: 1px 5px; border-radius: 4px; }
+  .cb .ref.on { background: rgba(236, 233, 225, 0.2); }
+
+  /* ---------- What it is: four questions, with the example beside them ---------- */
+  .w-grid { display: grid; grid-template-areas: "q1" "ex" "rest"; grid-template-columns: minmax(0, 1fr); column-gap: 40px; }
+  .w-q1 { grid-area: q1; }
+  .w-ex { grid-area: ex; margin: 2px 0 30px; }
+  .w-rest { grid-area: rest; }
+  @container (min-width: 860px) {
+    .w-grid { grid-template-areas: "q1 ex" "rest ex"; grid-template-columns: minmax(0, 1fr) minmax(0, 440px); grid-template-rows: auto 1fr; }
+    .w-ex { position: sticky; top: 20px; align-self: start; margin: 0; }
+  }
+  .q { margin: 0 0 28px; }
+  .q h3 { margin: 0 0 7px; font: 600 11px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--concept); }
+  .q p, .here p { font-family: var(--serif); font-size: 17px; line-height: 1.65; margin: 0 0 12px; max-width: 64ch; }
+  .w-after { font-family: var(--serif); font-size: 15.5px; line-height: 1.6; color: var(--muted); margin: 12px 0 0; }
+  .w-ex .fig { margin-top: 14px; }
+  .q-item { margin-bottom: 18px; }
+  .q-item .cb { box-shadow: none; }
+  .q-go { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 2px; }
+  .q-go-k { font-size: 12.5px; color: var(--faint); margin-right: 2px; }
+  .here { margin: 6px 0 0; padding: 12px 16px 14px; border-left: 3px solid var(--concept); background: color-mix(in srgb, var(--concept) 6%, transparent); }
+  .here .here-k, .ps-lead .k, .endcard .k { display: block; font: 600 10px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--concept); margin-bottom: 4px; }
+  .here p { font-size: 16px; margin: 0; }
+
+  /* ---------- Parts and Steps: the parts, one copy of the code, and the steps ---------- */
+  .ps-lead { margin: 0 0 24px; padding: 12px 16px; border-left: 3px solid var(--concept); background: color-mix(in srgb, var(--concept) 6%, transparent);
+    font-family: var(--serif); font-size: 16.5px; line-height: 1.6; max-width: 84ch; }
+  .ps-wrap { position: relative; }
+  .ps-wrap > svg.links { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; z-index: 2; }
+  .ps { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; align-items: start; }
+  .ps-code { order: -1; }
+  @container (min-width: 700px) {
+    .ps { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .ps-code { grid-column: 1 / -1; }
+  }
+  @container (min-width: 900px) {
+    .ps { grid-template-columns: minmax(190px, 235px) minmax(0, 1fr) minmax(210px, 255px); gap: 22px; }
+    .ps-code { grid-column: auto; order: 0; }
+    .ps-cb .cl .s { font-size: 13px; }
+  }
+  .ps-part { padding-left: 14px; border-left: 2px solid color-mix(in srgb, var(--fact) 35%, transparent); margin-bottom: 16px; transition: border-color 0.2s, opacity 0.25s, transform 0.25s; }
+  .ps-part.lit { border-left-color: var(--fact); }
+  .ps-part.leaving { opacity: 0; transform: translateX(8px); }
+  .ps-part h4 { margin: 0 0 3px; font-size: 14.5px; font-weight: 600; color: #a6e3cd; }
+  .ps-part p { margin: 0; font-family: var(--serif); font-size: 15.5px; line-height: 1.6; }
+  .ps .none { color: var(--faint); font-size: 13px; margin: 0; }
+  .ps-cb .cl { grid-template-columns: 40px 1fr 34px; }
+  .cl .badge { justify-self: center; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font: 700 10.5px var(--mono);
+    color: var(--step); border: 1.5px solid color-mix(in srgb, var(--step) 45%, transparent); transition: all 0.3s; }
+  .cl .badge.on { background: var(--step); color: var(--bg-deep); border-color: var(--step); box-shadow: 0 0 14px -1px var(--step); }
+  .cl.dim { opacity: 0.4; }
+  .cl.dim::after { content: "does not run yet"; position: absolute; right: 44px; bottom: 12px; font: 600 9.5px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--step); }
+  .chipv { margin-left: 14px; padding: 2px 7px; border-radius: 5px; font: 600 11.5px var(--mono); background: var(--step); color: var(--bg-deep); animation: rise 0.35s var(--ease); }
+  /* The body is marked with a dashed outline, because other parts are marked inside it. */
+  .mk[data-part="body"] { background: transparent; box-shadow: none; outline: 1px dashed color-mix(in srgb, var(--fact) 50%, transparent); outline-offset: 3px; }
+  .mk[data-part="body"]::before { left: 0; transform: none; bottom: calc(100% + 8px); }
+  .mk[data-part="body"].on { outline-color: var(--fact); box-shadow: none; background: color-mix(in srgb, var(--fact) 6%, transparent); }
+  .mk.known[data-part="body"] { outline: none; }
+  .cb.focus .mk[data-part].hold:not(.on) { opacity: 1; }
+  /* A line with no name written above it does not need the room for one. */
+  .cb.tall .cl.short { height: 32px; align-items: center; padding-bottom: 0; }
+  .cb.tall .cl.short.run::before { top: 50%; bottom: auto; margin-top: -6px; }
+  .cb.tall .cl.short.dim::after { bottom: auto; top: 50%; margin-top: -6px; }
+  .stepnote { font-size: 13.5px; color: var(--muted); margin: 0 0 14px; }
+  .step { display: grid; grid-template-columns: 28px 1fr; gap: 10px; padding: 10px 12px; margin: 0 -12px 4px; border-radius: 10px; cursor: pointer; opacity: 0.5; transition: opacity 0.3s, background 0.3s; }
+  .step:hover { opacity: 0.85; }
+  .step.done { opacity: 0.7; }
+  .step.on { opacity: 1; background: color-mix(in srgb, var(--step) 9%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--step) 35%, transparent); }
+  .step .sn { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 700 10.5px var(--mono); color: var(--step); border: 1.5px solid color-mix(in srgb, var(--step) 50%, transparent); margin-top: 1px; }
+  .step.on .sn { background: var(--step); color: var(--bg-deep); border-color: var(--step); box-shadow: 0 0 12px var(--step); }
+  .step .st { font-size: 14px; line-height: 1.55; }
+  .runbar { display: flex; gap: 8px; margin-top: 14px; }
+  .endcard { margin-top: 18px; padding: 14px 16px; border-radius: 12px; font-family: var(--serif); font-size: 15.5px; line-height: 1.55;
+    border: 1px solid var(--line-3); background: rgba(236, 233, 225, 0.04); animation: rise 0.4s var(--ease); }
+  .endcard.q-next { border-color: color-mix(in srgb, var(--concept) 50%, transparent); background: color-mix(in srgb, var(--concept) 7%, transparent); }
+
+  /* ---------- In memory: the steps on a time line, the code, and a drawing of memory ---------- */
+  .rail { position: relative; height: 40px; margin: 0 24px 4px; }
+  .rail .line { position: absolute; left: 0; right: 0; top: 19px; height: 2px; background: var(--line-2); border-radius: 1px; }
+  .rail .done { position: absolute; left: 0; top: 19px; height: 2px; background: var(--step); border-radius: 1px; transition: width 0.6s var(--ease); box-shadow: 0 0 10px var(--step); }
+  .rail .st { position: absolute; top: 7px; width: 26px; height: 26px; margin-left: -13px; border-radius: 50%; cursor: pointer; display: grid; place-items: center;
+    font: 700 11px var(--mono); background: var(--bg-deep); color: var(--step); border: 1.5px solid color-mix(in srgb, var(--step) 55%, transparent); transition: all 0.3s; }
+  .rail .st.past { background: color-mix(in srgb, var(--step) 28%, var(--bg-deep)); color: var(--text); }
+  .rail .st.on { background: var(--step); color: var(--bg-deep); box-shadow: 0 0 18px -2px var(--step); transform: scale(1.12); }
+  .now { display: flex; align-items: center; gap: 16px; margin: 8px 0 24px; min-height: 64px; }
+  .now .txt { flex: 1; font-family: var(--serif); font-size: 17px; line-height: 1.55; animation: rise 0.35s var(--ease); }
+  .now .ctl { display: flex; gap: 8px; flex: none; }
+  .mcols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; align-items: start; }
+  @container (min-width: 900px) { .mcols { grid-template-columns: minmax(0, 420px) minmax(0, 1fr); gap: 32px; } }
+  .memd { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 34px; padding: 14px 16px 16px; border-radius: 14px;
+    border: 1px solid var(--line); background: rgba(31, 30, 29, 0.55); }
+  .memd::before { content: ""; position: absolute; top: 12px; bottom: 12px; left: 50%; width: 1px; background: var(--line); }
+  .memd.compact { padding: 10px 12px 12px; gap: 0 26px; }
+  .mcol { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .marea { display: flex; flex-direction: column; gap: 10px; }
+  .marea-k { font: 600 10px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); }
+  .mempty { font-size: 12px; color: var(--faint); }
+  .memd .mb.changed { box-shadow: 0 0 0 1px var(--step), 0 0 22px -4px var(--step); }
+  .memd .mb.appear { animation: fadein 0.45s var(--ease); }
+  @keyframes fadein { from { opacity: 0; } }
+  .mf .fv.none { color: var(--faint); font: 10.5px var(--sans); }
+  .mnote span { font-size: 11px; color: var(--faint); }
+  .mnote .mono { font-family: var(--mono); color: var(--muted); }
+  .memd svg.marrows { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+  .note-mem { margin: 10px 0 0; font-size: 12px; line-height: 1.5; color: var(--faint); }
+</style>
+</head>
+<body class="dots">
+<div class="top">
+  <a class="back" href="index.html">← Home</a>
+  <span class="title">Dependency Graph · Graph and Page</span>
+  <span class="grow"></span>
+  <div class="hud"><span>←  →</span><span>steps, then views</span></div>
+</div>
+
+<aside class="side">
+  <p class="lead" id="lead"></p>
+  <div class="gwrap" id="gwrap"><svg id="glinks"></svg></div>
+  <p class="legend">Each box is a concept at one level. A line goes from a concept down to a concept it needs. The numbers are the order you learn them in. A dashed box is a concept you know. It has no number, because it is not taught here, and you can still click it to open its page.</p>
+</aside>
+<main class="main" id="main"><div class="page" id="page"></div></main>
+
+<div class="note">
+  <p><b>Graph and Page, with views.</b> The graph has two sections: the code on top, and memory below it. Each concept has up to three views, shown as tabs: <b>What it is</b>, which answers four questions, then <b>Parts and Steps</b>, then <b>In memory</b>.</p>
+  <p>Captured variables starts with what it is and how its code runs. Stack frame, Heap object, and Closure value come after that, right before its In memory view.</p>
+  <p>A closure starts as known, so it is a dashed box. Click it to open its whole page, or remove it in <b>What I know</b> to make it number 1. <b>→</b> runs the next step of a program, and then goes on to the next view.</p>
+</div>
+
+<script src="shared.js"></script>
+<script src="library-data.js"></script>
+<script src="library.js"></script>
+<script src="pages.js"></script>
+<script>
+  // The study on this page: the concept named by root in the address, or by show, or the study the reader is in the middle of.
+  // Its sections, boxes, and views come from the concept library.
+  const params = new URLSearchParams(location.search);
+  const ROOT = [params.get('root'), params.get('show')].find(id => id && LIB.hasStudy(id)) || STUDYING.id;
+  const { STUDY, BOXES, CONCEPTS } = LIB.study(ROOT);
+  const { VIEW_NAMES, VIEW_ORDER, QUESTIONS } = Library;
+  // What the reader knows, from known.json. A known concept is a dashed box.
+  const known = KNOWN;
+  const read = new Set();
+  let order = [], pages = [], onGraph = [];
+  let cur = { box: null, view: null }, lastTaught = null, stepAt = -1, focusPart = null, memPrev = new Set();
+  const gwrap = document.getElementById('gwrap');
+  const glinks = document.getElementById('glinks');
+  const pageEl = document.getElementById('page');
+  const rootName = CONCEPTS[STUDY.root].name;
+  const lower = s => s.charAt(0).toLowerCase() + s.slice(1);
+  const same = (a, b) => !!a && !!b && a.box === b.box && a.view === b.view;
+  const isKnownBox = id => known.has(BOXES[id].concept);
+  const conceptOf = id => CONCEPTS[BOXES[id].concept];
+  const listText = names => names.length < 2 ? names.join('') : names.length === 2 ? names.join(' and ') : names.slice(0, -1).join(', ') + ', and ' + names[names.length - 1];
+  const count = (n, one, many) => n === 1 ? one : `${n} ${many}`;
+
+  // ---------- Which boxes the graph shows, and in what order ----------
+
+  // Library.layoutGraph decides which boxes each section shows, their rows, and the teaching order.
+  // Each section shows every box the reader does not know, from its root, and each known box that one of them needs.
+  // It stops at a known box: what a known concept needs is not drawn below it.
+  // The views of a concept, in every box that has one, in the order What it is, Parts and Steps, In memory.
+  // A copy of a known box, drawn in a second section, adds no views.
+  function tabsOf(concept) {
+    return Object.entries(BOXES).filter(([, b]) => b.concept === concept && !b.copyOf)
+      .flatMap(([id, b]) => b.views.map(v => ({ box: id, view: v })))
+      .sort((a, b) => VIEW_ORDER.indexOf(a.view) - VIEW_ORDER.indexOf(b.view));
+  }
+
+  // ---------- The graph ----------
+
+  const BOXW = 110, COLW = 120, ROWH = 84, BOXH = 52, HEAD = 32, PAD = 12, GAP = 16;
+  // In a section, a box is one row below the lowest box that needs it, and each row is centered.
+  function layoutSection(sec) {
+    const pos = {}, cols = Math.max(...sec.rows.map(r => r.length));
+    sec.rows.forEach((r, y) => r.forEach((id, i) => { pos[id] = { x: ((cols - r.length) / 2 + i) * COLW, y: y * ROWH }; }));
+    return { pos, w: (cols - 1) * COLW + BOXW, h: (sec.rows.length - 1) * ROWH + BOXH };
+  }
+
+  function renderGraph() {
+    const G = Library.layoutGraph({ STUDY, BOXES }, concept => known.has(concept));
+    order = G.order;
+    pages = order.flatMap(b => BOXES[b].views.map(v => ({ box: b, view: v })));
+    onGraph = G.sections.flatMap(s => s.boxes);
+    const lays = G.sections.map(s => ({ s, ...layoutSection(s) }));
+    const inner = Math.max(250, ...lays.map(l => l.w));
+    const W = inner + 2 * PAD, abs = {};
+    gwrap.querySelectorAll('.gsec').forEach(e => e.remove());
+    let y = 0;
+    lays.forEach(l => {
+      const h = HEAD + l.h + PAD;
+      glinks.insertAdjacentHTML('beforebegin', `<div class="gsec" style="top:${y}px;width:${W}px;height:${h}px"><span class="gsec-k"><b>${l.s.name}</b> · ${l.s.note}</span></div>`);
+      const off = PAD + (inner - l.w) / 2;
+      Object.entries(l.pos).forEach(([id, p]) => { abs[id] = { x: off + p.x, y: y + HEAD + p.y }; });
+      y += h + GAP;
+    });
+    gwrap.style.width = W + 'px';
+    gwrap.style.height = (y - GAP) + 'px';
+    gwrap.querySelectorAll('.gn').forEach(n => { if (!onGraph.includes(n.dataset.id)) n.remove(); });
+    onGraph.forEach(id => {
+      let n = gwrap.querySelector(`.gn[data-id="${id}"]`);
+      if (!n) { n = document.createElement('div'); n.className = 'gn'; n.dataset.id = id; gwrap.appendChild(n); }
+      const k = isKnownBox(id);
+      n.innerHTML = `<span class="o">${k ? 'known' : order.indexOf(id) + 1}</span>${conceptOf(id).name}`;
+      n.style.left = abs[id].x + 'px'; n.style.top = abs[id].y + 'px';
+      n.classList.toggle('root', STUDY.sections.some(s => s.root === id));
+      n.classList.toggle('known', k);
+      n.classList.toggle('on', id === cur.box);
+      n.classList.toggle('read', read.has(id) && id !== cur.box && !k);
+    });
+    // A line goes from a box down to each box it needs. A line down to a known concept is grey and dashed, like its box.
+    // A box can need a box in the section above it, such as a concept taught at the code level: that line goes up.
+    glinks.innerHTML = '';
+    G.edges.forEach(({ from: a, to: b }) => {
+      const na = gwrap.querySelector(`.gn[data-id="${a}"]`), nb = gwrap.querySelector(`.gn[data-id="${b}"]`);
+      const lit = a === cur.box || b === cur.box, toKnown = isKnownBox(b), down = abs[b].y > abs[a].y;
+      const from = { x: abs[a].x + BOXW / 2, y: abs[a].y + (down ? na.offsetHeight : 0) }, to = { x: abs[b].x + BOXW / 2, y: abs[b].y + (down ? 0 : nb.offsetHeight) };
+      const color = toKnown ? KIND_COLOR.known : KIND_COLOR.concept;
+      const opts = { op: lit ? 0.95 : toKnown ? 0.55 : 0.35, width: lit ? 2 : 1.3, travel: lit ? 1.6 : 0, dash: toKnown ? '4 4' : undefined };
+      // A line that would run behind a box leaves its box from the side instead, and curves out past every box in its way,
+      // as the lines in Expand to Parts do.
+      const top = Math.min(from.y, to.y), bottom = Math.max(from.y, to.y);
+      const inWay = onGraph.filter(id => {
+        if (id === a || id === b || abs[id].y <= top || abs[id].y + BOXH >= bottom) return false;
+        const t = (abs[id].y + BOXH / 2 - from.y) / (to.y - from.y), x = from.x + t * (to.x - from.x);
+        return x > abs[id].x - 4 && x < abs[id].x + BOXW + 4;
+      });
+      if (!inWay.length) return curve(glinks, from, to, KIND_COLOR.concept, color, opts);
+      const lefts = [abs[a].x, abs[b].x], rights = lefts.map(x => x + BOXW);
+      const goRight = Math.max(...inWay.map(id => abs[id].x + BOXW)) - Math.max(...rights) <= Math.min(...lefts) - Math.min(...inWay.map(id => abs[id].x));
+      const edge = goRight ? Math.max(...inWay.map(id => abs[id].x + BOXW), ...rights) + 14 : Math.min(...inWay.map(id => abs[id].x), ...lefts) - 14;
+      const p = { x: goRight ? rights[0] : lefts[0], y: abs[a].y + na.offsetHeight / 2 }, q = { x: goRight ? rights[1] : lefts[1], y: abs[b].y + nb.offsetHeight / 2 };
+      // The curve's farthest point is three quarters of the way to its control points, so they sit past the edge it has to clear.
+      const c = (edge - (p.x + q.x) / 8) / 0.75;
+      const line = curve(glinks, p, q, KIND_COLOR.concept, color, opts), d = `M${p.x},${p.y} C${c},${p.y} ${c},${q.y} ${q.x},${q.y}`;
+      line.setAttribute('d', d);
+      const dot = line.nextElementSibling && line.nextElementSibling.querySelector('animateMotion');
+      if (dot) dot.setAttribute('path', d);
+    });
+    const needed = new Set(order.map(b => BOXES[b].concept)); needed.delete(STUDY.root);
+    const knownUsed = new Set(onGraph.filter(isKnownBox).map(b => BOXES[b].concept));
+    document.getElementById('lead').innerHTML = `<b>${rootName}</b> is taught one level at a time: first the code, then memory. `
+      + (needed.size ? `It needs ${count(needed.size, 'one concept', 'concepts')} you do not know yet, each taught right before the view that uses it.` : 'You know every concept it needs.')
+      + (knownUsed.size ? ` It also uses ${count(knownUsed.size, 'one concept', 'concepts')} you know: the dashed ${knownUsed.size === 1 ? 'box' : 'boxes'}.` : '');
+  }
+
+  // ---------- Drawings of memory ----------
+
+  const MEM_LEGEND = 'A grey box is a frame: a stack frame on the stack, or the async frame of an async function on the heap. A purple box is a heap object. A plain box is a constant at the top level of the file, or the program\'s code. A white dot is an address, and its line goes to the memory it names. A dashed box is memory that is gone.';
+
+  function fieldHTML(name, v) {
+    if (v && v.to) return `<div class="mf"><span class="fn">${name}</span><span class="fv ptr" data-to="${v.to}">address</span></div>`;
+    if (v && v.none) return `<div class="mf"><span class="fn">${name}</span><span class="fv none">${v.none}</span></div>`;
+    return `<div class="mf"><span class="fn">${name}</span><span class="fv">${v}</span></div>`;
+  }
+  function memHTML(st, compact) {
+    const blockHTML = b => `<div class="mb ${b.kind}${!compact && (st.changed || []).includes(b.id) ? ' changed' : ''}" data-id="${b.id}"><div class="mh">${b.title}<i>${b.tag}</i></div>`
+      + (b.fields ? b.fields.map(([n, v]) => fieldHTML(n, v)).join('') : `<div class="mf mnote"><span class="fn"></span><span${b.mono ? ' class="mono"' : ''}>${b.note}</span></div>`) + '</div>';
+    const area = (title, a, always) => {
+      const list = st.blocks.filter(b => b.area === a);
+      if (!list.length && !always) return '';
+      return `<div class="marea"><div class="marea-k">${title}</div>${list.length ? list.map(blockHTML).join('') : '<div class="mempty">Nothing here.</div>'}</div>`;
+    };
+    return `<div class="memd${compact ? ' compact' : ''}"><div class="mcol">${area('Stack', 'stack', true)}${area('Top level of the file', 'top')}</div>`
+      + `<div class="mcol">${area('Heap', 'heap', true)}${area('The program\'s code', 'code')}</div><svg class="marrows"></svg></div>`;
+  }
+  function figureHTML(F) {
+    return `<figure class="fig"><div class="panes">${F.panes.map(([t, st]) => `<div><div class="pane-k">${t}</div>${memHTML(st, true)}</div>`).join('')}</div>`
+      + `<div class="cap say">${F.caption} ${MEM_LEGEND}</div></figure>`;
+  }
+  // From each address to the memory it names. When the memory is to the right, the line enters its left edge.
+  // When the memory is in the same column, the line goes around the right side and enters its right edge.
+  function drawArrows(root) {
+    const line = (a, b, mx) => `<path d="M${a.x},${a.y} C${mx},${a.y} ${mx},${b.y} ${b.x},${b.y}" fill="none" stroke="#ece6d6" stroke-width="1.3" stroke-opacity="0.8"/>`;
+    const head = (b, dir) => `<path d="M${b.x + dir * 8},${b.y - 4.5} L${b.x},${b.y} L${b.x + dir * 8},${b.y + 4.5}" fill="none" stroke="#ece6d6" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>`;
+    root.querySelectorAll('.memd').forEach(m => {
+      const svg = m.querySelector('svg.marrows');
+      svg.innerHTML = '';
+      const base = m.getBoundingClientRect();
+      m.querySelectorAll('[data-to]').forEach(src => {
+        const t = m.querySelector(`[data-id="${src.dataset.to}"]`);
+        if (!t) return;
+        const f = src.getBoundingClientRect(), r = t.getBoundingClientRect();
+        const a = { x: f.right - 9 - base.left, y: f.top + f.height / 2 - base.top };
+        if (r.left - base.left > a.x) {
+          const b = { x: r.left - base.left - 1, y: r.top - base.top + 16 };
+          svg.insertAdjacentHTML('beforeend', line(a, { x: b.x - 2, y: b.y }, (a.x + b.x) / 2) + head(b, -1));
+        } else {
+          const b = { x: r.right - base.left + 1, y: r.top - base.top + 16 };
+          svg.insertAdjacentHTML('beforeend', line(a, { x: b.x + 2, y: b.y }, Math.max(a.x, b.x) + 30) + head(b, 1));
+        }
+      });
+    });
+  }
+
+  // ---------- The views ----------
+
+  // The code of Parts and Steps. Each line that a step runs shows that step's number.
+  function stepCodeHTML(lines, steps) {
+    const at = {};
+    steps.forEach((s, i) => (at[s.line] = at[s.line] || []).push(i));
+    return '<div class="cb tall ps-cb">' + lines.map((l, i) => `<div class="cl" data-ln="${i + 1}"><span class="n">${i + 1}</span><span class="s">${l}</span>`
+      + (at[i + 1] ? `<span class="badge" data-steps="${at[i + 1].join(' ')}">${at[i + 1][0] + 1}</span>` : '<span></span>') + '</div>').join('') + '</div>';
+  }
+  const outputHTML = lines => '<div class="k">Output</div>' + (lines.length ? lines.map(l => `<div class="o">${l}</div>`).join('') : '<div class="none">Nothing printed yet.</div>');
+  // What has been printed by step i: the output of the last step up to i that printed something.
+  function outUpTo(steps, i) {
+    for (let k = i; k >= 0; k--) if (steps[k].out) return steps[k].out;
+    return [];
+  }
+  // A button that opens another view of the same concept. A view that comes later in the order shows its number.
+  function viewButton(concept, view) {
+    const t = tabsOf(concept).find(t => t.view === view);
+    if (!t) return '';
+    const num = order.includes(t.box) && t.box !== cur.box ? ` · ${order.indexOf(t.box) + 1}` : '';
+    return `<button class="btn" data-tab="${t.box}|${t.view}">${VIEW_NAMES[view]}${num} →</button>`;
+  }
+
+  // What it is: the four questions, with the example beside them. The question about when you use it is left out when it does not fit.
+  function whatHTML(c, C) {
+    const W = C.what;
+    let own = 0;
+    const go = [viewButton(c, 'parts'), viewButton(c, 'memory')].join('');
+    return `<div class="w-grid">
+      <div class="w-q1 q"><h3>${QUESTIONS[0][1]}</h3><p class="say">${W.is}</p></div>
+      <div class="w-ex main-code">${codeLinesHTML(W.code, true)}${W.figure ? figureHTML(W.figure) : ''}${W.isAfter ? `<p class="w-after say">${W.isAfter}</p>` : ''}</div>
+      <div class="w-rest">
+        <div class="q"><h3>${QUESTIONS[1][1]}</h3><p class="say">${W.problem}</p></div>
+        <div class="q"><h3>${QUESTIONS[2][1]}</h3><p class="say">${W.how}</p>${go ? `<div class="q-go"><span class="q-go-k">Step by step:</span>${go}</div>` : ''}</div>
+        ${W.when ? `<div class="q"><h3>${QUESTIONS[3][1]}</h3>${W.when.map(w => `<div class="q-item${w.code ? ' own' : ''}" data-own="${own++}"><p class="say">${w.html}</p>${w.code ? codeLinesHTML(w.code) : ''}</div>`).join('')}</div>` : ''}
+        ${W.here && c !== STUDY.root ? `<div class="here own" data-own="here"><span class="here-k">In ${lower(rootName)}</span><p class="say">${W.here}</p><div class="why-code">${codeLinesHTML(CONCEPTS[STUDY.root].code)}</div></div>` : ''}
+      </div>
+    </div>`;
+  }
+
+  // Parts and Steps: the short answer to how it works, then its parts, one copy of the code, and the steps that run it.
+  function partsHTML(c, C, isKnown) {
+    const P = C.parts;
+    const list = P.list.filter(p => isKnown || !known.has(p.id));
+    return `<p class="ps-lead say"><span class="k">${QUESTIONS[2][1]}</span>${C.what.how}</p>
+      <div class="ps-wrap"><svg class="links"></svg><div class="ps">
+        <section class="ps-parts"><div class="col-k">Its parts</div>
+          ${list.map(p => `<section class="ps-part" data-part-id="${p.id}"><div class="l-ph"><h4>${p.name}</h4>${isKnown ? '' : `<button class="pknow" data-know-part="${p.id}">I know this</button>`}</div><p class="say">${p.html}</p></section>`).join('') || '<p class="none">You know every part of it.</p>'}
+        </section>
+        <section class="ps-code main-code"><div class="col-k">The code</div>${stepCodeHTML(P.code, P.steps)}<div class="output" id="out"></div></section>
+        <section class="ps-steps"><div class="col-k">What happens when it runs</div>
+          <p class="stepnote">The program runs the lines in this order, not from top to bottom.</p>
+          ${P.steps.map((s, i) => `<div class="step" data-step="${i}"><span class="sn">${i + 1}</span><div class="st say">${s.html}</div></div>`).join('')}
+          <div class="runbar"><button class="btn" data-stepgo="-1">←</button><button class="btn primary" data-stepgo="1" id="stepNext"></button></div>
+          <div id="stepEnd"></div>
+        </section>
+      </div></div>`;
+  }
+
+  // In memory: the question the code raised, the steps on a time line, the code, and the drawing of memory at each step.
+  function memoryHTML(c, C) {
+    const M = C.memory, n = M.steps.length;
+    return `<p class="ps-lead say"><span class="k">How does it work, in memory?</span>${M.question}</p>
+      <div class="rail"><div class="line"></div><div class="done" id="railDone"></div>
+        ${M.steps.map((s, i) => `<div class="st" data-s="${i}" style="left:${n > 1 ? i / (n - 1) * 100 : 0}%">${i + 1}</div>`).join('')}</div>
+      <div class="now"><div class="txt say" id="memNow"></div>
+        <div class="ctl"><button class="btn" data-stepgo="-1">←</button><button class="btn primary" data-stepgo="1" id="stepNext"></button></div></div>
+      <div class="mcols">
+        <div class="main-code">${codeLinesHTML(C.code)}<div class="output" id="out"></div></div>
+        <div><div id="memDraw"></div><p class="note-mem">${MEM_LEGEND}</p></div>
+      </div>
+      <div id="stepEnd"></div>`;
+  }
+  const VIEW_HTML = { what: whatHTML, parts: partsHTML, memory: memoryHTML };
+
+  // The card after the last step of Parts and Steps: the answer, or the question that In memory answers.
+  function endHTML(e) {
+    if (e.kind === 'answer') return `<div class="endcard say"><span class="k">${e.title}</span>${e.html}</div>`;
+    const t = tabsOf(BOXES[cur.box].concept).find(t => t.view === 'memory');
+    const needs = t ? BOXES[t.box].needs.filter(n => order.includes(n)).map(n => conceptOf(n).name) : [];
+    const at = t && order.includes(t.box) ? `, at number ${order.indexOf(t.box) + 1}` : '';
+    return `<div class="endcard q-next say"><span class="k">${e.title}</span>${e.html} In memory answers this${at}.`
+      + (needs.length ? ` It uses ${count(needs.length, 'one concept', 'concepts')} first: ${listText(needs)}.` : '') + '</div>';
+  }
+
+  // ---------- Showing a view ----------
+
+  function show(box, view, opts = {}) {
+    if (typeof box === 'object') { opts = view || {}; view = box.view; box = box.box; }
+    const B = BOXES[box], C = CONCEPTS[B.concept];
+    if (!B.views.includes(view)) view = B.views[0];
+    cur = { box, view };
+    focusPart = null;
+    const isKnown = isKnownBox(box), isRoot = B.concept === STUDY.root;
+    if (!isKnown) { read.add(box); lastTaught = { box, view }; }
+    renderGraph();
+    const idx = pages.findIndex(p => same(p, cur));
+    const prev = pages[idx - 1], next = pages[idx + 1];
+    const back = pages.find(p => same(p, lastTaught)) || pages[0] || null;
+    const pageName = p => `${conceptOf(p.box).name} · ${VIEW_NAMES[p.view]}`;
+    const sec = STUDY.sections.find(s => s.id === B.section);
+    const crumb = isKnown ? '<b class="k">A concept you know</b> · not taught in this study'
+      : `${isRoot ? '<b>The concept you named</b>' : `Concept <b>${order.indexOf(box) + 1}</b> of ${order.length}`} · ${lower(sec.name)}`;
+    const tabs = tabsOf(B.concept).map(t => {
+      const num = t.box !== box && order.includes(t.box) ? `<span class="tn">${order.indexOf(t.box) + 1}</span>` : '';
+      return `<button class="tab${same(t, cur) ? ' on' : ''}" data-tab="${t.box}|${t.view}">${VIEW_NAMES[t.view]}${num}</button>`;
+    }).join('');
+    const pager = isKnown ? (back ? `<button data-go="${back.box}|${back.view}"><small>← Back to</small>${pageName(back)}</button>` : '')
+      : (prev ? `<button data-go="${prev.box}|${prev.view}"><small>← Before this</small>${pageName(prev)}</button>` : '')
+      + (next ? `<button class="next" data-go="${next.box}|${next.view}"><small>Next →</small>${pageName(next)}</button>` : '');
+    pageEl.innerHTML = `<div class="crumb">${crumb}</div>
+      <header class="v-head"><h2 class="l-name">${C.name}</h2>${!isKnown && !isRoot ? `<button class="knowbtn show" data-know="${B.concept}">I know all of this</button>` : ''}</header>
+      <nav class="tabs">${tabs}</nav>
+      <article class="lesson view" id="view">${VIEW_HTML[view](B.concept, C, isKnown)}</article>
+      <div class="pager">${pager}</div>`;
+    pageEl.classList.toggle('still', !!opts.keep);
+    if (!opts.keep) document.getElementById('main').scrollTop = 0;
+
+    const v = document.getElementById('view');
+    // Each view's code has only that view's marks: What it is marks what its first answer names, and In memory marks nothing.
+    // A part the reader knows leaves the code too: its mark and its name vanish.
+    if (!isKnown) v.querySelectorAll('.mk[data-part]').forEach(m => m.classList.toggle('known', known.has(m.dataset.part)));
+    v.querySelectorAll('.cb.tall .cl').forEach(l => l.classList.toggle('short', !l.querySelector('.mk[data-label]:not(.known)')));
+    prepareMentions(v, view === 'parts' ? [C.parts.end.html] : view === 'memory' ? C.memory.steps.map(s => s.html).concat(C.memory.answer) : []);
+    linkMentions(v);
+    if (view === 'parts') showPartsStep(opts.keep ? stepAt : opts.atEnd ? C.parts.steps.length - 1 : -1);
+    if (view === 'memory') { memPrev = new Set(); showMemStep(opts.keep ? stepAt : opts.atEnd ? C.memory.steps.length - 1 : 0); }
+    setTimeout(() => drawArrows(v), 16);
+  }
+
+  // Parts and Steps: the program runs one step at a time. Step -1 is before the first step.
+  function showPartsStep(i) {
+    const v = document.getElementById('view');
+    const P = conceptOf(cur.box).parts;
+    stepAt = Math.max(-1, Math.min(P.steps.length - 1, i));
+    const s = P.steps[stepAt];
+    v.querySelectorAll('.step').forEach((el, k) => { el.classList.toggle('on', k === stepAt); el.classList.toggle('done', k < stepAt); });
+    const code = v.querySelector('.ps-cb');
+    code.querySelectorAll('.cl').forEach(l => l.classList.remove('run', 'also', 'dim'));
+    code.querySelectorAll('.chipv').forEach(c => c.remove());
+    code.querySelectorAll('.badge').forEach(b => {
+      const list = b.dataset.steps.split(' ').map(Number), on = list.includes(stepAt);
+      b.classList.toggle('on', on);
+      b.textContent = (on ? stepAt : list[0]) + 1;
+    });
+    if (s) {
+      code.querySelector(`.cl[data-ln="${s.line}"]`).classList.add('run');
+      (s.also || []).forEach(n => code.querySelector(`.cl[data-ln="${n}"]`).classList.add('also'));
+      (s.dim || []).forEach(n => code.querySelector(`.cl[data-ln="${n}"]`).classList.add('dim'));
+      if (s.value) code.querySelector(`.cl[data-ln="${s.value[0]}"] .s`).insertAdjacentHTML('beforeend', `<span class="chipv">${s.value[1]}</span>`);
+    }
+    v.querySelector('#out').innerHTML = outputHTML(outUpTo(P.steps, stepAt));
+    const last = stepAt === P.steps.length - 1;
+    const goesOn = last && !isKnownBox(cur.box) && pages[pages.findIndex(p => same(p, cur)) + 1];
+    v.querySelector('#stepNext').innerHTML = (stepAt < 0 ? 'Run the first step' : !last ? 'Next step' : goesOn ? 'Go on' : 'Run again') + ' <kbd>→</kbd>';
+    v.querySelector('#stepEnd').innerHTML = last ? endHTML(P.end) : '';
+    if (last) linkMentions(v, v.querySelector('#stepEnd'));
+    setTimeout(drawLinks, 16);
+  }
+
+  // In memory: the drawing changes at each step. Memory that is new in a step fades in, and memory that changed glows.
+  function showMemStep(i) {
+    const v = document.getElementById('view');
+    const M = conceptOf(cur.box).memory;
+    stepAt = Math.max(0, Math.min(M.steps.length - 1, i));
+    const s = M.steps[stepAt];
+    v.querySelectorAll('.rail .st').forEach((el, k) => { el.classList.toggle('on', k === stepAt); el.classList.toggle('past', k < stepAt); });
+    v.querySelector('#railDone').style.width = (M.steps.length > 1 ? stepAt / (M.steps.length - 1) * 100 : 0) + '%';
+    const now = v.querySelector('#memNow');
+    now.innerHTML = s.html; now.style.animation = 'none'; void now.offsetWidth; now.style.animation = '';
+    linkMentions(v, now);
+    v.querySelectorAll('.main-code .cl').forEach(l => l.classList.remove('run', 'also'));
+    s.lines.forEach((n, k) => v.querySelector(`.main-code .cl[data-ln="${n}"]`).classList.add(k === 0 ? 'run' : 'also'));
+    (s.also || []).forEach(n => v.querySelector(`.main-code .cl[data-ln="${n}"]`).classList.add('also'));
+    const draw = v.querySelector('#memDraw');
+    draw.innerHTML = memHTML(s);
+    draw.querySelectorAll('.mb[data-id]').forEach(b => { if (!memPrev.has(b.dataset.id)) b.classList.add('appear'); });
+    memPrev = new Set(s.blocks.map(b => b.id));
+    drawArrows(draw);
+    v.querySelector('#out').innerHTML = outputHTML(outUpTo(M.steps, stepAt));
+    const last = stepAt === M.steps.length - 1;
+    const goesOn = last && !isKnownBox(cur.box) && pages[pages.findIndex(p => same(p, cur)) + 1];
+    v.querySelector('#stepNext').innerHTML = (!last ? 'Next step' : goesOn ? 'Go on' : 'Start again') + ' <kbd>→</kbd>';
+    v.querySelector('#stepEnd').innerHTML = last ? `<div class="endcard say"><span class="k">The answer</span>${M.answer}</div>` : '';
+    if (last) linkMentions(v, v.querySelector('#stepEnd'));
+  }
+
+  // Moving: → runs the next step of a program, and after the last step goes on to the next view. ← goes back the same way.
+  function go(d, atEnd) {
+    const idx = pages.findIndex(p => same(p, cur));
+    if (idx < 0) { show(pages.find(p => same(p, lastTaught)) || pages[0]); return true; }
+    const p = pages[idx + d];
+    if (!p) return false;
+    show(p.box, p.view, { atEnd: !!atEnd });
+    return true;
+  }
+  function stepGo(d) {
+    if (cur.view === 'parts' || cur.view === 'memory') {
+      const steps = cur.view === 'parts' ? conceptOf(cur.box).parts.steps : conceptOf(cur.box).memory.steps;
+      const first = cur.view === 'parts' ? -1 : 0, at = cur.view === 'parts' ? showPartsStep : showMemStep;
+      if (d > 0 && stepAt >= steps.length - 1) { if (!isKnownBox(cur.box) && go(1)) return; return at(first); }
+      if (d < 0 && stepAt <= first) { go(-1, true); return; }
+      return at(stepAt + d);
+    }
+    go(d, d < 0);
+  }
+
+  // ---------- Parts: hovering one marks it on the code ----------
+
+  function setPart(id) {
+    if (focusPart === id) return;
+    focusPart = id;
+    const v = document.getElementById('view');
+    const cb = v && v.querySelector('.ps-cb');
+    if (!cb) return;
+    cb.classList.toggle('focus', !!id);
+    cb.querySelectorAll('.mk[data-part]').forEach(m => { m.classList.toggle('on', m.dataset.part === id); m.classList.remove('hold'); });
+    // A mark inside another mark, such as greeting inside the body, keeps the outer mark from dimming it.
+    cb.querySelectorAll('.mk.on').forEach(m => { for (let p = m.parentElement.closest('.mk'); p; p = p.parentElement.closest('.mk')) p.classList.add('hold'); });
+    v.querySelectorAll('.ps-part').forEach(p => p.classList.toggle('lit', p.dataset.partId === id));
+    drawLinks();
+  }
+  // Lines from a part's name to its marks, and from the step that runs to its line. They are drawn only when the columns sit side by side.
+  function drawLinks() {
+    const v = document.getElementById('view');
+    if (!v || cur.view !== 'parts') return;
+    const wrap = v.querySelector('.ps-wrap'), svg = wrap.querySelector('svg.links');
+    svg.innerHTML = '';
+    const base = wrap.getBoundingClientRect();
+    const rel = r => ({ l: r.left - base.left, r: r.right - base.left, cy: r.top + r.height / 2 - base.top });
+    const code = v.querySelector('.ps-cb').getBoundingClientRect();
+    const sec = focusPart && v.querySelector(`.ps-part[data-part-id="${focusPart}"]`);
+    if (sec && sec.getBoundingClientRect().right < code.left) {
+      const p = { r: rel(sec.getBoundingClientRect()).r, cy: rel(sec.querySelector('h4').getBoundingClientRect()).cy };
+      v.querySelectorAll(`.ps-cb .mk[data-part="${focusPart}"]`).forEach(t => {
+        const r = rel(t.getBoundingClientRect());
+        curve(svg, { x: p.r + 8, y: p.cy }, { x: r.l - 4, y: r.cy }, KIND_COLOR.fact, KIND_COLOR.fact, { horizontal: true, op: 0.7, travel: 1.3 });
+      });
+    }
+    const sn = stepAt >= 0 && v.querySelector(`.step[data-step="${stepAt}"] .sn`), bd = v.querySelector('.ps-cb .badge.on');
+    if (sn && bd && sn.getBoundingClientRect().left > code.right) {
+      const a = rel(sn.getBoundingClientRect()), b = rel(bd.getBoundingClientRect());
+      curve(svg, { x: a.l - 6, y: a.cy }, { x: b.r + 4, y: b.cy }, KIND_COLOR.step, KIND_COLOR.step, { horizontal: true, op: 0.85, travel: 1.2, animate: true });
+    }
+  }
+
+  // ---------- Every name of code in a sentence points at that code on the page ----------
+
+  // The text of one line of code, as text nodes. The value that a step shows beside a line, such as count = 2, is not part of the line.
+  function lineNodes(line) {
+    const walker = document.createTreeWalker(line, NodeFilter.SHOW_TEXT, { acceptNode: n => n.parentElement.closest('.chipv') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT });
+    const nodes = []; let n;
+    while ((n = walker.nextNode())) nodes.push(n);
+    return nodes;
+  }
+  // Wraps the characters from..to of one line of code in a span, so they can be marked. The characters can cross a colored piece of the line,
+  // such as the string in greet(name: "Ana"): the span then holds that piece. When they cross the edge of a mark, one span cannot hold them,
+  // so each text node in them gets its own span, with the same key.
+  function wrapRange(line, from, to, key) {
+    const span = () => { const s = document.createElement('span'); s.className = 'ref'; s.dataset.ref = key; return s; };
+    const parts = [];
+    let at = 0;
+    lineNodes(line).forEach(n => { const a = at, b = at += n.nodeValue.length; if (a < b && a < to && b > from) parts.push({ n, a, b }); });
+    const first = parts[0], last = parts[parts.length - 1];
+    const range = document.createRange();
+    range.setStart(first.n, from - first.a);
+    range.setEnd(last.n, to - last.a);
+    try { range.surroundContents(span()); return; } catch (err) { /* The characters cross the edge of a mark. */ }
+    parts.forEach(({ n, a, b }) => {
+      const r = document.createRange();
+      r.setStart(n, Math.max(from, a) - a);
+      r.setEnd(n, Math.min(to, b) - a);
+      r.surroundContents(span());
+    });
+  }
+  // Finds every place a name appears in the code panels given, and wraps each one so it can be marked.
+  // Library.findCode searches the plain text of each line, the same search that the checker in library/check.js makes.
+  // A Swift function name such as makeCounter(step:) is found where it is declared or called with those labels, and its base name is marked.
+  function wrapRefs(panels, text, key) {
+    let found = 0;
+    panels.forEach(panel => {
+      const lines = [...panel.querySelectorAll('.cl .s')];
+      Library.findCode(lines.map(l => lineNodes(l).map(n => n.nodeValue).join('')), text).forEach(p => {
+        wrapRange(lines[p.line - 1], p.from, p.to, key);
+        found++;
+      });
+    });
+    return found;
+  }
+  // A sentence looks for the code it names first in the code beside it, then in the view's main example, then in any code on the page.
+  function placesFor(view, c) {
+    const own = c && c.closest('.own');
+    return [
+      ['own' + (own ? own.dataset.own : ''), own ? [...own.querySelectorAll('.cb')] : []],
+      ['main', [...view.querySelectorAll('.main-code .cb')]],
+      ['all', [...view.querySelectorAll('.cb')]],
+    ];
+  }
+  // Every name in a view is wrapped once, before any sentence is linked, and longer names are wrapped first.
+  // A shorter name inside a longer one, such as makeCounter inside makeCounter(step: 2), is then wrapped inside the longer one's span,
+  // and the longer one stays one span. later holds the sentences that the view shows later, such as each step of In memory.
+  function prepareMentions(view, later) {
+    const cache = view._refs = new Map();
+    const tmp = document.createElement('div');
+    tmp.innerHTML = later.join(' ');
+    const wants = [...view.querySelectorAll('.say code')].map(c => ({ text: c.textContent.trim(), tries: placesFor(view, c) }))
+      .concat([...tmp.querySelectorAll('code')].map(c => ({ text: c.textContent.trim(), tries: placesFor(view, null) })));
+    wants.sort((a, b) => b.text.length - a.text.length).forEach(w => {
+      for (const [where, panels] of w.tries) {
+        if (!panels.length) continue;
+        const k = where + ':' + w.text;
+        if (!cache.has(k)) { const key = 'r' + cache.size; cache.set(k, wrapRefs(panels, w.text, key) ? key : null); }
+        if (cache.get(k)) return;
+      }
+    });
+  }
+  // A name with no code on the page is the checker's error: it is marked in red, and listed in the console.
+  function linkMentions(view, scope) {
+    const cache = view._refs || (view._refs = new Map());
+    (scope || view).querySelectorAll('.say code').forEach(c => {
+      if (c.dataset.ref || c.classList.contains('unmatched')) return;
+      const text = c.textContent.trim();
+      const tries = placesFor(view, c);
+      for (const [where, panels] of tries) {
+        if (!panels.length) continue;
+        const k = where + ':' + text;
+        if (!cache.has(k)) { const key = 'r' + cache.size; cache.set(k, wrapRefs(panels, text, key) ? key : null); }
+        if (cache.get(k)) { c.classList.add('mention'); c.dataset.ref = cache.get(k); return; }
+      }
+      c.classList.add('unmatched');
+      c.title = 'No code on this page shows this';
+      console.warn(`Checker: "${text}" names code that the page does not show.`);
+    });
+  }
+
+  // ---------- What the reader knows ----------
+
+  // When the concept on the page becomes known, it stays on the graph as a dashed box, and the page moves on to the next view
+  // that is still in the order. Anything else that changes keeps the reader where they were. saveKnown writes each change to known.json, when the server can.
+  const kl = knownList(NAMES, known, () => {
+    const oldPages = pages.slice(), idx = oldPages.findIndex(p => same(p, cur)), wasTaught = order.includes(cur.box);
+    renderGraph();
+    if (wasTaught && !order.includes(cur.box)) show(oldPages.slice(idx + 1).find(p => pages.some(q => same(q, p))) || pages[pages.length - 1]);
+    else if (!onGraph.includes(cur.box)) show(pages[0]);
+    else show(cur.box, cur.view, { keep: true });
+  }, saveKnown);
+  // "I know this" on a part takes it off the page. When it was the concept's last unknown part, the concept is known too.
+  function partKnown(btn) {
+    btn.closest('.ps-part').classList.add('leaving');
+    setTimeout(() => {
+      const c = BOXES[cur.box].concept;
+      kl.add(btn.dataset.knowPart);
+      if (c !== STUDY.root && CONCEPTS[c].parts.list.every(p => known.has(p.id))) kl.add(c);
+    }, 220);
+  }
+
+  // ---------- Input ----------
+
+  document.addEventListener('click', e => {
+    const m = e.target.closest('code.mention');
+    if (m) {
+      const first = m.closest('.lesson').querySelector(`.ref[data-ref="${m.dataset.ref}"]`);
+      const r = first.getBoundingClientRect();
+      if (r.top < 60 || r.bottom > innerHeight) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      first.classList.add('flash'); setTimeout(() => first.classList.remove('flash'), 900);
+      return;
+    }
+    const k = e.target.closest('[data-know]');
+    if (k) { kl.add(k.dataset.know); return; }
+    const kp = e.target.closest('[data-know-part]');
+    if (kp) { partKnown(kp); return; }
+    const t = e.target.closest('[data-tab], [data-go]');
+    if (t) { const [b, vw] = (t.dataset.tab || t.dataset.go).split('|'); show(b, vw); return; }
+    const sg = e.target.closest('[data-stepgo]');
+    if (sg) { stepGo(+sg.dataset.stepgo); return; }
+    const st = e.target.closest('.step[data-step]');
+    if (st) { showPartsStep(+st.dataset.step); return; }
+    const rs = e.target.closest('.rail .st');
+    if (rs) { showMemStep(+rs.dataset.s); return; }
+    const n = e.target.closest('.gn');
+    if (n) show(n.dataset.id, BOXES[n.dataset.id].views[0]);
+  });
+  document.addEventListener('mouseover', e => {
+    // Pointing at a name in a sentence marks its code.
+    const m = e.target.closest('code.mention');
+    document.querySelectorAll('.ref.on').forEach(r => r.classList.remove('on'));
+    if (m) m.closest('.lesson').querySelectorAll(`.ref[data-ref="${m.dataset.ref}"]`).forEach(r => r.classList.add('on'));
+    if (cur.view !== 'parts') return;
+    const p = e.target.closest('.ps-part'), mark = e.target.closest('.ps-cb .mk[data-part]:not(.known)');
+    if (p) setPart(p.dataset.partId);
+    else if (mark) setPart(mark.dataset.part);
+    else if (!e.target.closest('.ps-parts')) setPart(null);
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft' && e.key !== ' ') return;
+    e.preventDefault();
+    stepGo(e.key === 'ArrowLeft' ? -1 : 1);
+  });
+  window.addEventListener('resize', () => { const v = document.getElementById('view'); if (v) drawArrows(v); drawLinks(); });
+
+  renderGraph();
+  // Opened from Expand to Parts: the page starts on the idea that was selected there, and the top bar leads back to it.
+  if (params.get('from') === 'expand') {
+    document.querySelector('.top .back').outerHTML = '<a class="back" href="map-expand.html">← Back to Expand to Parts</a>';
+  }
+  const want = params.get('show');
+  // A study of a concept the reader knows teaches nothing, so it opens on that concept's own page.
+  const rootBox = STUDY.sections.find(s => s.root).root;
+  if (want && BOXES[want]) show(want, BOXES[want].views[0]); else show(pages[0] || { box: rootBox, view: BOXES[rootBox].views[0] });
+</script>
+</body>
+</html>

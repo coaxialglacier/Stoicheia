@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Library Map · Areas, Then Ideas</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+  body { overflow: hidden; }
+  .view { position: fixed; inset: 52px 0 0 0; overflow: auto; transition: opacity 0.4s, transform 0.5s var(--ease); }
+  .view.away { opacity: 0; pointer-events: none; }
+  .crumbs { position: fixed; left: 22px; top: 64px; z-index: 6; display: flex; gap: 8px; align-items: center; font-size: 13.5px; color: var(--muted); }
+  .crumbs span { cursor: pointer; }
+  .crumbs span:hover { color: var(--text); }
+  .crumbs b { color: var(--text); font-weight: 600; }
+
+  /* The overview: one tile for each area, and a line between two areas for each area that needs ideas from another. */
+  .ov { position: relative; width: 1310px; height: 820px; margin: 30px auto 0; }
+  .ov-lead { position: absolute; left: 0; top: 30px; width: 520px; }
+  .ov-lead h1 { margin: 0 0 6px; font-size: 28px; font-weight: 600; letter-spacing: -0.01em; }
+  .ov-lead p { margin: 0; font-family: ui-serif, "New York", Georgia, serif; font-size: 16px; color: var(--muted); line-height: 1.5; }
+  .tile { position: absolute; width: 340px; padding: 18px 20px 18px; border-radius: 18px; cursor: pointer; z-index: 2;
+    border: 1px solid color-mix(in srgb, var(--concept) 35%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--concept) 9%, var(--raise)), var(--panel));
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s; animation: appear 0.5s var(--ease) backwards; }
+  .tile:hover { border-color: var(--concept); box-shadow: 0 0 0 1px var(--concept), 0 0 40px -10px var(--concept); transform: translateY(-2px); }
+  .tile h3 { margin: 0 0 2px; font-size: 19px; font-weight: 600; }
+  .tile .cnt { font-size: 12.5px; color: var(--faint); }
+  .tile .strip { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 12px; }
+  .tile .strip .sdot { width: 12px; height: 12px; }
+  .tile .line { font-size: 13px; color: var(--muted); line-height: 1.5; }
+  .tile .line b { color: var(--text); font-weight: 600; }
+  .tile .open { margin-top: 12px; font: 600 10.5px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--concept); }
+  svg.ovlines { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 1; }
+  .xl { position: absolute; z-index: 3; transform: translate(-50%, -50%); font-size: 11.5px; line-height: 1.35; padding: 4px 9px; border-radius: 8px; text-align: center; max-width: 190px; cursor: help;
+    background: var(--bg-deep); border: 1px solid var(--line-3); color: var(--muted); }
+  .xl:hover { color: var(--text); border-color: var(--concept); }
+
+  /* One area, close up: ideas from other areas it needs on the left, its own ideas in the middle, ideas in other areas that use it on the right. */
+  .av { position: relative; margin: 0 auto; padding: 60px 0 60px; }
+  .av-lead { margin: 6px 0 0 22px; }
+  .av-lead h1 { margin: 0 0 4px; font-size: 28px; font-weight: 600; }
+  .av-lead p { margin: 0; font-family: ui-serif, "New York", Georgia, serif; font-size: 16px; color: var(--muted); max-width: 820px; line-height: 1.5; }
+  .av-board { position: relative; margin-top: 18px; }
+  .av-board .icard { position: absolute; animation: rise 0.4s var(--ease) backwards; }
+  .av-board .icard.ext { width: 200px; border-style: dashed; }
+  .av-board .icard.ext .ic-name::after { content: attr(data-area); display: block; font: 600 9px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); margin-top: 2px; }
+  .av-board .bandk { position: absolute; top: 0; font: 600 10px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); }
+  .av-board svg { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+  .av-board.hovering .icard { opacity: 0.25; }
+  .av-board.hovering .icard.lit { opacity: 1; }
+  .reason { position: fixed; z-index: 20; max-width: 300px; padding: 9px 12px; border-radius: 10px; font-size: 13px; line-height: 1.45; pointer-events: none;
+    background: var(--bg-deep); border: 1px solid color-mix(in srgb, var(--concept) 50%, transparent); box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.8); }
+  .reason[hidden] { display: none; }
+  .reason b { font-weight: 600; color: var(--concept); }
+
+  .drawer { position: fixed; right: 0; top: 52px; bottom: 0; width: 400px; z-index: 12; padding: 26px 26px 40px; overflow: auto; background: var(--bg-deep); border-left: 1px solid var(--line-2);
+    box-shadow: -30px 0 80px -30px rgba(0, 0, 0, 0.8); transform: translateX(100%); transition: transform 0.35s var(--ease); }
+  .drawer.open { transform: none; }
+  .drawer .x { position: absolute; right: 14px; top: 12px; }
+</style>
+</head>
+<body class="dots">
+<div class="top">
+  <a class="back" href="index.html">← Home</a>
+  <span class="title">Library Map · Areas, Then Ideas</span>
+  <span class="grow"></span>
+  <div class="hud"><span>esc</span><span>all areas</span></div>
+</div>
+<div class="crumbs" id="crumbs"></div>
+<div class="view" id="overview"></div>
+<div class="view away" id="areaview"></div>
+<div class="reason" id="reason" hidden></div>
+<aside class="drawer ipanel" id="drawer"></aside>
+
+<div class="note" style="top:auto;bottom:18px">
+  <p><b>Areas, Then Ideas.</b> The library starts as five areas. A line between two areas says how many ideas one needs from the other: hover its label to read them.</p>
+  <p>Click an area to open it. Inside, its own ideas are in the middle, the ideas it needs from other areas are on the left, and the ideas in other areas that use it are on the right.</p>
+</div>
+
+<script src="shared.js"></script>
+<script src="home-data.js"></script>
+<script src="map-core.js"></script>
+<script>
+  const TILE = { ui: [0, 330], swift: [440, 150], memory: [970, 150], conc: [440, 560], algo: [970, 560] };
+  const overview = document.getElementById('overview'), areaview = document.getElementById('areaview');
+  const reasonBox = document.getElementById('reason');
+  let current = null;
+
+  // The connections from ideas in one area to ideas in another: [area that needs, area it needs, [[idea, needed idea], ...]].
+  function crossLinks() {
+    const map = {};
+    Object.keys(IDEAS).forEach(id => IDEAS[id].deps.forEach(d => {
+      const a = IDEAS[id].area, b = IDEAS[d].area;
+      if (a === b) return;
+      (map[`${a}>${b}`] = map[`${a}>${b}`] || []).push([id, d]);
+    }));
+    return Object.entries(map).map(([k, pairs]) => [...k.split('>'), pairs]);
+  }
+
+  function renderOverview() {
+    let h = `<div class="ov" id="ov"><div class="ov-lead"><h1>The library</h1><p>${Object.keys(IDEAS).length} ideas in ${AREAS.length} areas. Each dot is one idea, in the order they are taught. Areas are joined where one needs ideas from the other.</p></div><svg class="ovlines" id="ovlines"></svg>`;
+    AREAS.forEach((a, i) => {
+      const ids = areaOrder(a.id), k = ids.filter(id => KNOWN.has(id)).length, ready = ids.filter(isReady);
+      const studying = ids.includes(STUDYING.id) ? STUDYING.id : null;
+      h += `<div class="tile" data-area="${a.id}" style="left:${TILE[a.id][0]}px;top:${TILE[a.id][1]}px;animation-delay:${i * 0.05}s">
+        <h3>${a.name}</h3><div class="cnt">${ids.length} ideas · you know ${k}</div>
+        <div class="strip">${ids.map(dotHTML).join('')}</div>
+        ${studying ? `<div class="line">Studying: <b>${IDEAS[studying].name}</b></div>` : ''}
+        <div class="line">${ready.length ? `Ready now: <b>${ready.map(r => IDEAS[r].name).join('</b>, <b>')}</b>` : 'Nothing ready yet: each new idea here needs another first.'}</div>
+        <div class="open">Open ${a.name.replace(/^The /, 'the ')} →</div></div>`;
+    });
+    overview.innerHTML = h + '</div>';
+    setTimeout(drawOverviewLines, 30);
+  }
+
+  function drawOverviewLines() {
+    const ov = document.getElementById('ov'), svg = document.getElementById('ovlines');
+    if (!ov) return;
+    svg.innerHTML = '';
+    ov.querySelectorAll('.xl').forEach(x => x.remove());
+    const base = ov.getBoundingClientRect();
+    const center = id => { const r = ov.querySelector(`.tile[data-area="${id}"]`).getBoundingClientRect(); return { x: r.left + r.width / 2 - base.left, y: r.top + r.height / 2 - base.top }; };
+    crossLinks().forEach(([a, b, pairs], i) => {
+      const A = center(a), B = center(b);
+      // Two areas that need each other get two lines, bent apart, so both can be read.
+      const bend = crossLinks().some(([x, y]) => x === b && y === a) ? 34 : 0;
+      const mx = (A.x + B.x) / 2 + (A.y - B.y) / Math.hypot(A.x - B.x, A.y - B.y || 1) * bend, my = (A.y + B.y) / 2 + (B.x - A.x) / Math.hypot(A.x - B.x, A.y - B.y || 1) * bend;
+      svg.insertAdjacentHTML('beforeend', `<path d="M${B.x},${B.y} Q${mx},${my} ${A.x},${A.y}" fill="none" stroke="${KIND_COLOR.concept}" stroke-opacity="0.45" stroke-width="${1 + pairs.length * 0.6}"/>`);
+      const lab = document.createElement('div');
+      lab.className = 'xl'; lab.style.left = mx + 'px'; lab.style.top = my + 'px';
+      lab.innerHTML = `${AREAS.find(x => x.id === a).name.replace(/^The /, '')} needs ${pairs.length === 1 ? 'one idea' : pairs.length + ' ideas'}<br>from ${AREAS.find(x => x.id === b).name.replace(/^The /, '')}`;
+      lab.dataset.pairs = JSON.stringify(pairs);
+      ov.appendChild(lab);
+    });
+  }
+
+  // ---------- One area, close up ----------
+
+  function openArea(id, fromTile) {
+    current = id;
+    const r = fromTile && fromTile.getBoundingClientRect();
+    if (r) overview.style.transformOrigin = `${r.left + r.width / 2}px ${r.top + r.height / 2 - 52}px`;
+    overview.style.transform = 'scale(1.5)'; overview.classList.add('away');
+    areaview.classList.remove('away'); areaview.style.transform = 'scale(0.96)';
+    requestAnimationFrame(() => areaview.style.transform = 'none');
+    setTimeout(() => areaview.style.transform = 'none', 20);
+    renderArea(id);
+    renderCrumbs();
+  }
+  function closeArea() {
+    current = null;
+    overview.style.transform = 'none'; overview.classList.remove('away'); areaview.classList.add('away');
+    document.getElementById('drawer').classList.remove('open');
+    renderCrumbs();
+    setTimeout(drawOverviewLines, 50);
+  }
+  function renderCrumbs() {
+    document.getElementById('crumbs').innerHTML = current ? `<span data-home>All areas</span> › <b>${areaName(current)}</b>` : '<b>All areas</b>';
+  }
+
+  function renderArea(area) {
+    const ids = areaOrder(area);
+    const ext = [...new Set(ids.flatMap(id => IDEAS[id].deps).filter(d => IDEAS[d].area !== area))];
+    const out = [...new Set(Object.keys(IDEAS).filter(o => IDEAS[o].area !== area && IDEAS[o].deps.some(d => ids.includes(d))))];
+    // Columns for this area's own ideas: each idea to the right of the ideas in this area that it needs.
+    const lvl = {};
+    const L = id => lvl[id] ?? (lvl[id] = IDEAS[id].deps.filter(d => ids.includes(d)).reduce((m, d) => Math.max(m, L(d) + 1), 0));
+    ids.forEach(L);
+    const cols = Math.max(...ids.map(L)) + 1;
+    const X0 = 250, CW = 280, RH = 150, pos = {};
+    const rowsIn = {};
+    ids.forEach(id => { const c = L(id); rowsIn[c] = (rowsIn[c] || 0); pos[id] = { x: X0 + c * CW, y: 34 + rowsIn[c] * RH }; rowsIn[c]++; });
+    ext.forEach((id, i) => pos[id] = { x: 22, y: 34 + i * 92 });
+    const XR = X0 + cols * CW + 30;
+    out.forEach((id, i) => pos[id] = { x: XR, y: 34 + i * 92 });
+    const height = Math.max(...Object.values(pos).map(p => p.y)) + 160;
+    const k = ids.filter(i => KNOWN.has(i)).length, ready = ids.filter(isReady);
+
+    areaview.innerHTML = `<div class="av" style="width:${XR + 230}px"><div class="av-lead"><h1>${areaName(area)}</h1>
+      <p>${ids.length} ideas, and you know ${k}. ${ready.length ? `You can study ${ready.map(r => `<b>${IDEAS[r].name}</b>`).join(' or ')} now.` : 'None of the others is ready yet: each one needs an idea you do not know first.'} Hover an idea to see its connections, and click it to read why each one is needed.</p></div>
+      <div class="av-board" id="board" style="height:${height}px">
+        <span class="bandk" style="left:22px">Needed from other areas</span><span class="bandk" style="left:${X0}px">${areaName(area)}</span><span class="bandk" style="left:${XR}px">Used in other areas</span>
+        <svg id="alines"></svg>
+        ${ids.map((id, i) => ideaCard(id).replace('class="icard', `style="left:${pos[id].x}px;top:${pos[id].y}px;animation-delay:${i * 0.03}s" class="icard`)).join('')}
+        ${[...ext, ...out].map(id => ideaCard(id, { small: true }).replace('class="icard', `data-area="${areaName(IDEAS[id].area)}" style="left:${pos[id].x}px;top:${pos[id].y}px" class="icard ext`)).join('')}
+      </div></div>`;
+    const board = document.getElementById('board');
+    board._pos = pos;
+    setTimeout(() => drawAreaLines(board, null), 30);
+  }
+
+  function drawAreaLines(board, focus) {
+    const svg = board.querySelector('svg'); svg.innerHTML = '';
+    const base = board.getBoundingClientRect();
+    const cards = [...board.querySelectorAll('.icard')].map(c => c.dataset.id);
+    const lit = focus ? new Set([focus, ...IDEAS[focus].deps, ...usedBy(focus)]) : null;
+    board.classList.toggle('hovering', !!focus);
+    board.querySelectorAll('.icard').forEach(c => c.classList.toggle('lit', !!lit && lit.has(c.dataset.id)));
+    cards.forEach(a => IDEAS[a].deps.filter(d => cards.includes(d)).forEach(d => {
+      const A = board.querySelector(`.icard[data-id="${a}"]`).getBoundingClientRect(), D = board.querySelector(`.icard[data-id="${d}"]`).getBoundingClientRect();
+      const on = focus && (a === focus || d === focus);
+      const known = KNOWN.has(d);
+      const p = curve(svg, { x: D.right - base.left, y: D.top + 18 - base.top }, { x: A.left - base.left, y: A.top + 18 - base.top },
+        known ? KIND_COLOR.known : KIND_COLOR.concept, KIND_COLOR.concept, { horizontal: true, op: focus ? (on ? 0.95 : 0.06) : 0.4, width: on ? 1.8 : 1.3, dash: known ? '4 4' : '', travel: on ? 1.8 : 0 });
+    }));
+  }
+
+  // ---------- Events ----------
+
+  const drawer = document.getElementById('drawer');
+  let lastHover = null;
+  document.addEventListener('click', e => {
+    if (e.target.closest('[data-home]')) { closeArea(); return; }
+    if (e.target.closest('[data-close]')) { drawer.classList.remove('open'); return; }
+    const s = e.target.closest('[data-start]');
+    if (s) { startStudy(s.dataset.start, s); return; }
+    const t = e.target.closest('.tile');
+    if (t) { openArea(t.dataset.area, t); return; }
+    const c = e.target.closest('.icard') || e.target.closest('[data-go]');
+    if (c) {
+      const id = c.dataset.id || c.dataset.go;
+      if (current && IDEAS[id].area !== current && c.closest('.av-board')) { openArea(IDEAS[id].area); }
+      drawer.innerHTML = `<button class="btn x" data-close>×</button>${ideaPanel(id)}`;
+      drawer.classList.add('open');
+    }
+  });
+  document.addEventListener('mouseover', e => {
+    const x = e.target.closest('.xl');
+    if (x) {
+      const pairs = JSON.parse(x.dataset.pairs);
+      const r = x.getBoundingClientRect();
+      reasonBox.innerHTML = pairs.map(([a, b]) => `<div style="margin:3px 0"><b>${IDEAS[a].name}</b> needs <b>${IDEAS[b].name}</b>. ${why(a, b)}</div>`).join('');
+      reasonBox.style.left = Math.min(innerWidth - 320, r.left) + 'px'; reasonBox.style.top = (r.bottom + 8) + 'px';
+      reasonBox.hidden = false;
+    } else reasonBox.hidden = true;
+    const board = document.getElementById('board');
+    if (board && current) {
+      // The lines are drawn again only when the pointer moves to a different idea.
+      const c = e.target.closest('.av-board .icard'), id = c ? c.dataset.id : null;
+      if (id !== lastHover) { lastHover = id; drawAreaLines(board, id); }
+    }
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (drawer.classList.contains('open')) drawer.classList.remove('open'); else closeArea(); } });
+  window.addEventListener('resize', () => current ? drawAreaLines(document.getElementById('board'), null) : drawOverviewLines());
+
+  renderOverview();
+  renderCrumbs();
+  if (location.search.includes('preview')) setTimeout(() => openArea('memory'), 400);
+</script>
+</body>
+</html>

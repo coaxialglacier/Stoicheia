@@ -1,0 +1,173 @@
+{
+  "id": "captured-variables",
+  "name": "Captured variables",
+  "area": "memory",
+  "first": "A variable, declared outside a closure, that the closure's body uses.",
+  "parts": ["closure", "variable-outside-closure", "variable-used-in-body", "captured-constant"],
+  "dependsOn": [
+    { "id": "closure", "views": ["what", "parts"],
+      "why": "A captured variable is a variable that a closure's body uses.",
+      "whyInExample": "`makeCounter(step:)` returns a closure, and each call of `counter()` runs that closure's body." },
+    { "id": "stack-frame", "views": ["memory"],
+      "why": "A captured variable is declared in a stack frame, which is removed when its call returns.",
+      "whyInExample": "`count` is declared inside `makeCounter(step:)`, but it still exists after that call's frame is removed. So `count` cannot be kept in the frame." },
+    { "id": "heap-object", "views": ["memory"],
+      "why": "Swift keeps a captured variable in a box, and the box is a heap object.",
+      "whyInExample": "`count` has to stay after `makeCounter(step:)` returns, and a stack frame cannot keep it. A heap object can." },
+    { "id": "closure-value", "views": ["memory"],
+      "why": "The context of the closure value holds the address of the box that keeps a captured variable.",
+      "whyInExample": "`counter` holds a closure value. Its context is where the closure finds `count` after `makeCounter(step:)` returns." }
+  ],
+  "example": {
+    "code": [
+      "func makeCounter(step: Int) -> () -> Int {",
+      "    var count = 0",
+      "    return {",
+      "        count += step",
+      "        return count",
+      "    }",
+      "}",
+      "let counter = makeCounter(step: 2)",
+      "print(counter())  // 2",
+      "print(counter())  // 4"
+    ],
+    "probes": [
+      { "after": 1, "print": "step", "values": ["2"] },
+      { "after": 2, "print": "count", "values": ["0"] }
+    ],
+    "sil": [
+      { "in": "makeCounter(step:)", "has": "alloc_box ${ var Int }, var, name \"count\"", "shows": "Line 2 keeps count in a box, which is a heap object." },
+      { "in": "makeCounter(step:)", "has": "partial_apply [callee_guaranteed]", "shows": "Line 3 makes the closure's context on the heap." },
+      { "in": "closure #1 in makeCounter(step:)", "has": "%0 : @closureCapture ${ var Int }", "shows": "The context holds the address of the box." },
+      { "in": "closure #1 in makeCounter(step:)", "has": "%1 : @closureCapture $Int", "shows": "The context holds the value of step." }
+    ]
+  },
+  "snippets": {
+    "total": {
+      "code": [
+        "func total(of prices: [Int]) -> Int {",
+        "    var sum = 0",
+        "    prices.forEach { sum += $0 }",
+        "    return sum",
+        "}",
+        "print(total(of: [3, 4]))  // 7"
+      ],
+      "output": ["7"]
+    },
+    "copy": {
+      "code": [
+        "func showCopy() {",
+        "    var count = 0",
+        "    let show = { [count] in print(count) }",
+        "    count = 5",
+        "    show()  // 0",
+        "}",
+        "showCopy()"
+      ],
+      "output": ["0"]
+    }
+  },
+  "views": {
+    "what": {
+      "is": "A captured variable is a variable, declared outside a closure, that the closure's body uses. The closure uses that same variable, not a copy of it.",
+      "marks": [
+        { "line": 2, "text": "count", "part": "variable-outside-closure", "label": "declared outside the closure" },
+        { "line": 4, "text": "count", "part": "variable-used-in-body", "label": "used in the body" },
+        { "line": 5, "text": "count", "part": "variable-used-in-body" }
+      ],
+      "afterExample": "`count` is declared inside `makeCounter(step:)`, outside the closure's braces, and the closure's body uses it. So `count` is a captured variable.",
+      "problem": "A closure sometimes needs to keep a value between its calls. `counter()` has to keep how far it has counted. A captured variable does this without a global variable or a class.",
+      "how": "The closure keeps `count` itself, so every call of `counter()` changes the same `count`. The first call makes it 2, and the second makes it 4. This still works after `makeCounter(step:)` has returned, because the closure still has `count`.",
+      "when": [
+        { "text": "Use one when a closure has to keep or change a value between calls, or change a value that the code around it reads afterward:", "snippet": "total" },
+        { "text": "Don't use one when the closure should see the value as it was when the closure was made. Instead, put the name in a capture list: names in square brackets at the start of the closure, such as `[count]`. The closure then gets its own copy:", "snippet": "copy" }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "closure", "name": "The closure, lines 3 to 6", "text": "`makeCounter(step:)` returns this closure. It takes no parameters and returns an `Int`, as `() -> Int` on line 1 says." },
+        { "part": "variable-outside-closure", "name": "The variable `count`", "text": "`count` is a variable declared on line 2, inside `makeCounter(step:)` but outside the closure's braces." },
+        { "part": "variable-used-in-body", "name": "Where the body uses it", "text": "The body changes `count` on line 4, and returns it on line 5. These uses are what make `count` a captured variable." },
+        { "part": "captured-constant", "name": "`step`, captured too", "text": "The body also uses `step`, the parameter on line 1. `step` is captured too, but a parameter is a constant, so the body only reads it." }
+      ],
+      "marks": [
+        { "line": 1, "text": "step", "part": "captured-constant", "label": "parameter" },
+        { "line": 2, "text": "count", "part": "variable-outside-closure", "label": "declared outside the closure" },
+        { "line": 3, "text": "{", "part": "closure", "label": "the closure" },
+        { "line": 4, "text": "count", "part": "variable-used-in-body", "label": "used in the body" },
+        { "line": 4, "text": "step", "part": "captured-constant" },
+        { "line": 5, "text": "count", "part": "variable-used-in-body" },
+        { "line": 6, "text": "}", "part": "closure" }
+      ],
+      "steps": [
+        { "text": "Line 8 calls `makeCounter(step: 2)`, so `step` is 2.", "line": 8 },
+        { "text": "Line 2 sets `count` to 0.", "line": 2 },
+        { "text": "Line 3 returns the closure, and the call of `makeCounter(step:)` ends. The closure's body does not run.", "line": 3, "dim": [4, 5] },
+        { "text": "Line 8 stores the closure in `counter`.", "line": 8 },
+        { "text": "Line 9 calls `counter()`. The body adds `step` to `count`, so `count` is 2, and returns it. Line 9 prints {{2}}.", "line": 9, "also": [4, 5], "value": { "line": 4, "name": "count", "is": "2" }, "prints": ["2"] },
+        { "text": "Line 10 calls `counter()` again. `count` is still 2 from the last call, so it becomes 4, and line 10 prints {{4}}.", "line": 10, "also": [4, 5], "value": { "line": 4, "name": "count", "is": "4" }, "prints": ["4"] }
+      ],
+      "end": { "kind": "question", "text": "`makeCounter(step:)` returned at step 3, but `count` still exists, and each call of `counter()` changes it. Where is `count` kept?" }
+    },
+    "memory": {
+      "question": "`makeCounter(step:)` has returned, so its stack frame is gone. Where is `count` kept?",
+      "steps": [
+        { "text": "Line 8 calls `makeCounter(step: 2)`. A stack frame is made for the call, and `step` in it is 2.",
+          "line": 8,
+          "blocks": [
+            { "id": "mc", "kind": "frame", "title": "makeCounter(step:)", "fields": [["step", "2"]] },
+            { "id": "code", "kind": "code", "title": "the closure's code", "tag": "lines 3 to 6", "text": "count += step …" }
+          ],
+          "highlight": ["mc"] },
+        { "text": "Line 2 makes `count`. The closure captures `count` and changes it, so Swift keeps `count` in a box: a heap object. The box holds 0, and the frame holds the address of the box.",
+          "line": 2,
+          "blocks": [
+            { "id": "mc", "kind": "frame", "title": "makeCounter(step:)", "fields": [["step", "2"], ["count", { "to": "box" }]] },
+            { "id": "box", "kind": "heap", "title": "box", "fields": [["count", "0"]] },
+            { "id": "code", "kind": "code", "title": "the closure's code", "tag": "lines 3 to 6", "text": "count += step …" }
+          ],
+          "highlight": ["box"] },
+        { "text": "Line 3 makes the closure. Its context is made on the heap. The context holds the address of the box, and `step`, which is 2.",
+          "line": 3, "also": [4, 5, 6],
+          "blocks": [
+            { "id": "mc", "kind": "frame", "title": "makeCounter(step:)", "fields": [["step", "2"], ["count", { "to": "box" }]] },
+            { "id": "box", "kind": "heap", "title": "box", "fields": [["count", "0"]] },
+            { "id": "ctx", "kind": "heap", "title": "context", "fields": [["count", { "to": "box" }], ["step", "2"]] },
+            { "id": "code", "kind": "code", "title": "the closure's code", "tag": "lines 3 to 6", "text": "count += step …" }
+          ],
+          "highlight": ["ctx"] },
+        { "text": "Line 3 returns the closure, and the frame of `makeCounter(step:)` is removed. Line 8 stores the closure value in `counter`: the address of its code, and the address of its context. The box stays, because the context holds its address.",
+          "line": 8, "also": [3],
+          "blocks": [
+            { "id": "mc", "kind": "removed", "title": "makeCounter(step:)", "text": "its frame is gone" },
+            { "id": "counter", "kind": "global", "title": "counter", "tag": "closure value", "fields": [["code", { "to": "code" }], ["context", { "to": "ctx" }]] },
+            { "id": "box", "kind": "heap", "title": "box", "fields": [["count", "0"]] },
+            { "id": "ctx", "kind": "heap", "title": "context", "fields": [["count", { "to": "box" }], ["step", "2"]] },
+            { "id": "code", "kind": "code", "title": "the closure's code", "tag": "lines 3 to 6", "text": "count += step …" }
+          ],
+          "highlight": ["counter"] },
+        { "text": "Line 9 calls `counter()`. The body uses the context to find the box, and adds `step` to the `count` in it, so the box holds 2. Line 9 prints {{2}}.",
+          "line": 9, "also": [4, 5], "prints": ["2"],
+          "blocks": [
+            { "id": "mc", "kind": "removed", "title": "makeCounter(step:)", "text": "its frame is gone" },
+            { "id": "counter", "kind": "global", "title": "counter", "tag": "closure value", "fields": [["code", { "to": "code" }], ["context", { "to": "ctx" }]] },
+            { "id": "box", "kind": "heap", "title": "box", "fields": [["count", "2"]] },
+            { "id": "ctx", "kind": "heap", "title": "context", "fields": [["count", { "to": "box" }], ["step", "2"]] },
+            { "id": "code", "kind": "code", "title": "the closure's code", "tag": "lines 3 to 6", "text": "count += step …" }
+          ],
+          "highlight": ["box"] },
+        { "text": "Line 10 calls `counter()` again. The box holds 4, and line 10 prints {{4}}.",
+          "line": 10, "also": [4, 5], "prints": ["4"],
+          "blocks": [
+            { "id": "mc", "kind": "removed", "title": "makeCounter(step:)", "text": "its frame is gone" },
+            { "id": "counter", "kind": "global", "title": "counter", "tag": "closure value", "fields": [["code", { "to": "code" }], ["context", { "to": "ctx" }]] },
+            { "id": "box", "kind": "heap", "title": "box", "fields": [["count", "4"]] },
+            { "id": "ctx", "kind": "heap", "title": "context", "fields": [["count", { "to": "box" }], ["step", "2"]] },
+            { "id": "code", "kind": "code", "title": "the closure's code", "tag": "lines 3 to 6", "text": "count += step …" }
+          ],
+          "highlight": ["box"] }
+      ],
+      "answer": "`count` is kept in a box on the heap, and the closure's context holds the address of the box."
+    }
+  }
+}

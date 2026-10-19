@@ -1,0 +1,74 @@
+/* The constellation theme, shared by the three mockups: colors, type, the sky, frames, buttons, the hover card, and the moves between pages. */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Jost:wght@300;400;500&family=JetBrains+Mono:wght@400&display=swap');
+
+:root{--sky0:#05070f;--ink:#ece6d6;--ink2:#b9b3a4;--ink3:#7e7c90;--gold:#e6c477;--gold2:#fbe7b0;--goldDim:rgba(230,196,119,.38);
+  --violet:#c3b0ff;--ice:#9ad9ff;--teal:#7fe8d2;--known:#8d92a8;--panel:rgba(9,13,30,.8);--hair:rgba(230,196,119,.16)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--sky0);color:var(--ink);font-family:'EB Garamond',Georgia,serif;overflow:hidden}
+
+/* The sky: clouds of color behind a canvas of stars. The clouds drift slowly. */
+.nebula{position:fixed;inset:-6%;pointer-events:none;animation:drift 60s ease-in-out infinite alternate}
+@keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(-2%,1.5%) scale(1.04)}}
+#sky{position:fixed;inset:0;pointer-events:none}
+#stage{position:fixed;inset:0;transition:transform .75s cubic-bezier(.6,0,.9,.4),opacity .7s ease-in,filter .7s}
+#stage.leaving{transform:scale(1.35);opacity:0;filter:brightness(2.2) blur(3px)}
+#stage.arriving{transform:scale(.94);opacity:0;filter:brightness(1.8)}
+#stage.arrived{transition:transform .9s cubic-bezier(.2,.7,.2,1),opacity .8s ease-out,filter 1s}
+#flash{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity .6s;background:radial-gradient(circle at var(--fx,50%) var(--fy,50%),rgba(255,246,220,.85),rgba(230,196,119,.25) 18%,transparent 45%)}
+#flash.on{opacity:1;transition:opacity .55s ease-in}
+
+/* A panel with gold corners. */
+.frame{background:
+  linear-gradient(var(--gold),var(--gold)) 0 0/16px 1px no-repeat,linear-gradient(var(--gold),var(--gold)) 0 0/1px 16px no-repeat,
+  linear-gradient(var(--gold),var(--gold)) 100% 0/16px 1px no-repeat,linear-gradient(var(--gold),var(--gold)) 100% 0/1px 16px no-repeat,
+  linear-gradient(var(--gold),var(--gold)) 0 100%/16px 1px no-repeat,linear-gradient(var(--gold),var(--gold)) 0 100%/1px 16px no-repeat,
+  linear-gradient(var(--gold),var(--gold)) 100% 100%/16px 1px no-repeat,linear-gradient(var(--gold),var(--gold)) 100% 100%/1px 16px no-repeat,
+  var(--panel);border:1px solid var(--hair);backdrop-filter:blur(10px)}
+.caps{font-family:Jost,sans-serif;text-transform:uppercase;letter-spacing:.2em;font-size:10.5px;color:var(--ink3);font-weight:400}
+.rule{display:flex;align-items:center;gap:10px;color:var(--gold);font-size:9px;margin:20px 0}
+.rule::before,.rule::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--goldDim))}
+.rule::after{transform:scaleX(-1)}
+
+/* Buttons with angled ends. */
+.hex{--c:var(--goldDim);display:inline-block;padding:1px;background:var(--c);clip-path:polygon(9px 0,calc(100% - 9px) 0,100% 50%,calc(100% - 9px) 100%,9px 100%,0 50%);cursor:pointer;transition:filter .2s;white-space:nowrap;user-select:none;text-decoration:none}
+.hex>span{display:block;padding:8px 20px;background:#0c1129;clip-path:inherit;font-family:Jost;text-transform:uppercase;letter-spacing:.18em;font-size:10.5px;color:var(--gold2)}
+.hex.gold{--c:var(--gold)}
+.hex.gold>span{background:linear-gradient(180deg,#2a2412,#15120a);color:#fff3cf}
+.hex:hover{--c:var(--gold);filter:drop-shadow(0 0 10px rgba(230,196,119,.45))}
+.hex:active{transform:scale(.97)}
+
+header{position:fixed;top:0;left:0;right:0;height:58px;display:flex;align-items:center;gap:22px;padding:0 26px;z-index:3;border-bottom:1px solid var(--hair);background:linear-gradient(180deg,rgba(5,7,15,.88),rgba(5,7,15,.35))}
+.brand{font-family:Cinzel;font-weight:500;letter-spacing:.42em;font-size:15px;color:var(--gold2);display:flex;align-items:center;gap:12px;text-decoration:none}
+.brand i{font-style:normal;color:var(--gold);font-size:13px;filter:drop-shadow(0 0 6px var(--gold))}
+.back{font-family:Jost;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink2);text-decoration:none;cursor:pointer}
+.back:hover{color:var(--gold2)}
+.grow{flex:1}
+
+/* Stars and lines in SVG. */
+.halo{animation:tw 4.5s ease-in-out infinite}
+@keyframes tw{0%,100%{opacity:1}50%{opacity:.55}}
+.travel{stroke-dasharray:3 22;animation:flow 2.6s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-50}}
+.draw{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1s cubic-bezier(.5,0,.2,1) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.ignite{opacity:0;animation:ignite .7s cubic-bezier(.2,.9,.3,1.3) forwards}
+@keyframes ignite{0%{opacity:0;transform:scale(.2)}60%{opacity:1;transform:scale(1.25)}100%{opacity:1;transform:scale(1)}}
+.fade{opacity:0;animation:fade 1.2s ease-out forwards}
+@keyframes fade{to{opacity:1}}
+.burst{animation:burst 1s ease-out forwards;transform-box:fill-box;transform-origin:center}
+@keyframes burst{from{transform:scale(.3);opacity:1}to{transform:scale(3.2);opacity:0}}
+.ig{transform-box:fill-box;transform-origin:center}
+
+/* The hover card: a framed inscription near the star, with its name, first fact, and where it stands for the reader. */
+#card{position:fixed;z-index:9;width:300px;padding:14px 18px 13px;text-align:center;pointer-events:none;opacity:0;transform:translateY(6px);transition:opacity .18s,transform .18s}
+#card.on{opacity:1;transform:none}
+#card .n{font-family:Cinzel;font-size:17px;letter-spacing:.06em;color:var(--gold2);display:flex;align-items:center;gap:10px}
+#card .n::before,#card .n::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--goldDim))}
+#card .n::after{transform:scaleX(-1)}
+#card .f{font-size:16px;line-height:1.4;color:var(--ink);margin-top:6px}
+#card .s{font-family:Jost;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-top:8px}
+#card .s.known{color:var(--known)}
+#card .s.ready{color:var(--ice)}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.draw{stroke-dashoffset:0}.ignite,.fade{opacity:1}}

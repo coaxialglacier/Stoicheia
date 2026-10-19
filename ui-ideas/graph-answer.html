@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Answer First</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+  .wrap { position: relative; max-width: 1260px; margin: 0 auto; padding: 84px 36px 240px; display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 40px; }
+  .col { position: relative; padding-left: 40px; }
+  svg#wires { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+
+  /* A concept's name in a sentence, which opens that concept's lesson below. */
+  .clink { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+    text-decoration: underline dotted; text-decoration-color: var(--concept); text-decoration-thickness: 2px; text-underline-offset: 4px; }
+  .clink:hover { color: #fff; background: color-mix(in srgb, var(--concept) 14%, transparent); border-radius: 4px; }
+  .clink.opened { text-decoration-style: solid; color: #d6d2fa; }
+
+  .answer { padding-bottom: 30px; }
+  .acard { position: relative; margin-top: 34px; padding: 26px 30px 30px; border-radius: 18px; border: 1px solid color-mix(in srgb, var(--concept) 40%, transparent);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--concept) 7%, var(--panel)), var(--panel)); animation: appear 0.5s var(--ease) both; }
+  .acard .from { font: 600 10px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); margin-bottom: 14px; }
+  .acard .from b { color: var(--concept); }
+  .acard .x { position: absolute; right: 14px; top: 14px; }
+  .acard.flash { box-shadow: 0 0 0 1px var(--concept), 0 0 40px -10px var(--concept); }
+
+  .side { position: sticky; top: 72px; align-self: start; padding: 16px 18px; border-radius: 14px; background: var(--bg-deep); border: 1px solid var(--line); }
+  .side .k { font: 600 10px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); margin-bottom: 10px; }
+  .side .it { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 13.5px; color: var(--muted); cursor: pointer; }
+  .side .it .d { width: 11px; height: 11px; border-radius: 50%; border: 1.5px solid var(--concept); flex: none; }
+  .side .it.open { color: var(--text); }
+  .side .it.open .d { background: var(--concept); }
+  .side p { font-size: 12px; color: var(--faint); line-height: 1.5; margin: 12px 0 0; }
+</style>
+</head>
+<body class="dots">
+<div class="top">
+  <a class="back" href="index.html">← Home</a>
+  <span class="title">Dependency Graph · Answer First</span>
+  <span class="grow"></span>
+  <div class="hud"><span>click an underlined name</span><span class="sep"></span><span>open what it means</span></div>
+</div>
+
+<div class="wrap">
+  <div class="col" id="col"><svg id="wires"></svg><div class="answer" id="answer"></div><div id="cards"></div></div>
+  <aside class="side" id="side"></aside>
+</div>
+
+<div class="note">
+  <p><b>Answer First.</b> The study starts with the answer to the question. Each concept the answer uses is underlined. Clicking one opens its lesson below, joined to the word by a line, and that lesson can have underlined names of its own.</p>
+  <p>This is the expanding you first described. It goes against one belief: the answer uses names before they are taught. It follows "The whole first" instead.</p>
+</div>
+
+<script src="shared.js"></script>
+<script src="graph-content.js"></script>
+<script>
+  // The names to underline in each lesson, and the concept each one opens.
+  const LINKS = {
+    cv: [['stack frame', 'sf'], ['closure captures', 'cap'], ['heap object', 'ho'], ['closure value', 'clv']],
+    clv: [['closure\'s code', 'cl'], ['captured', 'cap']],
+    ho: [['stack frame', 'sf']],
+    cl: [['Capture', 'cap']],
+  };
+  const known = new Set();
+  const opened = [];        // [{ id, from: lesson id, word }]
+  const answer = document.getElementById('answer');
+  const cards = document.getElementById('cards');
+  const wires = document.getElementById('wires');
+
+  // Wraps the first use of each name in a lesson's sentences in a link, unless the reader knows that concept.
+  function addLinks(root, id) {
+    (LINKS[id] || []).forEach(([phrase, target]) => {
+      if (known.has(target)) return;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n =>
+        n.parentElement.closest('code, .l-code, .fig, h2, h4, .clink, .l-why span, .from, .why-code') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT });
+      let node;
+      while ((node = walker.nextNode())) {
+        const i = node.nodeValue.toLowerCase().indexOf(phrase.toLowerCase());
+        if (i < 0) continue;
+        const after = node.splitText(i);
+        after.splitText(phrase.length);
+        const b = document.createElement('button');
+        b.className = 'clink'; b.dataset.open = target; b.dataset.from = id; b.textContent = after.nodeValue;
+        after.replaceWith(b);
+        break;
+      }
+    });
+  }
+
+  function render() {
+    answer.innerHTML = lessonHTML(ROOT, {});
+    addLinks(answer, ROOT);
+    // A card stays open only while its concept is still needed and the word that opened it is still there.
+    const needed = neededConcepts(known);
+    for (let i = opened.length - 1; i >= 0; i--) if (!needed.includes(opened[i].id)) opened.splice(i, 1);
+    cards.innerHTML = opened.map(o => `<div class="acard" data-card="${o.id}"><button class="btn x" data-shut="${o.id}">×</button>
+        <div class="from">Opened from “${o.word}” in <b>${LESSONS[o.from].name}</b></div>${lessonHTML(o.id, { know: true, compact: true })}</div>`).join('');
+    opened.forEach(o => addLinks(cards.querySelector(`[data-card="${o.id}"]`), o.id));
+    document.querySelectorAll('.clink').forEach(l => l.classList.toggle('opened', opened.some(o => o.id === l.dataset.open)));
+    renderSide(needed);
+    setTimeout(() => { drawFigure(document.getElementById('col')); drawWires(); }, 16);
+  }
+
+  function renderSide(needed) {
+    const uses = teachingOrder(needed).filter(id => id !== ROOT);
+    document.getElementById('side').innerHTML = `<div class="k">The answer uses</div>`
+      + (uses.length ? uses.map(id => `<div class="it ${opened.some(o => o.id === id) ? 'open' : ''}" data-side="${id}"><span class="d"></span>${LESSONS[id].name}</div>`).join('')
+        : '<div class="it">Only concepts you know.</div>')
+      + `<p>A filled dot is a concept you have opened. Concepts you mark as known leave this list, and their names stop being underlined.</p>`;
+  }
+
+  // A line in the left margin from each underlined name to the lesson it opened.
+  function drawWires() {
+    wires.innerHTML = '';
+    const base = document.getElementById('col').getBoundingClientRect();
+    opened.forEach(o => {
+      const holder = o.from === ROOT ? answer : cards.querySelector(`[data-card="${o.from}"]`);
+      const link = holder && holder.querySelector(`.clink[data-open="${o.id}"]`);
+      const card = cards.querySelector(`[data-card="${o.id}"]`);
+      if (!link || !card) return;
+      const l = link.getBoundingClientRect(), c = card.getBoundingClientRect();
+      const a = { x: l.left - base.left, y: l.bottom - base.top + 2 };
+      const b = { x: c.left - base.left, y: c.top - base.top + 30 };
+      const gx = 14;
+      wires.insertAdjacentHTML('beforeend', `<path d="M${a.x},${a.y} C${a.x},${a.y + 18} ${gx},${a.y + 4} ${gx},${a.y + 40} L${gx},${b.y - 30} C${gx},${b.y} ${gx},${b.y} ${b.x - 4},${b.y}"
+        fill="none" stroke="${KIND_COLOR.concept}" stroke-opacity="0.6" stroke-width="1.5"/><circle cx="${b.x - 4}" cy="${b.y}" r="3" fill="${KIND_COLOR.concept}"/>`);
+    });
+  }
+
+  function open(id, from, word) {
+    const at = opened.findIndex(o => o.id === id);
+    if (at < 0) {
+      // A card opens right after the card it was opened from, and after any cards already opened from that card.
+      let i = from === ROOT ? opened.length : opened.findIndex(o => o.id === from) + 1;
+      while (i < opened.length && opened[i].from === from) i++;
+      opened.splice(i, 0, { id, from, word });
+      render();
+    }
+    const card = cards.querySelector(`[data-card="${id}"]`);
+    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    card.classList.add('flash'); setTimeout(() => card.classList.remove('flash'), 900);
+  }
+
+  const kl = knownList(Object.fromEntries(Object.entries(LESSONS).map(([id, l]) => [id, l.name])), known, render);
+  document.addEventListener('click', e => {
+    const k = e.target.closest('[data-know]');
+    if (k) { kl.add(k.dataset.know); return; }
+    const c = e.target.closest('.clink');
+    if (c) { open(c.dataset.open, c.dataset.from, c.textContent); return; }
+    const s = e.target.closest('[data-shut]');
+    if (s) {
+      // Closing a card also closes the cards opened from it.
+      const drop = new Set([s.dataset.shut]);
+      opened.forEach(o => { if (drop.has(o.from)) drop.add(o.id); });
+      for (let i = opened.length - 1; i >= 0; i--) if (drop.has(opened[i].id)) opened.splice(i, 1);
+      render(); return;
+    }
+    const side = e.target.closest('[data-side]');
+    if (side) {
+      const card = cards.querySelector(`[data-card="${side.dataset.side}"]`);
+      if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+  linkParts(document.getElementById('col'));
+  window.addEventListener('resize', () => { drawFigure(document.getElementById('col')); drawWires(); });
+  render();
+  if (location.search.includes('preview')) open('clv', ROOT, 'closure value');
+</script>
+</body>
+</html>

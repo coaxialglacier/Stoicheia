@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parts and Steps</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+  .stage { position: relative; max-width: 1400px; margin: 0 auto; padding: 84px 36px 80px; }
+  .question { max-width: 640px; margin: 0 auto 34px; text-align: center; font-size: 16px; line-height: 1.55; color: var(--text); }
+  .question .q-k { display: block; font: 600 10px var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--faint); margin-bottom: 6px; }
+  .question code, .col code { color: #f1ead7; background: rgba(236, 233, 225, 0.07); padding: 1px 5px; border-radius: 4px; font-size: 0.9em; }
+
+  .cols { display: grid; grid-template-columns: minmax(250px, 320px) minmax(460px, 1fr) minmax(270px, 340px); gap: 44px; align-items: start; }
+  .col-k { font: 600 10.5px var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--faint); margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+  .col-k::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+  /* ---------- The parts, on the left ---------- */
+  .intro { font-size: 14px; color: var(--muted); margin: 0 0 20px; }
+  .part { position: relative; padding: 10px 12px 12px 14px; margin: 0 -12px 6px -14px; border-radius: 10px; cursor: default; transition: background 0.2s; }
+  .part::before { content: ""; position: absolute; left: 0; top: 12px; bottom: 12px; width: 2px; border-radius: 1px; background: color-mix(in srgb, var(--fact) 35%, transparent); transition: background 0.2s; }
+  .part.on { background: color-mix(in srgb, var(--fact) 7%, transparent); }
+  .part.on::before { background: var(--fact); box-shadow: 0 0 10px var(--fact); }
+  .part .pn { font-size: 14px; font-weight: 600; color: #a6e3cd; margin-bottom: 3px; }
+  .part .pd { font-size: 14px; line-height: 1.55; color: var(--text); }
+  .opener { margin-top: 9px; display: inline-flex; align-items: center; gap: 7px; font: 600 10.5px var(--mono); letter-spacing: 0.06em; color: var(--concept); cursor: pointer;
+    padding: 5px 9px; border-radius: 7px; border: 1px solid color-mix(in srgb, var(--concept) 40%, transparent); background: color-mix(in srgb, var(--concept) 8%, transparent); }
+  .opener:hover { background: color-mix(in srgb, var(--concept) 16%, transparent); }
+  .inner-concept { margin-top: 10px; padding: 12px 14px; border-radius: 10px; font-size: 14px; line-height: 1.6;
+    border: 1px solid color-mix(in srgb, var(--concept) 32%, transparent); background: color-mix(in srgb, var(--concept) 6%, var(--bg-deep)); animation: rise 0.35s var(--ease); }
+  .inner-concept .ck { font: 600 10px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--concept); margin-bottom: 5px; }
+
+  /* A part the reader knows is not shown at all: no explanation, no name, and no mark on the code. */
+  .knowbtn { position: absolute; right: 10px; top: 9px; font: 600 10px var(--mono); letter-spacing: 0.06em; color: var(--faint); background: none; cursor: pointer;
+    border: 1px solid var(--line-2); border-radius: 6px; padding: 3px 7px; opacity: 0; transition: opacity 0.2s; }
+  .part:hover .knowbtn { opacity: 1; }
+  .knowbtn:hover { color: var(--text); border-color: var(--line-3); }
+  .part .pn { padding-right: 92px; }
+  .tk[data-part].known, .codebox.focus .tk[data-part].known { background: transparent; box-shadow: none; outline: none; opacity: 1; padding: 0; cursor: text; }
+  .tk[data-part].known::before { display: none; }
+
+  /* The list of what the reader knows is its own panel, opened from the top bar, and never part of a study. */
+  .klist { position: fixed; right: 18px; top: 62px; z-index: 30; width: 300px; padding: 14px 16px; border-radius: 12px;
+    background: var(--bg-deep); border: 1px solid var(--line-2); box-shadow: 0 20px 50px -20px rgba(0,0,0,0.8); animation: rise 0.25s var(--ease); }
+  .klist[hidden] { display: none; }
+  .klist .kk { font: 600 10px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); margin-bottom: 8px; }
+  .klist .row { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 13.5px; border-top: 1px solid var(--line); }
+  .klist .row:first-of-type { border-top: 0; }
+  .klist .row span { flex: 1; }
+  .klist .row code { background: none !important; padding: 0 !important; }
+  .klist .none { font-size: 13px; color: var(--faint); }
+
+  /* A term opens its explanation under the sentence. */
+  .pterm { text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--fact) 70%, transparent); text-underline-offset: 3px; text-decoration-thickness: 1.5px; cursor: pointer; }
+  .pterm:hover { color: #fff; text-decoration-color: var(--fact); }
+  .tdef { margin-top: 8px; padding: 8px 11px; border-radius: 8px; font-size: 13px; line-height: 1.5; color: var(--text);
+    border-left: 2px solid var(--fact); background: color-mix(in srgb, var(--fact) 7%, var(--bg-deep)); animation: rise 0.3s var(--ease); }
+  .tdef b { color: #a6e3cd; font-weight: 600; }
+
+  /* ---------- The code, in the middle ---------- */
+  .codebox { background: var(--bg-deep); border: 1px solid var(--line-2); border-radius: 14px; padding: 18px 0 14px; position: relative;
+    box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.03); }
+  .pl { display: grid; grid-template-columns: 44px 1fr 40px; align-items: end; height: 54px; padding-bottom: 10px; position: relative; transition: background 0.3s, opacity 0.3s; }
+  .pl .num { text-align: right; padding-right: 16px; font: 500 12px var(--mono); color: var(--faint); }
+  .pl .src { font: 16px/1 var(--mono); color: #e6e1d4; white-space: pre; }
+  .pl .kw { color: #c9b8a0; font-weight: 600; }
+  .pl .str { color: #d8cba5; }
+  .pl.run { background: linear-gradient(90deg, color-mix(in srgb, var(--step) 14%, transparent), color-mix(in srgb, var(--step) 4%, transparent)); }
+  .pl.run::before { content: ""; position: absolute; left: 6px; bottom: 13px; border-left: 8px solid var(--step); border-top: 6px solid transparent; border-bottom: 6px solid transparent; filter: drop-shadow(0 0 6px var(--step)); }
+  .pl.also { background: color-mix(in srgb, var(--step) 6%, transparent); }
+  .pl.dim { opacity: 0.4; }
+  .pl.dim::after { content: "does not run yet"; position: absolute; right: 48px; bottom: 12px; font: 600 9.5px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--step); }
+
+  /* Each part is marked on the code, with its name above the first token. */
+  .tk { position: relative; border-radius: 4px; transition: background 0.25s, box-shadow 0.25s, opacity 0.25s; }
+  .tk[data-part] { background: color-mix(in srgb, var(--fact) 13%, transparent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--fact) 42%, transparent); padding: 1px 1px; cursor: default; }
+  .tk[data-part="body"] { background: transparent; box-shadow: none; outline: 1px dashed color-mix(in srgb, var(--fact) 50%, transparent); outline-offset: 3px; }
+  .tk[data-label]::before { content: attr(data-label); position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); white-space: nowrap;
+    font: 600 10px var(--sans); letter-spacing: 0.02em; color: #8fd9bd; pointer-events: none; transition: opacity 0.25s, color 0.25s; }
+  .tk[data-part="body"]::before { left: 0; transform: none; bottom: calc(100% + 8px); }
+  .codebox.focus .tk[data-part] { opacity: 0.35; }
+  .codebox.focus .tk[data-part].on, .codebox.focus .tk[data-part].on .tk { opacity: 1; }
+  .tk[data-part].on { background: color-mix(in srgb, var(--fact) 26%, transparent); box-shadow: 0 0 0 1px var(--fact), 0 0 16px -2px color-mix(in srgb, var(--fact) 70%, transparent); }
+  .tk[data-part="body"].on { outline-color: var(--fact); box-shadow: none; background: color-mix(in srgb, var(--fact) 6%, transparent); }
+  .tk[data-part].on::before { color: #fff; }
+  .tk.arg.on { background: color-mix(in srgb, var(--step) 26%, transparent); box-shadow: 0 0 0 1px var(--step); }
+  .tk.arg.on::before { content: "argument"; position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); font: 600 10px var(--sans); color: var(--step); white-space: nowrap; }
+  .pl .badge { justify-self: center; width: 20px; height: 20px; margin-bottom: -2px; border-radius: 50%; display: grid; place-items: center; font: 700 10.5px var(--mono);
+    color: var(--step); border: 1.5px solid color-mix(in srgb, var(--step) 45%, transparent); transition: all 0.3s; }
+  .pl .badge.on { background: var(--step); color: var(--bg-deep); border-color: var(--step); box-shadow: 0 0 14px -1px var(--step); }
+  .chipv { margin-left: 14px; padding: 2px 7px; border-radius: 5px; font: 600 11.5px var(--mono); background: var(--step); color: var(--bg-deep); animation: rise 0.35s var(--ease); }
+  .outbox { margin-top: 12px; padding: 10px 16px; border-radius: 12px; background: var(--bg-deep); border: 1px solid var(--line); font: 13px/1.7 var(--mono); min-height: 52px; }
+  .outbox .ok { font: 600 9.5px var(--mono); letter-spacing: 0.14em; color: var(--faint); text-transform: uppercase; }
+  .outbox .ol { color: var(--text); animation: rise 0.3s var(--ease); }
+  .outbox .none { color: var(--faint); font-family: var(--sans); font-size: 12.5px; }
+  .level { margin-top: 12px; font-size: 12px; color: var(--faint); text-align: center; }
+
+  /* ---------- The steps, on the right ---------- */
+  .stepnote { font-size: 14px; color: var(--muted); margin: 0 0 16px; }
+  .step { display: grid; grid-template-columns: 28px 1fr; gap: 10px; padding: 10px 12px; margin: 0 -12px 4px; border-radius: 10px; cursor: pointer; opacity: 0.5; transition: opacity 0.3s, background 0.3s; }
+  .step:hover { opacity: 0.85; }
+  .step.done { opacity: 0.7; }
+  .step.on { opacity: 1; background: color-mix(in srgb, var(--step) 9%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--step) 35%, transparent); }
+  .step .sn { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 700 10.5px var(--mono); color: var(--step); border: 1.5px solid color-mix(in srgb, var(--step) 50%, transparent); margin-top: 1px; }
+  .step.on .sn { background: var(--step); color: var(--bg-deep); border-color: var(--step); box-shadow: 0 0 12px var(--step); }
+  .step .st { font-size: 14px; line-height: 1.55; color: var(--text); }
+  .runbar { display: flex; gap: 8px; margin-top: 14px; }
+  .answer { margin-top: 18px; padding: 14px 16px; border-radius: 12px; font-size: 14.5px; line-height: 1.55;
+    border: 1px solid var(--line-3); background: linear-gradient(180deg, rgba(236, 233, 225, 0.06), transparent); animation: rise 0.4s var(--ease); }
+  .answer .ak { font: 600 10px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); margin-bottom: 4px; }
+
+  svg#links { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+</style>
+</head>
+<body class="dots">
+<div class="top">
+  <a class="back" href="index.html">← Home</a>
+  <span class="title">Parts and Steps</span>
+  <span class="grow"></span>
+  <div class="hud"><span>A closure</span><span class="sep"></span><span>what the code does</span></div>
+  <button class="btn" id="knownBtn">What I know</button>
+</div>
+
+<div class="stage" id="stage">
+  <svg id="links"></svg>
+  <div class="question"><span class="q-k">The question</span><code>greet</code> is a constant, but <code>greet("Ana")</code> runs code and prints <code>Hello, Ana</code>. What does <code>greet</code> hold?</div>
+
+  <div class="cols">
+    <section class="col" id="parts">
+      <div class="col-k">What it is made of</div>
+      <p class="intro">The closure in this example is a closure expression: a function with no name, written between braces. It can be stored in a constant and called later.</p>
+    </section>
+
+    <section class="col">
+      <div class="col-k">The code</div>
+      <div class="codebox" id="code"></div>
+      <div class="outbox" id="out"></div>
+      <div class="level">Hover a part on the left, or on the code, to see where it is.</div>
+    </section>
+
+    <section class="col" id="steps">
+      <div class="col-k">What happens when it runs</div>
+      <p class="stepnote">The program runs the lines in this order, not from top to bottom.</p>
+      <div id="stepList"></div>
+      <div class="runbar">
+        <button class="btn" id="prev">←</button>
+        <button class="btn primary" id="next">Run the first step <kbd>space</kbd></button>
+      </div>
+      <div id="answer"></div>
+    </section>
+  </div>
+</div>
+
+<div class="klist" id="klist" hidden></div>
+
+<div class="note">
+  <p><b>Parts and Steps</b>, the approved format. The parts of a closure are on the left, explained in connected sentences, and each one is marked by name on the code. The steps are on the right, in the order the program runs them.</p>
+  <p>Hover a part to see it on the code. Open <b>Capture</b> under the captured value. Press space to run the steps. Underlined words open their explanation in place.</p>
+  <p>Hover a part and click <b>I know this</b>. The part leaves the page entirely, and so does its mark on the code. <b>What I know</b>, in the top bar, lists what you marked, so you can bring a part back.</p>
+</div>
+
+<script src="shared.js"></script>
+<script>
+  // The example. Each part's tokens carry data-part, and the first token of a part carries its name in data-label.
+  const LINES = [
+    '<span class="kw">let</span> <span class="tk" data-tk="greeting1" data-part="captured" data-label="captured value">greeting</span> = <span class="str">"Hello"</span>',
+    '<span class="tk" data-tk="letgreet"><span class="kw">let</span> greet =</span> <span class="tk" data-tk="open" data-part="braces" data-label="braces">{</span> <span class="tk" data-tk="params" data-part="params" data-label="parameter list">(name: String)</span> <span class="tk" data-tk="in" data-part="in">in</span>',
+    '    <span class="tk" data-tk="body" data-part="body" data-label="body">print(<span class="str">"\\(<span class="tk" data-tk="greeting2" data-part="captured" data-label="captured value">greeting</span>), \\(<span class="tk" data-tk="name2">name</span>)"</span>)</span>',
+    '<span class="tk" data-tk="close" data-part="braces">}</span>',
+    '<span class="tk" data-tk="call1">greet(<span class="tk arg" data-tk="arg1">"Ana"</span>)</span>',
+    '<span class="tk" data-tk="call2">greet(<span class="tk arg" data-tk="arg2">"Bo"</span>)</span>',
+  ];
+
+  const PARTS = [
+    { id: 'braces', name: 'The braces, <code>{</code> and <code>}</code>',
+      html: 'The closure starts at <code>{</code> on line 2 and ends at the matching <code>}</code> on line 4. Everything between them belongs to the closure.' },
+    { id: 'params', name: 'The parameter list, <code>(name: String)</code>',
+      html: 'The inputs that the closure takes. <code>name</code> is a <span class="pterm" data-term="parameter">parameter</span>, and <code>String</code> is its type.' },
+    { id: 'in', name: '<code>in</code>',
+      html: 'It ends the parameter list. The body comes after it.' },
+    { id: 'body', name: 'The body',
+      html: 'The code that runs each time the closure is called. Here it prints a greeting.' },
+    { id: 'captured', name: 'The captured value, <code>greeting</code>',
+      html: 'A constant declared outside the braces that the body uses.',
+      concept: { name: 'Capture', html: 'The body uses <code>greeting</code> on line 3, but <code>greeting</code> is declared on line 1, outside the braces. A closure captures each constant and variable from outside its braces that its body uses. So <code>greet</code> captures <code>greeting</code>: it keeps <code>greeting</code>, so that the body can use it each time it runs.' } },
+  ];
+
+  const TERMS2 = {
+    parameter: 'A <b>parameter</b> is a name for an input, declared in the parameter list. While the body runs, it holds the value that the call passed in.',
+    argument: 'An <b>argument</b> is the value passed to a parameter in a call. Here <code>"Ana"</code> is passed to <code>name</code>.',
+  };
+
+  const STEPS = [
+    { html: 'Line 2 stores the closure in <code>greet</code>. The body does not run.', line: 2, dim: [3], out: [] },
+    { html: 'Line 5 calls <code>greet</code> with the <span class="pterm" data-term="argument">argument</span> <code>"Ana"</code>.', line: 5, arg: 'arg1', out: [] },
+    { html: 'The body on line 3 runs, with <code>name</code> set to <code>"Ana"</code>. It prints <code>Hello, Ana</code>.', line: 3, value: 'name = "Ana"', out: ['Hello, Ana'] },
+    { html: 'Line 6 calls <code>greet</code> with <code>"Bo"</code>, and the body prints <code>Hello, Bo</code>.', line: 6, also: [3], arg: 'arg2', value: 'name = "Bo"', out: ['Hello, Ana', 'Hello, Bo'] },
+  ];
+
+  const code = document.getElementById('code');
+  const stage = document.getElementById('stage');
+  const links = document.getElementById('links');
+
+  // The step that runs each line, shown as a number beside that line.
+  const stepOfLine = {};
+  STEPS.forEach((s, i) => stepOfLine[s.line] = i);
+  code.innerHTML = LINES.map((l, i) => `<div class="pl" data-ln="${i + 1}"><span class="num">${i + 1}</span><span class="src">${l}</span>${stepOfLine[i + 1] !== undefined ? `<span class="badge" data-badge="${stepOfLine[i + 1]}">${stepOfLine[i + 1] + 1}</span>` : '<span></span>'}</div>`).join('');
+
+  // The parts the reader knows. In Stoicheia this list would come from the file of known concepts and parts, checked when the study is built.
+  const known = new Set();
+  const partsHost = document.createElement('div');
+  document.getElementById('parts').appendChild(partsHost);
+  function renderParts() {
+    partsHost.innerHTML = PARTS.filter(p => !known.has(p.id)).map(p => `
+      <div class="part" data-part="${p.id}">
+        <button class="knowbtn" data-know="${p.id}">I know this</button>
+        <div class="pn">${p.name}</div>
+        <div class="pd">${p.html}</div>
+        ${p.concept ? `<span class="opener" data-open="${p.id}">${ICONS.concept} ${p.concept.name} · a concept with its own parts · open</span>` : ''}
+      </div>`).join('');
+    code.querySelectorAll('.tk[data-part]').forEach(t => t.classList.toggle('known', known.has(t.dataset.part)));
+    const kl = document.getElementById('klist');
+    const kn = PARTS.filter(p => known.has(p.id));
+    kl.innerHTML = '<div class="kk">What I know</div>' + (kn.length
+      ? kn.map(p => `<div class="row"><span>${p.name}</span><button class="btn" data-unknow="${p.id}">Remove</button></div>`).join('')
+      : '<div class="none">Nothing yet. In Stoicheia, this list is known.json.</div>');
+    setTimeout(drawLinks, 16);
+  }
+  document.getElementById('knownBtn').onclick = () => { const kl = document.getElementById('klist'); kl.hidden = !kl.hidden; };
+  renderParts();
+
+  document.getElementById('stepList').innerHTML = STEPS.map((s, i) => `
+    <div class="step" data-step="${i}"><span class="sn">${i + 1}</span><div class="st">${s.html}</div></div>`).join('');
+
+  // ---------- Parts: hovering one marks it on the code ----------
+
+  let focusPart = null;
+  function setPart(id) {
+    if (focusPart === id) return;
+    focusPart = id;
+    code.classList.toggle('focus', !!id);
+    code.querySelectorAll('.tk[data-part]').forEach(t => t.classList.toggle('on', t.dataset.part === id));
+    document.querySelectorAll('.part').forEach(p => p.classList.toggle('on', p.dataset.part === id));
+    drawLinks();
+  }
+  document.getElementById('parts').addEventListener('mouseover', e => {
+    const p = e.target.closest('.part');
+    if (p) setPart(p.dataset.part);
+  });
+  document.getElementById('parts').addEventListener('mouseleave', () => setPart(null));
+  code.addEventListener('mouseover', e => { const t = e.target.closest('.tk[data-part]:not(.known)'); setPart(t ? t.dataset.part : null); });
+  code.addEventListener('mouseleave', () => setPart(null));
+
+  // Opening Capture shows its explanation under the captured value.
+  document.addEventListener('click', e => {
+    const k = e.target.closest('[data-know]');
+    if (k) { known.add(k.dataset.know); focusPart = null; code.classList.remove('focus'); renderParts(); return; }
+    const u = e.target.closest('[data-unknow]');
+    if (u) { known.delete(u.dataset.unknow); renderParts(); return; }
+    const o = e.target.closest('[data-open]');
+    if (o) {
+      const part = o.closest('.part');
+      const open = part.querySelector('.inner-concept');
+      if (open) { open.remove(); o.innerHTML = `${ICONS.concept} Capture · a concept with its own parts · open`; }
+      else {
+        const c = PARTS.find(p => p.id === o.dataset.open).concept;
+        part.insertAdjacentHTML('beforeend', `<div class="inner-concept"><div class="ck">${c.name}</div>${c.html}</div>`);
+        o.innerHTML = `${ICONS.concept} Capture · close`;
+      }
+      setTimeout(drawLinks, 16);
+      return;
+    }
+    // A term opens its explanation under the sentence, and closes on a second click.
+    const t = e.target.closest('.pterm');
+    if (t) {
+      e.stopPropagation();
+      const host = t.closest('.pd, .st');
+      const open = host.querySelector(`.tdef[data-for="${t.dataset.term}"]`);
+      if (open) open.remove();
+      else host.insertAdjacentHTML('beforeend', `<div class="tdef" data-for="${t.dataset.term}">${TERMS2[t.dataset.term]}</div>`);
+      setTimeout(drawLinks, 16);
+      return;
+    }
+    const s = e.target.closest('.step');
+    if (s) showStep(+s.dataset.step);
+  });
+
+  // ---------- Steps: the program runs one line at a time ----------
+
+  let cur = -1;
+  function showStep(i) {
+    cur = Math.max(-1, Math.min(STEPS.length - 1, i));
+    const s = STEPS[cur];
+    document.querySelectorAll('.step').forEach((el, k) => { el.classList.toggle('on', k === cur); el.classList.toggle('done', k < cur); });
+    code.querySelectorAll('.pl').forEach(l => l.classList.remove('run', 'also', 'dim'));
+    code.querySelectorAll('.badge').forEach(b => b.classList.toggle('on', +b.dataset.badge === cur));
+    code.querySelectorAll('.tk.arg').forEach(a => a.classList.toggle('on', !!s && a.dataset.tk === s.arg));
+    code.querySelectorAll('.chipv').forEach(c => c.remove());
+    const out = document.getElementById('out');
+    if (s) {
+      code.querySelector(`.pl[data-ln="${s.line}"]`).classList.add('run');
+      (s.also || []).forEach(n => code.querySelector(`.pl[data-ln="${n}"]`).classList.add('also'));
+      (s.dim || []).forEach(n => code.querySelector(`.pl[data-ln="${n}"]`).classList.add('dim'));
+      if (s.value) code.querySelector('.pl[data-ln="3"] .src').insertAdjacentHTML('beforeend', `<span class="chipv">${s.value}</span>`);
+    }
+    const lines = s ? s.out : [];
+    out.innerHTML = '<div class="ok">Output</div>' + (lines.length ? lines.map(l => `<div class="ol">${l}</div>`).join('') : '<div class="none">Nothing printed yet.</div>');
+    const next = document.getElementById('next');
+    next.innerHTML = (cur < 0 ? 'Run the first step' : cur < STEPS.length - 1 ? 'Next step' : 'Run again') + ' <kbd>space</kbd>';
+    document.getElementById('answer').innerHTML = cur === STEPS.length - 1
+      ? '<div class="answer"><div class="ak">The answer</div>So <code>greet</code> holds two things: its code, and the <code>greeting</code> that it captured.</div>' : '';
+    setTimeout(drawLinks, 16);
+  }
+  function next() { showStep(cur < STEPS.length - 1 ? cur + 1 : 0); }
+  document.getElementById('next').onclick = next;
+  document.getElementById('prev').onclick = () => showStep(cur - 1);
+  document.addEventListener('keydown', e => {
+    if (e.key === ' ' || e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); next(); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); showStep(cur - 1); }
+  });
+
+  // ---------- The lines between the columns and the code ----------
+
+  function drawLinks() {
+    links.innerHTML = '';
+    const base = stage.getBoundingClientRect();
+    const rel = r => ({ l: r.left - base.left, r: r.right - base.left, t: r.top - base.top, b: r.bottom - base.top, cy: r.top + r.height / 2 - base.top });
+    if (focusPart) {
+      const from = document.querySelector(`.part[data-part="${focusPart}"] .pn`);
+      if (!from) return;
+      const p = rel(from.getBoundingClientRect());
+      code.querySelectorAll(`.tk[data-part="${focusPart}"]`).forEach(t => {
+        const r = rel(t.getBoundingClientRect());
+        curve(links, { x: p.r + 10, y: p.cy }, { x: r.l - 4, y: r.cy }, KIND_COLOR.fact, KIND_COLOR.fact, { horizontal: true, op: 0.7, travel: 1.3 });
+      });
+    }
+    if (cur >= 0) {
+      const st = rel(document.querySelector(`.step[data-step="${cur}"] .sn`).getBoundingClientRect());
+      const bd = rel(code.querySelector(`.badge[data-badge="${cur}"]`).getBoundingClientRect());
+      curve(links, { x: st.l - 6, y: st.cy }, { x: bd.r + 4, y: bd.cy }, KIND_COLOR.step, KIND_COLOR.step, { horizontal: true, op: 0.85, travel: 1.2, animate: true });
+    }
+  }
+  window.addEventListener('resize', drawLinks);
+  showStep(-1);
+  if (location.search.includes('preview')) { known.add('braces'); renderParts(); setPart('params'); showStep(2); }
+</script>
+</body>
+</html>

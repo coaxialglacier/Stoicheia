@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Library Map · Focus</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+  body { overflow: hidden; }
+  .bar2 { position: fixed; left: 0; right: 0; top: 52px; height: 58px; display: flex; align-items: center; gap: 16px; padding: 0 22px; z-index: 5; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 92%, transparent); }
+  .bar2 input { width: 300px; height: 36px; padding: 0 14px; border-radius: 10px; font: 400 14px var(--sans); color: var(--text); background: var(--bg-deep); border: 1px solid var(--line-3); outline: none; }
+  .bar2 input:focus { border-color: var(--concept); }
+  .trail { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--faint); overflow: hidden; white-space: nowrap; }
+  .trail span { cursor: pointer; color: var(--muted); }
+  .trail span:hover { color: var(--text); }
+  .trail b { color: var(--text); font-weight: 600; }
+
+  /* Three columns: what the idea needs, the idea, and what it leads to. */
+  .stage { position: fixed; left: 0; right: 0; top: 110px; bottom: 0; display: grid; grid-template-columns: 1fr minmax(380px, 440px) 1fr; gap: 90px; padding: 34px 50px 40px; overflow: auto; }
+  .col { display: flex; flex-direction: column; justify-content: center; gap: 14px; min-height: 100%; }
+  .col.left { align-items: flex-end; }
+  .col.right { align-items: flex-start; }
+  .colk { font: 600 10.5px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); width: 260px; }
+  .col.left .colk { text-align: right; }
+  .col .icard { width: 260px; animation: rise 0.4s var(--ease) backwards; }
+  .empty { width: 260px; font-size: 13px; color: var(--faint); line-height: 1.5; }
+  .col.left .empty { text-align: right; }
+
+  .focus { align-self: center; padding: 26px 28px 26px; border-radius: 20px; border: 1px solid var(--concept); animation: appear 0.45s var(--ease) both;
+    background: radial-gradient(130% 120% at 0% 0%, color-mix(in srgb, var(--concept) 16%, var(--panel)), var(--panel) 70%);
+    box-shadow: 0 0 0 1px var(--concept), 0 30px 90px -30px color-mix(in srgb, var(--concept) 60%, transparent); }
+  .focus.known { border-style: dashed; border-color: var(--known); box-shadow: none; background: var(--panel); }
+  svg#lines { position: fixed; inset: 110px 0 0 0; width: 100%; height: calc(100% - 110px); pointer-events: none; z-index: 1; }
+
+  /* The whole library, small, with the idea in focus and its neighbours lit. */
+  .mini { position: fixed; right: 18px; bottom: 18px; z-index: 6; width: 300px; padding: 10px 12px 12px; border-radius: 14px; background: color-mix(in srgb, var(--bg-deep) 94%, transparent); border: 1px solid var(--line-2); backdrop-filter: blur(10px); }
+  .mini .k { font: 600 9.5px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); margin-bottom: 6px; display: flex; justify-content: space-between; }
+  .mini svg { width: 100%; height: 180px; display: block; cursor: pointer; }
+  .mlegend { position: fixed; left: 22px; bottom: 18px; z-index: 6; }
+</style>
+</head>
+<body class="dots">
+<div class="top">
+  <a class="back" href="index.html">← Home</a>
+  <span class="title">Library Map · Focus</span>
+  <span class="grow"></span>
+  <div class="hud"><span>click a card</span><span>move to it</span><span class="sep"></span><span>← →</span><span>back · forward</span></div>
+</div>
+<div class="bar2"><input id="q" placeholder="Find an idea" autocomplete="off" spellcheck="false"><div class="trail" id="trail"></div></div>
+
+<svg id="lines"></svg>
+<div class="stage" id="stage"></div>
+<div class="mini"><div class="k"><span>The whole library</span><span id="mcount"></span></div><svg id="mini"></svg></div>
+<div class="maplegend mlegend"><span><span class="sdot"></span>Needs ideas first</span><span><span class="sdot ready"></span>Ready to study</span><span><span class="sdot studying"></span>Studying</span><span><span class="sdot known"></span>Known</span></div>
+
+<div class="note">
+  <p><b>Focus.</b> One idea at a time, in the middle. On the left, every idea it needs. On the right, every idea that uses it. Each card says why the two are connected.</p>
+  <p>Click any card to move to it. The trail at the top keeps the ideas you visited, and the small map shows where you are in the whole library.</p>
+</div>
+
+<script src="shared.js"></script>
+<script src="home-data.js"></script>
+<script src="map-core.js"></script>
+<script>
+  const stage = document.getElementById('stage');
+  const lines = document.getElementById('lines');
+  let focusId = STUDYING.id;
+  let trail = [focusId], at = 0;
+
+  function render(from) {
+    const I = IDEAS[focusId];
+    const needs = I.deps, leads = usedBy(focusId);
+    stage.innerHTML = `
+      <div class="col left"><div class="colk">It needs</div>${needs.length
+        ? needs.map((n, i) => ideaCard(n, { reason: why(focusId, n), reasonLabel: `Why ${I.name.toLowerCase()} needs it` }).replace('class="icard', `style="animation-delay:${i * 0.05}s" class="icard`)).join('')
+        : `<div class="empty">${I.name} needs no other idea. It can be learned on its own.</div>`}</div>
+      <div class="focus ipanel ${KNOWN.has(focusId) ? 'known' : ''}" id="focus">${ideaPanel(focusId).replace(/<div class="ip-k2">It needs<\/div>[\s\S]*?(?=<p class="ip-plan">|<button|$)/, '')}</div>
+      <div class="col right"><div class="colk">It leads to</div>${leads.length
+        ? leads.map((n, i) => ideaCard(n, { reason: why(n, focusId), reasonLabel: `Why it needs ${I.name.toLowerCase()}` }).replace('class="icard', `style="animation-delay:${i * 0.05}s" class="icard`)).join('')
+        : `<div class="empty">No idea in the library uses ${I.name.toLowerCase()} yet.</div>`}</div>`;
+    const f = document.getElementById('focus');
+    if (from) f.animate([{ transform: `translateX(${from === 'left' ? -60 : 60}px)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 420, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' });
+    renderTrail();
+    renderMini();
+    setTimeout(drawLines, 16);
+    setTimeout(drawLines, 450);
+  }
+
+  // A line from each card on the left to the idea, and from the idea to each card on the right.
+  function drawLines() {
+    lines.innerHTML = '';
+    const base = lines.getBoundingClientRect();
+    const f = document.getElementById('focus').getBoundingClientRect();
+    stage.querySelectorAll('.col.left .icard').forEach(c => {
+      const r = c.getBoundingClientRect();
+      const col = KNOWN.has(c.dataset.id) ? KIND_COLOR.known : KIND_COLOR.concept;
+      curve(lines, { x: r.right - base.left, y: r.top + 22 - base.top }, { x: f.left - base.left, y: f.top + f.height / 2 - base.top }, col, KIND_COLOR.concept,
+        { horizontal: true, op: 0.6, dash: KNOWN.has(c.dataset.id) ? '4 4' : '', travel: 2.2 });
+    });
+    stage.querySelectorAll('.col.right .icard').forEach(c => {
+      const r = c.getBoundingClientRect();
+      curve(lines, { x: f.right - base.left, y: f.top + f.height / 2 - base.top }, { x: r.left - base.left, y: r.top + 22 - base.top }, KIND_COLOR.concept, KIND_COLOR.concept,
+        { horizontal: true, op: 0.6, travel: 2.2 });
+    });
+  }
+
+  function renderTrail() {
+    document.getElementById('trail').innerHTML = 'Visited: ' + trail.map((id, i) => i === at ? `<b>${IDEAS[id].name}</b>` : `<span data-trail="${i}">${IDEAS[id].name}</span>`).join(' › ');
+  }
+
+  // The small map uses the same layout as the full Library Map, scaled down.
+  const { pos, regions } = mapLayout(MAP_ORIGIN);
+  const S = 0.205;
+  function renderMini() {
+    const m = document.getElementById('mini');
+    const lit = new Set([focusId, ...IDEAS[focusId].deps, ...usedBy(focusId)]);
+    let h = Object.values(regions).map(r => `<rect x="${r.x * S}" y="${r.y * S}" width="${r.w * S}" height="${r.h * S}" rx="5" fill="rgba(236,233,225,0.025)" stroke="rgba(236,233,225,0.08)"/>`).join('');
+    Object.keys(IDEAS).forEach(id => IDEAS[id].deps.forEach(d => {
+      const on = (id === focusId || d === focusId);
+      h += `<line x1="${(pos[d].x + 160) * S}" y1="${(pos[d].y + 17) * S}" x2="${pos[id].x * S}" y2="${(pos[id].y + 17) * S}" stroke="${on ? KIND_COLOR.concept : 'rgba(236,233,225,0.1)'}" stroke-width="${on ? 1.2 : 0.6}"/>`;
+    }));
+    Object.keys(IDEAS).forEach(id => {
+      const st = stateClass(id), on = lit.has(id);
+      const fill = id === focusId ? '#ece9e1' : st === 'known' ? 'none' : st === 'studying' ? KIND_COLOR.concept : on ? 'rgba(175,169,236,0.55)' : 'rgba(175,169,236,0.18)';
+      const stroke = st === 'known' ? KIND_COLOR.known : KIND_COLOR.concept;
+      h += `<rect data-id="${id}" x="${pos[id].x * S}" y="${pos[id].y * S}" width="${160 * S}" height="${34 * S}" rx="3.5" fill="${fill}" stroke="${stroke}" stroke-opacity="${on ? 1 : 0.35}" stroke-width="0.8" ${st === 'known' ? 'stroke-dasharray="2 1.5"' : ''}/>`;
+    });
+    m.setAttribute('viewBox', `0 0 ${1420 * S} ${880 * S}`);
+    m.innerHTML = h;
+    document.getElementById('mcount').textContent = `${Object.keys(IDEAS).length} ideas`;
+  }
+
+  function go(id, side) {
+    if (!IDEAS[id] || id === focusId) return;
+    trail = trail.slice(0, at + 1); trail.push(id); at = trail.length - 1;
+    focusId = id;
+    render(side);
+  }
+  document.addEventListener('click', e => {
+    const s = e.target.closest('[data-start]');
+    if (s) { startStudy(s.dataset.start, s); return; }
+    const c = e.target.closest('.icard');
+    if (c) { go(c.dataset.id, c.closest('.left') ? 'left' : 'right'); return; }
+    const t = e.target.closest('[data-trail]');
+    if (t) { at = +t.dataset.trail; focusId = trail[at]; render(); return; }
+    const r = e.target.closest('#mini [data-id]');
+    if (r) go(r.dataset.id);
+    const g = e.target.closest('[data-go]');
+    if (g) go(g.dataset.go);
+  });
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT') return;
+    if (e.key === 'ArrowLeft' && at > 0) { at--; focusId = trail[at]; render('right'); }
+    if (e.key === 'ArrowRight' && at < trail.length - 1) { at++; focusId = trail[at]; render('left'); }
+  });
+  document.getElementById('q').addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const t = e.target.value.trim().toLowerCase();
+    const hit = Object.keys(IDEAS).find(id => IDEAS[id].name.toLowerCase().includes(t));
+    if (hit) { go(hit); e.target.value = ''; e.target.blur(); }
+  });
+  window.addEventListener('resize', drawLines);
+  stage.addEventListener('scroll', drawLines);
+  render();
+</script>
+</body>
+</html>

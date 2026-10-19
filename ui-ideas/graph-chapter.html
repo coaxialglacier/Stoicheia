@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chapter</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+  /* The graph sits in the left margin, one dot for each section, with a line from each concept up to each concept it needs. */
+  .margin { position: fixed; left: 0; top: 52px; bottom: 0; width: 280px; padding: 30px 0 30px 24px; z-index: 5; }
+  .mg { position: relative; }
+  .mg svg { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+  .md { position: absolute; left: 70px; display: flex; align-items: center; gap: 10px; cursor: pointer; white-space: nowrap; transition: top 0.5s var(--ease); animation: rise 0.3s var(--ease) both; }
+  .md .dot { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--concept); background: var(--bg); flex: none; transition: all 0.25s; }
+  .md .t { font-size: 13px; color: var(--muted); transition: color 0.25s; }
+  .md .t small { display: block; font: 600 9.5px var(--mono); letter-spacing: 0.1em; color: var(--faint); }
+  .md:hover .t { color: var(--text); }
+  .md.on .dot { background: var(--concept); box-shadow: 0 0 14px var(--concept); }
+  .md.on .t { color: var(--text); font-weight: 600; }
+  .md.done .dot { background: color-mix(in srgb, var(--concept) 40%, var(--bg)); }
+  .mk-legend { margin-top: 18px; padding-right: 30px; font-size: 11.5px; color: var(--faint); line-height: 1.5; }
+
+  .book { margin-left: 280px; padding: 60px 40px 200px; }
+  .book > * { max-width: 860px; margin-left: auto; margin-right: auto; }
+  .titlepage { padding-bottom: 34px; margin-bottom: 40px; border-bottom: 1px solid var(--line-2); }
+  .titlepage .k { font: 600 10.5px var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--concept); }
+  .titlepage h1 { font-size: 42px; letter-spacing: -0.02em; font-weight: 600; margin: 6px 0 12px; }
+  .titlepage .q { font-family: ui-serif, "New York", Georgia, serif; font-size: 21px; line-height: 1.5; margin: 0 0 18px; }
+  .titlepage .q code { font-family: var(--mono); font-size: 0.8em; color: #f1ead7; background: rgba(236, 233, 225, 0.07); padding: 1px 5px; border-radius: 4px; }
+  .titlepage p.plan { font-family: ui-serif, "New York", Georgia, serif; font-size: 16.5px; line-height: 1.65; color: var(--muted); margin: 0; }
+  .titlepage p.plan b { color: var(--text); font-weight: 600; }
+  .sec { padding: 10px 0 56px; margin-bottom: 30px; border-bottom: 1px solid var(--line); scroll-margin-top: 70px; animation: rise 0.4s var(--ease) both; }
+  .sec:last-child { border-bottom: 0; }
+  .sec .l-num { width: auto; height: auto; border: 0; border-radius: 0; font: 700 15px var(--mono); color: var(--concept); margin-top: 9px; }
+  .sec.root .l-name { font-size: 34px; }
+</style>
+</head>
+<body class="dots">
+<div class="top">
+  <a class="back" href="index.html">← Home</a>
+  <span class="title">Dependency Graph · Chapter</span>
+  <span class="grow"></span>
+  <div class="hud"><span>scroll</span><span>read in order</span></div>
+</div>
+
+<aside class="margin"><div class="mg" id="mg"><svg id="mlinks"></svg></div>
+  <p class="mk-legend">Each dot is a section of this chapter. A line on the left joins a concept to a concept it needs, which comes before it.</p></aside>
+<main class="book" id="book"></main>
+
+<div class="note">
+  <p><b>Chapter.</b> The dependency graph becomes one chapter of a textbook, read from top to bottom in teaching order. Each concept is a numbered section, and the concept you named is the last section, where the question is answered.</p>
+  <p>The graph stays in the margin, with the section you are reading lit. <b>I know this</b> on a section removes it from the chapter and from the margin.</p>
+</div>
+
+<script src="shared.js"></script>
+<script src="graph-content.js"></script>
+<script>
+  const known = new Set();
+  const book = document.getElementById('book');
+  const mg = document.getElementById('mg');
+  const mlinks = document.getElementById('mlinks');
+  let order = [];
+  const GAP = 58;
+
+  function render() {
+    order = teachingOrder(neededConcepts(known));
+    const before = order.filter(id => id !== ROOT);
+    book.innerHTML = `<header class="titlepage">
+        <div class="k">Chapter</div><h1>Captured variables</h1>
+        <p class="q">${LESSONS[ROOT].question}</p>
+        <p class="plan">${before.length
+          ? `The answer uses ${before.length === 1 ? 'one concept' : before.length + ' concepts'} you do not know yet. This chapter teaches them first, each one before the concepts that use it: ${before.map((id, i) => `<b>${LESSONS[id].name.replace(/^A /, 'a ')}</b>`).join(', ')}. The last section answers the question.`
+          : 'You know every concept the answer uses, so this chapter is one section.'}</p>
+      </header>`
+      + order.map((id, i) => `<section class="sec${id === ROOT ? ' root' : ''}" id="s-${id}">${lessonHTML(id, { num: i + 1, know: true })}</section>`).join('');
+
+    // The margin: dots in teaching order, and a line on the left from each concept up to each concept it needs.
+    mg.querySelectorAll('.md').forEach(d => d.remove());
+    mg.style.height = (order.length * GAP) + 'px';
+    order.forEach((id, i) => mg.insertAdjacentHTML('beforeend',
+      `<div class="md" data-go="${id}" style="top:${i * GAP}px;animation-delay:${i * 0.04}s"><span class="dot"></span><span class="t"><small>${i + 1}</small>${LESSONS[id].name}</span></div>`));
+    mlinks.innerHTML = '';
+    order.forEach((id, i) => LESSONS[id].deps.filter(d => order.includes(d)).forEach(d => {
+      const j = order.indexOf(d);
+      const y1 = i * GAP + 7, y2 = j * GAP + 7, x = 77;
+      const bend = 18 + (i - j) * 9;
+      mlinks.insertAdjacentHTML('beforeend', `<path d="M${x - 7},${y1} C${x - 7 - bend},${y1} ${x - 7 - bend},${y2} ${x - 7},${y2}" fill="none" stroke="${KIND_COLOR.concept}" stroke-opacity="0.55" stroke-width="1.4"/>`);
+    }));
+    setTimeout(() => { drawFigure(book); onScroll(); }, 16);
+  }
+
+  // The section at the top of the window is the one lit in the margin.
+  function onScroll() {
+    let cur = order[0];
+    order.forEach(id => { const s = document.getElementById('s-' + id); if (s && s.getBoundingClientRect().top < innerHeight * 0.35) cur = id; });
+    mg.querySelectorAll('.md').forEach(d => {
+      d.classList.toggle('on', d.dataset.go === cur);
+      d.classList.toggle('done', order.indexOf(d.dataset.go) < order.indexOf(cur));
+    });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  const kl = knownList(Object.fromEntries(Object.entries(LESSONS).map(([id, l]) => [id, l.name])), known, render);
+  document.addEventListener('click', e => {
+    const k = e.target.closest('[data-know]');
+    if (k) { kl.add(k.dataset.know); return; }
+    const g = e.target.closest('[data-go]');
+    if (g) document.getElementById('s-' + g.dataset.go).scrollIntoView({ behavior: 'smooth' });
+  });
+  linkParts(book);
+  window.addEventListener('resize', () => drawFigure(book));
+  render();
+</script>
+</body>
+</html>

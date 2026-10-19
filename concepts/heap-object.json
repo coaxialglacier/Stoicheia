@@ -1,0 +1,72 @@
+{
+  "id": "heap-object",
+  "name": "Heap object",
+  "area": "memory",
+  "first": "Memory on the heap, found by its address.",
+  "parts": [],
+  "dependsOn": [
+    { "id": "stack-frame", "views": ["what", "memory"], "why": "A heap object stays after the call that made it returns, and a stack frame does not." }
+  ],
+  "example": {
+    "code": [
+      "final class Score {",
+      "    var points = 0",
+      "}",
+      "func makeScore() -> Score {",
+      "    let score = Score()",
+      "    return score",
+      "}",
+      "let mine = makeScore()"
+    ],
+    "probes": [
+      { "after": 5, "print": "score.points", "values": ["0"] },
+      { "after": 8, "print": "mine.points", "values": ["0"] }
+    ],
+    "sil": [
+      { "in": "Score.__allocating_init()", "has": "alloc_ref $Score", "shows": "Score() makes its object on the heap." },
+      { "in": "makeScore()", "lacks": "alloc_box", "shows": "score holds the object's address, and is not itself kept on the heap." }
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "The heap is memory that does not belong to any one call, so it is not removed when a call returns. A heap object is one piece of the heap, made while the program runs, and found by its address.",
+      "marks": [
+        { "line": 5, "text": "score", "label": "an address" },
+        { "line": 5, "text": "Score()", "label": "a heap object" },
+        { "line": 8, "text": "mine", "label": "the same address" }
+      ],
+      "figure": {
+        "panes": [{ "title": "After line 5", "step": 2 }, { "title": "After makeScore() returns", "step": 3 }],
+        "caption": { "title": "A `Score` object on the heap,", "text": "while `makeScore()` runs, and after it returns." }
+      },
+      "afterExample": "`Score()` on line 5 makes a heap object. `score` does not hold the object itself: it holds the object's address.",
+      "problem": "Some values must stay after the call that made them returns, and be used from more than one place. A stack frame cannot keep them, because it is removed when its call returns.",
+      "how": "A heap object stays while something holds its address. When `makeScore()` returns, `score` is removed with its frame, but `mine` holds the same address, so the object stays."
+    },
+    "memory": {
+      "question": "`score` is removed when `makeScore()` returns. What happens to the `Score` object?",
+      "steps": [
+        { "text": "Line 8 calls `makeScore()`. A stack frame is made for the call. `score` has no value yet.",
+          "line": 8,
+          "blocks": [{ "id": "ms", "kind": "frame", "title": "makeScore()", "fields": [["score", null]] }],
+          "highlight": ["ms"] },
+        { "text": "Line 5 makes a `Score` object on the heap, with `points` set to 0. `score`, in the frame, holds its address.",
+          "line": 5, "also": [2],
+          "blocks": [
+            { "id": "ms", "kind": "frame", "title": "makeScore()", "fields": [["score", { "to": "obj" }]] },
+            { "id": "obj", "kind": "heap", "title": "Score", "fields": [["points", "0"]] }
+          ],
+          "highlight": ["obj"] },
+        { "text": "Line 6 returns `score`, and the frame is removed, so `score` no longer exists. Line 8 stores the returned address in `mine`. The object stays, because `mine` holds its address.",
+          "line": 6, "also": [8],
+          "blocks": [
+            { "id": "ms", "kind": "removed", "title": "makeScore()", "text": "score is gone" },
+            { "id": "mine", "kind": "global", "title": "mine", "tag": "constant", "fields": [["mine", { "to": "obj" }]] },
+            { "id": "obj", "kind": "heap", "title": "Score", "fields": [["points", "0"]] }
+          ],
+          "highlight": ["mine"] }
+      ],
+      "answer": "The object stays, because `mine` holds its address. A heap object stays while something holds its address."
+    }
+  }
+}

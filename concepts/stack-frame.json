@@ -1,0 +1,70 @@
+{
+  "id": "stack-frame",
+  "name": "Stack frame",
+  "area": "memory",
+  "first": "The memory made for one function call.",
+  "parts": ["parameter", "local-value"],
+  "dependsOn": [
+    { "id": "function", "views": ["what", "memory"], "why": "A stack frame is the memory made for one call of a function." }
+  ],
+  "example": {
+    "code": [
+      "func double(_ n: Int) -> Int {",
+      "    let result = n * 2",
+      "    return result",
+      "}",
+      "let answer = double(4)"
+    ],
+    "probes": [
+      { "after": 1, "print": "n", "values": ["4"] },
+      { "after": 2, "print": "result", "values": ["8"] },
+      { "after": 5, "print": "answer", "values": ["8"] }
+    ],
+    "sil": [
+      { "in": "double(_:)", "lacks": "alloc_box", "shows": "double(_:) keeps nothing in a box on the heap." },
+      { "in": "double(_:)", "lacks": "alloc_ref", "shows": "double(_:) makes no object on the heap." }
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A stack frame is the memory made for one call of a function. It holds that call's parameters, and its local constants and variables.",
+      "marks": [
+        { "line": 1, "text": "n", "part": "parameter", "label": "parameter" },
+        { "line": 2, "text": "result", "part": "local-value", "label": "local constant" },
+        { "line": 5, "text": "double(4)", "part": "call", "label": "the call" }
+      ],
+      "figure": {
+        "panes": [{ "title": "After line 2", "step": 2 }, { "title": "After double(4) returns", "step": 4 }],
+        "caption": { "title": "The stack frame of `double(4)`,", "text": "while the call runs, and after it returns." }
+      },
+      "afterExample": "While `double(4)` runs, its frame holds `n`, which is 4, and `result`, which is 8.",
+      "problem": "Each call of a function needs its own place for its parameters and local values, so that two calls never change each other's values.",
+      "how": "The frame is made when the call starts, and removed when the call returns. After `double(4)` returns, `n` and `result` no longer exist. Only the returned value, 8, is kept, in `answer`."
+    },
+    "memory": {
+      "question": "Where are `n` and `result` while `double(4)` runs, and what happens to them when it returns?",
+      "steps": [
+        { "text": "Line 5 calls `double(4)`. A stack frame is made for the call, and `n` in it is 4.",
+          "line": 5,
+          "blocks": [{ "id": "d", "kind": "frame", "title": "double(_:)", "fields": [["n", "4"]] }],
+          "highlight": ["d"] },
+        { "text": "Line 2 sets `result` to 8, in the same frame.",
+          "line": 2,
+          "blocks": [{ "id": "d", "kind": "frame", "title": "double(_:)", "fields": [["n", "4"], ["result", "8"]] }],
+          "highlight": ["d"] },
+        { "text": "Line 3 returns `result`, and the frame is removed. `n` and `result` no longer exist.",
+          "line": 3,
+          "blocks": [{ "id": "d", "kind": "removed", "title": "double(_:)", "text": "n and result are gone" }],
+          "highlight": [] },
+        { "text": "Line 5 stores the returned 8 in `answer`.",
+          "line": 5,
+          "blocks": [
+            { "id": "d", "kind": "removed", "title": "double(_:)", "text": "n and result are gone" },
+            { "id": "answer", "kind": "global", "title": "answer", "tag": "constant", "fields": [["answer", "8"]] }
+          ],
+          "highlight": ["answer"] }
+      ],
+      "answer": "A value in a stack frame exists only until its call returns."
+    }
+  }
+}

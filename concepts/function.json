@@ -1,0 +1,81 @@
+{
+  "id": "function",
+  "name": "Function",
+  "area": "swift",
+  "first": "A named block of code that takes inputs and can return a value.",
+  "parts": ["func-keyword", "function-name", "parameter-list", "return-type", "body", "return-statement", "call"],
+  "dependsOn": [],
+  "example": {
+    "code": [
+      "func greet(name: String) -> String {",
+      "    return \"Hello, \\(name)\"",
+      "}",
+      "let message = greet(name: \"Ana\")",
+      "print(message)"
+    ]
+  },
+  "snippets": {
+    "twice": {
+      "code": [
+        "func greet(name: String) -> String {",
+        "    return \"Hello, \\(name)\"",
+        "}",
+        "print(greet(name: \"Ana\"))  // Hello, Ana",
+        "print(greet(name: \"Bo\"))   // Hello, Bo"
+      ],
+      "output": ["Hello, Ana", "Hello, Bo"]
+    },
+    "map": {
+      "code": [
+        "let doubled = [1, 2, 3].map { (n: Int) in n * 2 }",
+        "print(doubled)  // [2, 4, 6]"
+      ],
+      "output": ["[2, 4, 6]"]
+    }
+  },
+  "views": {
+    "what": {
+      "is": "A function is a block of code with a name. You declare it once, with `func`, and run it by calling its name. It can take inputs, called parameters, and it can return a value.",
+      "marks": [
+        { "line": 1, "text": "func", "part": "func-keyword" },
+        { "line": 1, "text": "(name: String)", "part": "parameter-list", "label": "parameters" },
+        { "line": 1, "text": "-> String", "part": "return-type", "label": "returns" }
+      ],
+      "afterExample": "Lines 1 to 3 declare a function named `greet`. Line 4 calls it, and `message` holds the value that it returns.",
+      "problem": "The same work is often needed in more than one place, with different values. A function lets you write that work once, and run it from each place with the values that place gives it.",
+      "how": "Declaring `greet` does not run its body. The call on line 4 runs the body, with the parameter `name` set to the argument `\"Ana\"`. The call ends at `return`, and gives back the value after it.",
+      "when": [
+        { "text": "Use one when the same work is needed in more than one place, or when a piece of work has one job that you can name. Each call runs the same body with its own argument:", "snippet": "twice" },
+        { "text": "Don't use one when the code is handed to another function to run, such as the code that `map` runs once for each item. There, write a closure instead: a function with no name, written right where it is handed over.", "snippet": "map" }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "func-keyword", "name": "`func`", "text": "The word `func` starts the declaration of a function, on line 1." },
+        { "part": "function-name", "name": "The name, `greet`", "text": "`greet` is the function's name. A call uses this name to run the function, as line 4 does." },
+        { "part": "parameter-list", "name": "The parameter list, `(name: String)`", "text": "The inputs that the function takes, in parentheses. `name` is a parameter, and `String` is its type. Inside the body, `name` holds the value that the call gave it." },
+        { "part": "return-type", "name": "The return type, `-> String`", "text": "The type of the value that the function gives back. `greet` gives back a `String`." },
+        { "part": "body", "name": "The body", "text": "The code between `{` on line 1 and `}` on line 3. It runs each time the function is called." },
+        { "part": "return-statement", "name": "`return`", "text": "`return` on line 2 ends the call, and gives back the value after it. That value must have the return type, `String`." },
+        { "part": "call", "name": "The call, on line 4", "text": "Line 4 calls `greet`. In the parentheses, `name:` is the argument label: it says which parameter the value is for. `\"Ana\"` is the argument: the value that the parameter `name` gets. Its type must be the parameter's type, `String`." }
+      ],
+      "marks": [
+        { "line": 1, "text": "func", "part": "func-keyword" },
+        { "line": 1, "text": "greet", "part": "function-name", "label": "name" },
+        { "line": 1, "text": "(name: String)", "part": "parameter-list", "label": "parameter list" },
+        { "line": 1, "text": "-> String", "part": "return-type", "label": "return type" },
+        { "line": 2, "text": "return \"Hello, \\(name)\"", "part": "body", "label": "body" },
+        { "line": 2, "text": "return", "part": "return-statement" },
+        { "line": 4, "text": "name:", "part": "call", "label": "argument label" },
+        { "line": 4, "text": "\"Ana\"", "part": "call", "label": "argument" }
+      ],
+      "steps": [
+        { "text": "Line 4 calls `greet` with the argument `\"Ana\"`.", "line": 4 },
+        { "text": "The body runs, with `name` set to `\"Ana\"`. Line 2 returns the string \"Hello, Ana\", and the call ends.", "line": 2, "value": { "line": 2, "name": "name", "is": "\"Ana\"" } },
+        { "text": "Line 4 stores the returned string in `message`.", "line": 4, "value": { "line": 4, "name": "message", "is": "\"Hello, Ana\"" } },
+        { "text": "Line 5 prints {{Hello, Ana}}.", "line": 5, "prints": ["Hello, Ana"] }
+      ],
+      "end": { "kind": "answer", "text": "`greet` runs only when it is called. Each call gives `name` the argument of that call, and gives back the value after `return`." }
+    }
+  }
+}

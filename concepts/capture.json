@@ -1,0 +1,59 @@
+{
+  "id": "capture",
+  "name": "Capture",
+  "area": "swift",
+  "first": "A closure keeps each outside constant and variable that its body uses.",
+  "parts": ["declared-outside", "used-in-body"],
+  "dependsOn": [
+    { "id": "closure", "views": ["what", "parts"], "why": "Capture is what a closure does with a constant or variable from outside its braces that its body uses." }
+  ],
+  "example": {
+    "code": [
+      "func sayHello() {",
+      "    let greeting = \"Hello\"",
+      "    let greet = { (name: String) in",
+      "        print(\"\\(greeting), \\(name)\")",
+      "    }",
+      "    greet(\"Ana\")",
+      "    greet(\"Bo\")",
+      "}",
+      "sayHello()"
+    ],
+    "sil": [
+      { "in": "closure #1 in sayHello()", "has": "%1 : @closureCapture $String", "shows": "The closure's code receives greeting as a captured value, apart from its parameter name." }
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "Capture is what a closure does with a constant or variable that is declared outside its braces and used in its body: the closure keeps it, so the body can use it each time the closure runs.",
+      "marks": [
+        { "line": 2, "text": "greeting", "part": "declared-outside", "label": "declared outside the braces" },
+        { "line": 4, "text": "greeting", "part": "used-in-body", "label": "used in the body" }
+      ],
+      "afterExample": "`greeting` is declared on line 2, outside the closure's braces, and the body uses it on line 4. So the closure captures `greeting`.",
+      "problem": "A closure's body often needs a value that the code around the closure already has, such as `greeting`. Capture lets the body use that value by its name, without passing it in as an argument at each call.",
+      "how": "When line 3 makes the closure, the closure captures `greeting`. Each call of `greet` runs the body, and the body uses the captured `greeting`.",
+      "when": [
+        { "text": "Capture happens on its own, whenever the body uses a name from outside the braces. So the choice is between a captured value and a parameter. A captured value, such as `greeting`, is the same at every call. A parameter, such as `name`, gets a new value from each call." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "declared-outside", "name": "Declared outside the braces", "text": "`greeting` is declared on line 2, inside `sayHello()`, before the closure's `{` on line 3. So it is outside the closure's braces." },
+        { "part": "used-in-body", "name": "Used in the body", "text": "The body uses `greeting` on line 4. Each name that the body uses, and that is declared outside the braces, is a name the closure captures." }
+      ],
+      "marks": [
+        { "line": 2, "text": "greeting", "part": "declared-outside", "label": "declared outside the braces" },
+        { "line": 4, "text": "greeting", "part": "used-in-body", "label": "used in the body" }
+      ],
+      "steps": [
+        { "text": "Line 9 calls `sayHello()`.", "line": 9 },
+        { "text": "Line 2 sets `greeting` to `\"Hello\"`.", "line": 2 },
+        { "text": "Line 3 makes the closure, and stores it in `greet`. The closure captures `greeting`. The body does not run yet.", "line": 3, "dim": [4] },
+        { "text": "Line 6 calls `greet` with `\"Ana\"`. The body runs, uses the captured `greeting`, and prints {{Hello, Ana}}.", "line": 6, "also": [4], "value": { "line": 4, "name": "greeting", "is": "\"Hello\"" }, "prints": ["Hello, Ana"] },
+        { "text": "Line 7 calls `greet` with `\"Bo\"`. The body uses the same captured `greeting`, and prints {{Hello, Bo}}.", "line": 7, "also": [4], "value": { "line": 4, "name": "greeting", "is": "\"Hello\"" }, "prints": ["Hello, Bo"] }
+      ],
+      "end": { "kind": "answer", "text": "The closure keeps `greeting` from line 3 on. Both calls of `greet` use it, and neither call passes it as an argument." }
+    }
+  }
+}

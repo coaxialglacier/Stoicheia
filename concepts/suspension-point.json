@@ -1,0 +1,6 @@
+{
+  "id": "suspension-point",
+  "name": "Suspension point",
+  "first": "A place where code can suspend: stop running, and free its thread, until the call it waits for returns. Each await marks one.",
+  "parts": []
+}

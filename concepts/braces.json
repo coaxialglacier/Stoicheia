@@ -1,0 +1,6 @@
+{
+  "id": "braces",
+  "name": "Braces",
+  "first": "The two brace characters that mark where a closure starts and where it ends. Everything between them belongs to the closure.",
+  "parts": []
+}

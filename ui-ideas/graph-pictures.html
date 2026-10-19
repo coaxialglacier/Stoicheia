@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Picture Graph</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+  body { overflow: hidden; }
+  #view { position: fixed; inset: 52px 0 0 0; overflow: hidden; }
+  #world { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+  #links { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+
+  /* A concept in the graph shows its name, its first fact, and a small copy of its figure. */
+  .pn { position: absolute; width: 290px; border-radius: 14px; cursor: pointer; overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--concept) 40%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--concept) 10%, var(--raise)), var(--panel));
+    transition: left 0.6s var(--ease), top 0.6s var(--ease), border-color 0.25s, box-shadow 0.25s; animation: appear 0.5s var(--ease) both; }
+  .pn:hover { border-color: var(--concept); box-shadow: 0 0 0 1px var(--concept), 0 0 34px -8px var(--concept); }
+  .pn.root { border-color: color-mix(in srgb, var(--concept) 75%, transparent); }
+  .pn .ph { padding: 13px 15px 10px; display: flex; gap: 10px; align-items: flex-start; }
+  .pn .o { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 700 10px var(--mono); color: var(--concept); border: 1.5px solid color-mix(in srgb, var(--concept) 55%, transparent); margin-top: 1px; }
+  .pn.root .o { background: var(--concept); color: var(--bg-deep); }
+  .pn .nm { font-size: 16px; font-weight: 600; }
+  .pn .ff { font-family: ui-serif, "New York", Georgia, serif; font-size: 13px; color: var(--muted); line-height: 1.45; margin-top: 2px; }
+  .pn .ff code { font-size: 0.85em; color: #f1ead7; }
+  .pn .thumb { height: 148px; overflow: hidden; position: relative; border-top: 1px solid var(--line); background: rgba(31, 30, 29, 0.5); }
+  .pn .thumb .ti { position: absolute; left: 12px; top: 10px; width: 620px; transform: scale(0.43); transform-origin: 0 0; pointer-events: none; }
+  .pn .thumb .ti .cap { display: none; }
+  .pn .thumb::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 30px; background: linear-gradient(transparent, var(--panel)); }
+
+  /* The lesson grows out of the concept that was clicked, over the graph. */
+  .backdrop { position: fixed; inset: 52px 0 0 0; background: rgba(20, 19, 18, 0.62); backdrop-filter: blur(3px); opacity: 0; pointer-events: none; transition: opacity 0.4s; z-index: 15; }
+  .backdrop.on { opacity: 1; pointer-events: auto; }
+  .sheet { position: fixed; z-index: 16; border-radius: 18px; overflow: hidden; border: 1px solid var(--concept); background: var(--bg);
+    box-shadow: 0 40px 120px -30px rgba(0, 0, 0, 0.9), 0 0 0 1px var(--concept), 0 0 60px -20px var(--concept);
+    transition: left 0.55s var(--ease), top 0.55s var(--ease), width 0.55s var(--ease), height 0.55s var(--ease), opacity 0.3s; }
+  .sheet .scroll { position: absolute; inset: 0; overflow: auto; padding: 34px 44px 60px; opacity: 0; transition: opacity 0.3s 0.25s; }
+  .sheet.open .scroll { opacity: 1; }
+  .sheet .close { position: absolute; right: 14px; top: 12px; z-index: 2; }
+  .rel { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 18px; font: 600 10px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); }
+  .rel button { font: 500 12.5px var(--sans); letter-spacing: 0; text-transform: none; color: var(--text); padding: 5px 10px; border-radius: 8px; cursor: pointer;
+    border: 1px solid color-mix(in srgb, var(--concept) 45%, transparent); background: color-mix(in srgb, var(--concept) 10%, transparent); }
+  .rel button:hover { background: color-mix(in srgb, var(--concept) 20%, transparent); }
+
+  .start { position: fixed; left: 20px; bottom: 20px; z-index: 5; max-width: 340px; padding: 14px 16px; border-radius: 14px; background: color-mix(in srgb, var(--bg-deep) 92%, transparent);
+    border: 1px solid var(--line-2); backdrop-filter: blur(10px); font-size: 13.5px; line-height: 1.5; }
+  .start b { font-weight: 600; }
+  .start .btn { margin-top: 10px; }
+</style>
+</head>
+<body class="dots">
+<div class="top">
+  <a class="back" href="index.html">← Home</a>
+  <span class="title">Dependency Graph · Picture Graph</span>
+  <span class="grow"></span>
+  <div class="hud"><span>esc</span><span>back to the graph</span></div>
+</div>
+
+<div id="view"><div id="world"><svg id="links"></svg></div></div>
+<div class="start" id="start"></div>
+<div class="backdrop" id="backdrop"></div>
+<div class="sheet" id="sheet" hidden><button class="btn close" id="close">× Graph</button><div class="scroll" id="sheetBody"></div></div>
+
+<div class="note">
+  <p><b>Picture Graph.</b> Every concept in the graph shows a small copy of its figure, so the graph already shows what each concept looks like before you open it.</p>
+  <p>Click a concept. Its lesson grows out of that box, over the graph. The lesson names the concepts it needs and the concept that uses it, so you can move along the graph from inside a lesson.</p>
+</div>
+
+<script src="shared.js"></script>
+<script src="graph-content.js"></script>
+<script>
+  const known = new Set();
+  const world = document.getElementById('world');
+  const view = document.getElementById('view');
+  const links = document.getElementById('links');
+  let pos = {}, order = [], scale = 1;
+
+  function layout(ids) {
+    const p = {}; let col = 0;
+    (function place(id, row) {
+      const kids = LESSONS[id].deps.filter(d => ids.includes(d));
+      kids.forEach(k => place(k, row + 1));
+      p[id] = { x: kids.length ? kids.reduce((s, k) => s + p[k].x, 0) / kids.length : (col++) * 330, y: row * 300 };
+    })(ROOT, 0);
+    return p;
+  }
+
+  function thumbHTML(id) {
+    const L = LESSONS[id];
+    const inner = L.figure === 'code' ? `<div class="l-code">${codeLinesHTML(L.code, true)}<svg class="farrows"></svg></div>` : figureHTML(id);
+    return `<div class="thumb"><div class="ti lesson" data-lesson="${id}">${inner}</div></div>`;
+  }
+
+  function render() {
+    const ids = neededConcepts(known);
+    order = teachingOrder(ids);
+    pos = layout(ids);
+    world.querySelectorAll('.pn').forEach(n => { if (!ids.includes(n.dataset.id)) n.remove(); });
+    ids.forEach(id => {
+      let n = world.querySelector(`.pn[data-id="${id}"]`);
+      if (!n) {
+        n = document.createElement('div');
+        n.className = 'pn' + (id === ROOT ? ' root' : ''); n.dataset.id = id;
+        n.innerHTML = `<div class="ph"><span class="o"></span><div><div class="nm">${LESSONS[id].name}</div><div class="ff">${LESSONS[id].first}</div></div></div>${thumbHTML(id)}`;
+        world.appendChild(n);
+      }
+      n.querySelector('.o').textContent = order.indexOf(id) + 1;
+      n.style.left = pos[id].x + 'px'; n.style.top = pos[id].y + 'px';
+    });
+    fit();
+    setTimeout(() => { drawLinks(ids); drawFigure(world); }, 650);
+    drawLinks(ids);
+    setTimeout(() => drawFigure(world), 16);
+    const before = order.length - 1;
+    document.getElementById('start').innerHTML = before
+      ? `<b>Captured variables</b> needs ${before === 1 ? 'one concept' : before + ' concepts'} you do not know yet. The numbers are the order to learn them in.<br><button class="btn primary" data-open="${order[0]}">Start with ${LESSONS[order[0]].name} →</button>`
+      : `You know every concept that <b>Captured variables</b> needs.<br><button class="btn primary" data-open="${ROOT}">Open Captured variables →</button>`;
+  }
+
+  function drawLinks(ids) {
+    links.innerHTML = '';
+    ids.forEach(a => LESSONS[a].deps.filter(d => ids.includes(d)).forEach(b => {
+      const A = world.querySelector(`.pn[data-id="${a}"]`);
+      curve(links, { x: pos[a].x + 145, y: pos[a].y + A.offsetHeight }, { x: pos[b].x + 145, y: pos[b].y }, KIND_COLOR.concept, KIND_COLOR.concept, { op: 0.55, width: 1.6 });
+    }));
+  }
+
+  function fit() {
+    const xs = Object.values(pos).map(p => p.x), ys = Object.values(pos).map(p => p.y);
+    const w = Math.max(...xs) + 290 - Math.min(...xs), h = Math.max(...ys) + 240 - Math.min(...ys);
+    const W = view.clientWidth, H = view.clientHeight;
+    scale = Math.min(1, (W - 80) / w, (H - 60) / h);
+    world.style.transform = `translate(${(W - w * scale) / 2 - Math.min(...xs) * scale}px, ${(H - h * scale) / 2 - Math.min(...ys) * scale}px) scale(${scale})`;
+  }
+
+  // ---------- The lesson that grows out of a concept ----------
+
+  const sheet = document.getElementById('sheet');
+  const backdrop = document.getElementById('backdrop');
+  let openId = null;
+  function open(id) {
+    const from = world.querySelector(`.pn[data-id="${id}"]`).getBoundingClientRect();
+    const needs = LESSONS[id].deps.filter(d => order.includes(d));
+    const user = usedBy(id);
+    document.getElementById('sheetBody').innerHTML =
+      `<div class="rel">${needs.length ? `Needs ${needs.map(d => `<button data-open="${d}">${LESSONS[d].name}</button>`).join('')}` : 'Needs no other concept you do not know'}${user ? `<span style="width:14px"></span>Used by <button data-open="${user}">${LESSONS[user].name}</button>` : ''}</div>`
+      + lessonHTML(id, { know: true, num: order.indexOf(id) + 1 });
+    const already = openId !== null;
+    openId = id;
+    sheet.hidden = false;
+    if (!already) {
+      sheet.classList.remove('open');
+      Object.assign(sheet.style, { transition: 'none', left: from.left + 'px', top: from.top + 'px', width: from.width + 'px', height: from.height + 'px' });
+      void sheet.offsetWidth;
+      sheet.style.transition = '';
+    }
+    const W = Math.min(1040, innerWidth - 80);
+    Object.assign(sheet.style, { left: (innerWidth - W) / 2 + 'px', top: '72px', width: W + 'px', height: (innerHeight - 96) + 'px' });
+    sheet.classList.add('open');
+    backdrop.classList.add('on');
+    sheet.querySelector('.scroll').scrollTop = 0;
+    setTimeout(() => drawFigure(sheet), 580);
+  }
+  function close() {
+    if (openId === null) return;
+    const node = world.querySelector(`.pn[data-id="${openId}"]`);
+    sheet.classList.remove('open');
+    backdrop.classList.remove('on');
+    if (node) {
+      const r = node.getBoundingClientRect();
+      Object.assign(sheet.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' });
+    }
+    openId = null;
+    setTimeout(() => { if (openId === null) sheet.hidden = true; }, 560);
+  }
+
+  const kl = knownList(Object.fromEntries(Object.entries(LESSONS).map(([id, l]) => [id, l.name])), known, () => { close(); render(); });
+
+  document.addEventListener('click', e => {
+    const k = e.target.closest('[data-know]');
+    if (k) { kl.add(k.dataset.know); return; }
+    const o = e.target.closest('[data-open]') || e.target.closest('.pn');
+    if (o) { open(o.dataset.open || o.dataset.id); return; }
+    if (e.target.closest('#close') || e.target === backdrop) close();
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  linkParts(sheet);
+  window.addEventListener('resize', () => { fit(); if (openId) open(openId); });
+
+  render();
+  if (location.search.includes('preview')) setTimeout(() => open('ho'), 700);
+</script>
+</body>
+</html>

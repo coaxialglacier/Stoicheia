@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Side by Side</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+  .stage { max-width: 1180px; margin: 0 auto; padding: 84px 36px 80px; position: relative; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .pair h3 { margin: 0 0 10px; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; display: flex; align-items: baseline; gap: 10px; }
+  .pair h3 span { font-size: 13px; font-weight: 400; color: var(--muted); }
+  .cb .cl .s { font-size: 15px; }
+
+  /* One row for each part. A part that is the same in both concepts is one cell across both columns. */
+  .rows { margin-top: 34px; display: flex; flex-direction: column; gap: 12px; }
+  .row { position: relative; border-radius: 14px; padding: 14px 18px 16px; border: 1px solid var(--line); background: rgba(236, 233, 225, 0.02);
+    transition: border-color 0.2s, background 0.2s; animation: rise 0.35s var(--ease) both; }
+  .row.on { border-color: color-mix(in srgb, var(--fact) 45%, transparent); background: color-mix(in srgb, var(--fact) 5%, transparent); }
+  .row .rn { font-size: 14.5px; font-weight: 600; color: #a6e3cd; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+  .row .rn .same { font: 600 9.5px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); }
+  .row .rn .knowbtn { margin-left: auto; }
+  .row .cells { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .row .cell { font-size: 14px; line-height: 1.55; }
+  .row .cell.both { grid-column: 1 / -1; }
+  .row .cell .who { display: block; font: 600 9.5px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); margin-bottom: 2px; }
+  .row .cells .cell + .cell { border-left: 1px solid var(--line); padding-left: 28px; margin-left: -28px; }
+</style>
+</head>
+<body class="dots">
+<div class="top">
+  <a class="back" href="index.html">← Home</a>
+  <span class="title">Side by Side</span>
+  <span class="grow"></span>
+  <div class="hud"><span>a function</span><span class="sep"></span><span>a closure</span></div>
+</div>
+
+<div class="stage">
+  <div class="question prose"><span class="qk">The question</span>A function and a closure both run a block of code, and both take inputs. What is different about them?</div>
+
+  <div class="pair">
+    <div><h3>A function <span>named with <code>func</code></span></h3><div id="codeF"></div></div>
+    <div><h3>A closure <span>stored in a constant</span></h3><div id="codeC"></div></div>
+  </div>
+
+  <div class="rows prose" id="rows"></div>
+</div>
+
+<div class="note">
+  <p><b>Side by Side.</b> A candidate format, rebuilt from idea C. It is used for two concepts that have most of their parts in common.</p>
+  <p>Each row is one part. A part that is the same in both is one cell across both columns, so the differences stand out. Hover a row to see it on both pieces of code. <b>I know this</b> removes a row.</p>
+  <p>This format has no steps. Running the code is Parts and Steps.</p>
+</div>
+
+<script src="shared.js"></script>
+<script>
+  // Each part's tokens carry data-part. The first token of a part carries its name in data-label.
+  const F = [
+    '<span class="mk" data-part="name" data-label="name"><span class="kw">func</span> greet</span><span class="mk" data-part="params" data-label="parameter list">(name: String)</span> <span class="mk" data-part="start" data-label="body starts">{</span>',
+    '    <span class="mk" data-part="body" data-label="body">print(<span class="str">"Hello, \\(name)"</span>)</span>',
+    '}',
+    '<span class="mk" data-part="call" data-label="call">greet(name: <span class="str">"Ana"</span>)</span>',
+  ];
+  const C = [
+    '<span class="mk" data-part="name" data-label="name"><span class="kw">let</span> greet =</span> <span class="mk" data-part="start">{</span> <span class="mk" data-part="params" data-label="parameter list">(name: String)</span> <span class="mk" data-part="start" data-label="body starts">in</span>',
+    '    <span class="mk" data-part="body" data-label="body">print(<span class="str">"Hello, \\(name)"</span>)</span>',
+    '}',
+    '<span class="mk" data-part="call" data-label="call">greet(<span class="str">"Ana"</span>)</span>',
+  ];
+
+  // One row for each part: either one explanation for both, or one for each.
+  const ROWS = [
+    { id: 'name', name: 'How it is named',
+      f: '<code>func</code> starts a function, and <code>greet</code> is its name.',
+      c: 'A closure has no name of its own. <code>let greet =</code> stores it in a constant named <code>greet</code>.' },
+    { id: 'params', name: 'The parameter list',
+      both: '<code>(name: String)</code> lists the inputs, and the type of each one.' },
+    { id: 'start', name: 'Where the body starts',
+      f: 'The body starts at <code>{</code>, after the parameter list.',
+      c: '<code>{</code> comes first, before the parameter list. The body starts after <code>in</code>.' },
+    { id: 'body', name: 'The body',
+      both: 'The code that runs each time it is called.' },
+    { id: 'call', name: 'The call',
+      f: 'The call writes the argument label <code>name:</code> before the argument <code>"Ana"</code>.',
+      c: 'The call has no argument labels: only the argument <code>"Ana"</code>.' },
+  ];
+
+  const known = new Set();
+  const codeF = document.getElementById('codeF'), codeC = document.getElementById('codeC');
+  codeF.innerHTML = codeLinesHTML(F, true);
+  codeC.innerHTML = codeLinesHTML(C, true);
+  const boxes = [codeF.querySelector('.cb'), codeC.querySelector('.cb')];
+
+  function render() {
+    document.getElementById('rows').innerHTML = ROWS.filter(r => !known.has(r.id)).map((r, i) => `
+      <div class="row" data-row="${r.id}" style="animation-delay:${i * 0.04}s">
+        <div class="rn">${r.name}${r.both ? '<span class="same">the same in both</span>' : ''}<button class="knowbtn" data-know="${r.id}">I know this</button></div>
+        <div class="cells">${r.both
+          ? `<div class="cell both">${r.both}</div>`
+          : `<div class="cell"><span class="who">A function</span>${r.f}</div><div class="cell"><span class="who">A closure</span>${r.c}</div>`}</div>
+      </div>`).join('');
+    boxes.forEach(b => b.querySelectorAll('.mk[data-part]').forEach(m => m.classList.toggle('known', known.has(m.dataset.part))));
+  }
+
+  // Hovering a row, or a part on either piece of code, marks that part on both.
+  function focus(id) {
+    boxes.forEach(b => {
+      b.classList.toggle('focus', !!id);
+      b.querySelectorAll('.mk[data-part]').forEach(m => m.classList.toggle('on', m.dataset.part === id));
+    });
+    document.querySelectorAll('.row').forEach(r => r.classList.toggle('on', r.dataset.row === id));
+  }
+  document.addEventListener('mouseover', e => {
+    const r = e.target.closest('.row') || e.target.closest('.mk[data-part]:not(.known)');
+    focus(r ? (r.dataset.row || r.dataset.part) : null);
+  });
+
+  const kl = knownList(Object.fromEntries(ROWS.map(r => [r.id, r.name])), known, render);
+  document.addEventListener('click', e => { const k = e.target.closest('[data-know]'); if (k) kl.add(k.dataset.know); });
+  render();
+  if (location.search.includes('preview')) focus('start');
+</script>
+</body>
+</html>

@@ -1,0 +1,92 @@
+{
+  "id": "closure-value",
+  "name": "Closure value",
+  "area": "swift",
+  "first": "Two addresses: one for the closure's code, and one for its context.",
+  "parts": ["closure-code", "context"],
+  "dependsOn": [
+    { "id": "closure", "views": ["what", "memory"], "why": "A closure value is what a constant holds when it holds a closure." },
+    { "id": "heap-object", "views": ["what", "memory"], "why": "The context of a closure value is a heap object." },
+    { "id": "stack-frame", "views": ["memory"], "why": "Its steps show the stack frame of the function that makes the closure, which is removed when that function returns." }
+  ],
+  "example": {
+    "code": [
+      "func makeGreeter() -> (String) -> Void {",
+      "    let greeting = \"Hello\"",
+      "    return { (name: String) in",
+      "        print(\"\\(greeting), \\(name)\")",
+      "    }",
+      "}",
+      "let greet = makeGreeter()",
+      "greet(\"Ana\")"
+    ],
+    "probes": [
+      { "after": 2, "print": "greeting", "values": ["Hello"] }
+    ],
+    "sil": [
+      { "in": "makeGreeter()", "has": "partial_apply [callee_guaranteed]", "shows": "Line 3 makes the closure's context on the heap, from greeting." },
+      { "in": "closure #1 in makeGreeter()", "has": "%1 : @closureCapture $String", "shows": "The closure's code gets greeting from its context." }
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A closure value is what a constant holds when it holds a closure: two addresses. The first is the address of the closure's code. The second is the address of the closure's context: a heap object that holds what the closure captured.",
+      "marks": [
+        { "line": 3, "text": "{", "part": "closure-code", "label": "the closure's code" },
+        { "line": 7, "text": "greet", "label": "a closure value" }
+      ],
+      "figure": {
+        "panes": [{ "title": "After line 7", "step": 4 }],
+        "caption": { "title": "What `greet` holds:", "text": "the address of the closure's code, and the address of its context." }
+      },
+      "problem": "A closure can be called after the function that made it has returned, from any code that has the closure. So its code and what it captured must stay together, in one value that a constant can hold.",
+      "how": "Calling `greet` runs the code at the first address, and passes it the context at the second address. That is how the body finds `greeting` after `makeGreeter()` has returned."
+    },
+    "memory": {
+      "question": "How does the body find `greeting` after `makeGreeter()` has returned?",
+      "steps": [
+        { "text": "Line 7 calls `makeGreeter()`. A stack frame is made for the call.",
+          "line": 7,
+          "blocks": [
+            { "id": "mg", "kind": "frame", "title": "makeGreeter()", "fields": [["greeting", null]] },
+            { "id": "code", "kind": "code", "title": "the closure's code", "tag": "lines 3 to 5", "text": "print(…)" }
+          ],
+          "highlight": ["mg"] },
+        { "text": "Line 2 sets `greeting` to `\"Hello\"`, in the frame.",
+          "line": 2,
+          "blocks": [
+            { "id": "mg", "kind": "frame", "title": "makeGreeter()", "fields": [["greeting", "\"Hello\""]] },
+            { "id": "code", "kind": "code", "title": "the closure's code", "tag": "lines 3 to 5", "text": "print(…)" }
+          ],
+          "highlight": ["mg"] },
+        { "text": "Line 3 makes the closure. Its context is made on the heap, and holds `greeting`.",
+          "line": 3, "also": [4, 5],
+          "blocks": [
+            { "id": "mg", "kind": "frame", "title": "makeGreeter()", "fields": [["greeting", "\"Hello\""]] },
+            { "id": "ctx", "kind": "heap", "title": "context", "fields": [["greeting", "\"Hello\""]] },
+            { "id": "code", "kind": "code", "title": "the closure's code", "tag": "lines 3 to 5", "text": "print(…)" }
+          ],
+          "highlight": ["ctx"] },
+        { "text": "Line 3 returns the closure, and the frame is removed. Line 7 stores the closure value in `greet`: the address of the closure's code, and the address of its context.",
+          "line": 7, "also": [3],
+          "blocks": [
+            { "id": "mg", "kind": "removed", "title": "makeGreeter()", "text": "its frame is gone" },
+            { "id": "greet", "kind": "global", "title": "greet", "tag": "closure value", "fields": [["code", { "to": "code" }], ["context", { "to": "ctx" }]] },
+            { "id": "ctx", "kind": "heap", "title": "context", "fields": [["greeting", "\"Hello\""]] },
+            { "id": "code", "kind": "code", "title": "the closure's code", "tag": "lines 3 to 5", "text": "print(…)" }
+          ],
+          "highlight": ["greet"] },
+        { "text": "Line 8 calls `greet` with `\"Ana\"`. The code at the first address runs, with the context at the second address, so the body finds `greeting` and prints {{Hello, Ana}}.",
+          "line": 8, "also": [4], "prints": ["Hello, Ana"],
+          "blocks": [
+            { "id": "mg", "kind": "removed", "title": "makeGreeter()", "text": "its frame is gone" },
+            { "id": "greet", "kind": "global", "title": "greet", "tag": "closure value", "fields": [["code", { "to": "code" }], ["context", { "to": "ctx" }]] },
+            { "id": "ctx", "kind": "heap", "title": "context", "fields": [["greeting", "\"Hello\""]] },
+            { "id": "code", "kind": "code", "title": "the closure's code", "tag": "lines 3 to 5", "text": "print(…)" }
+          ],
+          "highlight": ["ctx", "code"] }
+      ],
+      "answer": "The context is a heap object, so it stays after `makeGreeter()` returns, and `greet` holds its address."
+    }
+  }
+}

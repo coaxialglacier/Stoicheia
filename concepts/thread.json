@@ -1,0 +1,38 @@
+{
+  "id": "thread",
+  "name": "Thread",
+  "area": "conc",
+  "first": "One sequence of instructions that the processor runs, one after another, with its own stack.",
+  "parts": ["stack"],
+  "dependsOn": [
+    { "id": "stack-frame", "views": ["what"],
+      "why": "Each thread has its own stack, which holds a stack frame for each call that the thread is running." }
+  ],
+  "example": {
+    "code": [
+      "import Foundation",
+      "let helper = Thread {",
+      "    print(\"The helper thread runs this\")",
+      "}",
+      "helper.start()",
+      "Thread.sleep(forTimeInterval: 1)",
+      "print(\"The main thread runs this\")"
+    ],
+    "output": ["The helper thread runs this", "The main thread runs this"]
+  },
+  "views": {
+    "what": {
+      "is": "A thread is one sequence of instructions that the processor runs, one after another. A program can have many threads, and they can run at the same time. Each thread has its own stack: the memory that holds a stack frame for each call that the thread is running.",
+      "marks": [
+        { "line": 2, "text": "Thread", "label": "a second thread" },
+        { "line": 7, "text": "print(\"The main thread runs this\")", "label": "runs on the main thread" }
+      ],
+      "afterExample": "The program starts with one thread, the main thread, which runs the top-level code. Line 2 makes a second thread, `helper`, and line 5 starts it. `helper` runs the closure on lines 2 to 4, while the main thread goes on to line 6.",
+      "problem": "A thread does one thing at a time, in order. A program that has to do two things at once, such as draw its screen while it reads a file, needs a thread for each of them.",
+      "how": "The system decides when each thread runs, and on which core of the processor. Line 6 makes the main thread wait for one second, and it runs nothing while it waits. In that second, `helper` prints {{The helper thread runs this}}. Then the main thread prints {{The main thread runs this}}.",
+      "when": [
+        { "text": "You seldom make a thread yourself, as line 2 does. Swift and Apple's frameworks run your code on threads that they choose. An app draws its screen on the main thread, so code that runs on the main thread must not wait for long, or the screen stops responding." }
+      ]
+    }
+  }
+}

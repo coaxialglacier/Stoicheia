@@ -1,0 +1,6 @@
+{
+  "id": "closure-code",
+  "name": "The closure's code",
+  "first": "The code that the compiler makes from a closure's body. It is kept with the rest of the program's code.",
+  "parts": []
+}

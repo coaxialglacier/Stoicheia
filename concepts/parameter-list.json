@@ -1,0 +1,8 @@
+{
+  "id": "parameter-list",
+  "name": "Parameter list",
+  "first": "The inputs that a function or closure takes, in parentheses, each with a name and a type.",
+  "parts": [
+    "parameter"
+  ]
+}

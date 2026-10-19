@@ -1,0 +1,6 @@
+{
+  "id": "context",
+  "name": "Context",
+  "first": "A heap object that holds what a closure captured.",
+  "parts": []
+}

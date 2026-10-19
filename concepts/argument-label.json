@@ -1,0 +1,6 @@
+{
+  "id": "argument-label",
+  "name": "Argument label",
+  "first": "The name before a colon in a call, which says which parameter the next value is for.",
+  "parts": []
+}

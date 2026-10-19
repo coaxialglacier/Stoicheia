@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dependency Graph</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+  body { overflow: hidden; }
+  #view { position: fixed; inset: 52px 0 0 320px; overflow: hidden; cursor: grab; }
+  #view.panning { cursor: grabbing; }
+  #view::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(31, 30, 29, 0.7) 100%); }
+  #world { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+  #world.fly { transition: transform 0.9s var(--ease); }
+
+  /* A concept in the graph. Its parts are drawn inside it, and can be read once the view zooms in. */
+  .g { position: absolute; width: 250px; height: 130px; cursor: pointer; transition: left 0.6s var(--ease), top 0.6s var(--ease), opacity 0.4s; animation: appear 0.5s var(--ease) both; }
+  .g .box { position: absolute; inset: 0; border-radius: 12px; overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--concept) 45%, transparent);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--concept) 12%, var(--raise)), color-mix(in srgb, var(--concept) 4%, var(--panel)));
+    transition: border-color 0.3s, box-shadow 0.3s; }
+  .g:hover .box { border-color: var(--concept); box-shadow: 0 0 0 1px var(--concept), 0 0 30px -6px color-mix(in srgb, var(--concept) 60%, transparent); }
+  .g.root .box { border-color: color-mix(in srgb, var(--concept) 75%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--concept) 20%, var(--raise)), color-mix(in srgb, var(--concept) 7%, var(--panel))); }
+  .g.focus .box { border-color: var(--concept); box-shadow: 0 0 0 0.5px var(--concept); }
+  .g.leaving { opacity: 0; pointer-events: none; }
+
+  .label { position: absolute; inset: 0; padding: 16px 18px; display: flex; flex-direction: column; justify-content: center; transition: opacity 0.5s; }
+  .label .nm { font-size: 19px; font-weight: 600; letter-spacing: -0.01em; }
+  .label .ff { font-size: 12.5px; color: var(--muted); margin-top: 4px; line-height: 1.45; }
+  .label .ff code { font-size: 0.92em; color: #f1ead7; }
+  .label .rk { font: 600 9.5px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--concept); margin-bottom: 5px; }
+  .g.focus .label { opacity: 0; pointer-events: none; }
+  .g .knowbtn { position: absolute; right: 10px; top: 10px; }
+  .g.focus .knowbtn, .g.root .knowbtn { display: none; }
+
+  .inside { position: absolute; left: 0; top: 0; width: 1000px; height: 520px; transform: scale(0.25); transform-origin: 0 0; padding: 40px 48px; opacity: 0; transition: opacity 0.6s; }
+  .g.focus .inside { opacity: 1; }
+  .inside h2 { margin: 0 0 6px; font-size: 32px; font-weight: 600; letter-spacing: -0.01em; }
+  .inside .first { color: var(--muted); font-size: 17px; margin-bottom: 26px; }
+  .inside .first code { color: #f1ead7; }
+  .inside .pk { font: 600 12px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); margin-bottom: 10px; }
+  .inside .parts { display: flex; flex-direction: column; gap: 9px; }
+  .inside .parts div { font-size: 17px; padding-left: 14px; border-left: 2px solid color-mix(in srgb, var(--fact) 55%, transparent); }
+  .inside .parts code { color: #f1ead7; }
+  .inside .go { margin-top: 26px; display: inline-flex; font-size: 15px; padding: 9px 16px; border-radius: 10px; color: var(--text); text-decoration: none;
+    border: 1px solid color-mix(in srgb, var(--concept) 55%, transparent); background: color-mix(in srgb, var(--concept) 16%, transparent); }
+  .inside .nogo { margin-top: 26px; font-size: 14px; color: var(--faint); }
+
+  svg#links { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+
+  /* The panel on the left: the concepts to learn, in teaching order. */
+  .panel { position: fixed; left: 0; top: 52px; bottom: 0; width: 320px; padding: 22px 20px; overflow: auto; background: var(--bg-deep); border-right: 1px solid var(--line); z-index: 10; }
+  .panel .lead { font-size: 15px; line-height: 1.55; margin: 0 0 18px; }
+  .panel .lead b { font-weight: 600; }
+  .ord { display: grid; grid-template-columns: 24px 1fr; gap: 10px; padding: 9px 10px; margin: 0 -10px; border-radius: 10px; cursor: pointer; animation: rise 0.3s var(--ease) both; }
+  .ord:hover { background: rgba(236, 233, 225, 0.04); }
+  .ord .on { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 700 10.5px var(--mono); color: var(--concept); border: 1.5px solid color-mix(in srgb, var(--concept) 50%, transparent); }
+  .ord .nm { font-size: 14px; font-weight: 600; }
+  .ord .ff { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .ord.root .on { background: var(--concept); color: var(--bg-deep); border-color: var(--concept); }
+  .panel .btn { margin-top: 16px; }
+
+  .crumbs { display: flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); }
+  .crumbs span { cursor: pointer; }
+  .crumbs span:hover { color: var(--text); }
+  .crumbs b { color: var(--text); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="top">
+  <a class="back" href="index.html">← Home</a>
+  <span class="title">Dependency Graph</span>
+  <span style="width:1px;height:16px;background:var(--line-2)"></span>
+  <div class="crumbs" id="crumbs"></div>
+  <span class="grow"></span>
+  <div class="hud"><span>esc</span><span>whole graph</span><span class="sep"></span><span>scroll</span><span>zoom</span><span class="sep"></span><span>drag</span><span>move</span></div>
+</div>
+
+<aside class="panel" id="panel"></aside>
+<div id="view" class="dots"><div id="world"><svg id="links"></svg></div></div>
+
+<div class="note">
+  <p><b>Dependency Graph.</b> A candidate format, rebuilt from idea B. It is used before a study, when the concept you named needs concepts you do not know yet.</p>
+  <p>The graph shows only what you do not know. Hover a concept and click <b>I know this</b>: it leaves the graph, with every concept that only it needed. Click a concept to zoom into its parts.</p>
+</div>
+
+<script src="shared.js"></script>
+<script>
+  // The graph of Captured Variables. Each concept lists the concepts it depends on, and the names of its parts.
+  const G = {
+    cv: { name: 'Captured variables', first: 'How <code>count</code> still exists after <code>makeCounter(step:)</code> has returned.', deps: ['sf', 'ho', 'clv'],
+      parts: ['The box: where <code>count</code> is kept, on the heap', 'The context: what the closure keeps, which holds the address of the box'] },
+    sf: { name: 'Stack frame', first: 'The memory made for each function call.', deps: [],
+      parts: ['The values of the call\'s parameters and local variables', 'When it is removed: when its call returns'] },
+    ho: { name: 'Heap object', first: 'Memory on the heap, found by its address.', deps: [],
+      parts: ['Its address', 'How long it stays: while something refers to it'] },
+    clv: { name: 'Closure value', first: 'Two pointers: one to the closure\'s code, and one to its context.', deps: ['cl'],
+      parts: ['The code pointer', 'The context pointer'] },
+    cl: { name: 'A closure', first: 'A function with no name, written between braces.', deps: ['cap'], study: 'parts-and-steps.html',
+      parts: ['The braces', 'The parameter list', '<code>in</code>', 'The body', 'The captured value'] },
+    cap: { name: 'Capture', first: 'A closure keeps each outside constant and variable that its body uses.', deps: [],
+      parts: ['The value the body uses', 'Where it is declared: outside the braces'] },
+  };
+  const ROOT = 'cv';
+  const known = new Set();
+  const world = document.getElementById('world');
+  const view = document.getElementById('view');
+  const links = document.getElementById('links');
+
+  // The concepts this study needs: every concept reachable from the root through concepts the reader does not know.
+  function needed() {
+    const out = [];
+    (function walk(id) { if (out.includes(id)) return; out.push(id); G[id].deps.filter(d => !known.has(d)).forEach(walk); })(ROOT);
+    return out;
+  }
+  // Teaching order: each concept comes after every concept it depends on.
+  function teachingOrder(ids) {
+    const out = [];
+    (function walk(id) { if (out.includes(id)) return; G[id].deps.filter(d => ids.includes(d)).forEach(walk); out.push(id); })(ROOT);
+    return out;
+  }
+
+  // The layout: each leaf gets the next column, and each concept sits centered over the concepts it depends on.
+  function layout(ids) {
+    const pos = {};
+    let col = 0;
+    (function place(id, row) {
+      const kids = G[id].deps.filter(d => ids.includes(d));
+      kids.forEach(k => place(k, row + 1));
+      const x = kids.length ? kids.reduce((s, k) => s + pos[k].x, 0) / kids.length : (col++) * 310;
+      pos[id] = { x, y: row * 210 };
+    })(ROOT, 0);
+    return pos;
+  }
+
+  function nodeHTML(id) {
+    const g = G[id];
+    return `<div class="box"><div class="inside">
+        <h2>${g.name}</h2><div class="first">${g.first}</div>
+        <div class="pk">Its parts</div><div class="parts">${g.parts.map(p => `<div>${p}</div>`).join('')}</div>
+        ${g.study ? `<a class="go" href="${g.study}">Open it in Parts and Steps →</a>` : '<div class="nogo">No study of it has been made yet.</div>'}
+      </div></div>
+      <div class="label">${id === ROOT ? '<div class="rk">The concept you named</div>' : ''}<div class="nm">${g.name}</div><div class="ff">${g.first}</div></div>
+      ${id === ROOT ? '' : `<button class="knowbtn" data-know="${id}">I know this</button>`}`;
+  }
+
+  let pos = {};
+  function render() {
+    const ids = needed();
+    pos = layout(ids);
+    // Concepts that are no longer needed leave the graph.
+    world.querySelectorAll('.g').forEach(el => { if (!ids.includes(el.dataset.id)) el.remove(); });
+    ids.forEach(id => {
+      let el = document.getElementById('n-' + id);
+      if (!el) {
+        el = document.createElement('div');
+        el.className = 'g' + (id === ROOT ? ' root' : '');
+        el.id = 'n-' + id; el.dataset.id = id;
+        el.innerHTML = nodeHTML(id);
+        world.appendChild(el);
+      }
+      el.style.left = pos[id].x + 'px'; el.style.top = pos[id].y + 'px';
+    });
+    drawLinks(ids);
+    setTimeout(() => drawLinks(ids), 620);
+    renderPanel(ids);
+  }
+
+  function drawLinks(ids) {
+    links.innerHTML = '';
+    ids.forEach(a => G[a].deps.filter(d => ids.includes(d)).forEach(b => {
+      const A = pos[a], B = pos[b];
+      curve(links, { x: A.x + 125, y: A.y + 130 }, { x: B.x + 125, y: B.y }, KIND_COLOR.concept, KIND_COLOR.concept, { op: 0.5 });
+    }));
+  }
+
+  function renderPanel(ids) {
+    const order = teachingOrder(ids);
+    const before = order.filter(id => id !== ROOT);
+    const p = document.getElementById('panel');
+    p.innerHTML = before.length
+      ? `<p class="lead"><b>Captured variables</b> needs ${before.length === 1 ? 'one concept' : before.length + ' concepts'} that you do not know yet. They are taught in this order, each one after the concepts it needs.</p>`
+      : `<p class="lead">You know every concept that <b>Captured variables</b> needs.</p>`;
+    p.insertAdjacentHTML('beforeend', order.map((id, i) => `<div class="ord ${id === ROOT ? 'root' : ''}" data-go="${id}" style="animation-delay:${i * 0.04}s">
+      <span class="on">${i + 1}</span><div><div class="nm">${G[id].name}</div><div class="ff">${G[id].first}</div></div></div>`).join(''));
+    p.insertAdjacentHTML('beforeend', `<button class="btn primary" data-go="${order[0]}">Start with ${G[order[0]].name} →</button>`);
+  }
+
+  const kl = knownList(Object.fromEntries(Object.entries(G).map(([id, g]) => [id, g.name])), known, () => { render(); setTimeout(() => fitAll(), 30); });
+
+  // ---------- The view ----------
+
+  let cam = { x: 0, y: 0, s: 1 };
+  function apply(fly) {
+    world.classList.toggle('fly', !!fly);
+    world.style.transform = `translate(${cam.x}px, ${cam.y}px) scale(${cam.s})`;
+  }
+  function fitAll(fly = true) {
+    const xs = Object.values(pos).map(p => p.x), ys = Object.values(pos).map(p => p.y);
+    const minX = Math.min(...xs), maxX = Math.max(...xs) + 250, minY = Math.min(...ys), maxY = Math.max(...ys) + 130;
+    const W = view.clientWidth, H = view.clientHeight;
+    cam.s = Math.min(1.1, Math.min(W / (maxX - minX + 160), H / (maxY - minY + 160)));
+    cam.x = (W - (maxX + minX) * cam.s) / 2; cam.y = (H - (maxY + minY) * cam.s) / 2;
+    setFocus(null);
+    apply(fly);
+  }
+  function zoomTo(id) {
+    const p = pos[id];
+    const W = view.clientWidth, H = view.clientHeight;
+    cam.s = Math.min(W * 0.86 / 250, H * 0.84 / 130);
+    cam.x = W / 2 - (p.x + 125) * cam.s; cam.y = H / 2 - (p.y + 65) * cam.s;
+    setFocus(id);
+    apply(true);
+  }
+  function setFocus(id) {
+    world.querySelectorAll('.g').forEach(g => g.classList.toggle('focus', g.dataset.id === id));
+    document.getElementById('crumbs').innerHTML = `<span data-crumb="">Whole graph</span>` + (id ? ` › <b>${G[id].name}</b>` : '');
+    document.querySelector('[data-crumb]').onclick = () => fitAll();
+  }
+
+  document.addEventListener('click', e => {
+    if (moved) return;
+    const k = e.target.closest('[data-know]');
+    if (k) { e.stopPropagation(); kl.add(k.dataset.know); return; }
+    const go = e.target.closest('[data-go]');
+    if (go) { zoomTo(go.dataset.go); return; }
+    const g = e.target.closest('.g');
+    if (g && !g.classList.contains('focus') && !e.target.closest('a')) zoomTo(g.dataset.id);
+  });
+
+  // Dragging moves the view, and the scroll wheel zooms around the pointer.
+  let drag = null, moved = false;
+  view.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, cx: cam.x, cy: cam.y }; moved = false; });
+  window.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (Math.abs(dx) + Math.abs(dy) > 4) { moved = true; view.classList.add('panning'); }
+    if (moved) { cam.x = drag.cx + dx; cam.y = drag.cy + dy; apply(false); }
+  });
+  window.addEventListener('pointerup', () => { drag = null; view.classList.remove('panning'); setTimeout(() => moved = false, 0); });
+  view.addEventListener('wheel', e => {
+    e.preventDefault();
+    const r = view.getBoundingClientRect();
+    const px = e.clientX - r.left, py = e.clientY - r.top;
+    const s = Math.max(0.2, Math.min(8, cam.s * Math.exp(-e.deltaY * 0.0015)));
+    cam.x = px - (px - cam.x) * (s / cam.s); cam.y = py - (py - cam.y) * (s / cam.s); cam.s = s;
+    apply(false);
+  }, { passive: false });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') fitAll(); });
+  window.addEventListener('resize', () => fitAll(false));
+
+  render();
+  fitAll(false);
+</script>
+</body>
+</html>

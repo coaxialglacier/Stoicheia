@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Expand to Parts</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+  body { overflow: hidden; }
+  :root { --chunk: #afa9ec; --atom: #5dcaa5; }
+
+  .head { position: fixed; left: 0; right: 0; top: 52px; z-index: 6; height: 64px; display: flex; align-items: center; gap: 18px; padding: 0 24px;
+    background: color-mix(in srgb, var(--bg-deep) 70%, transparent); backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
+  /* Each name stays on one line. When the names do not fit, the row scrolls sideways. */
+  .roots { display: flex; gap: 6px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+  .roots button { flex-shrink: 0; white-space: nowrap; font-size: 13px; padding: 6px 13px; border-radius: 20px; cursor: pointer; color: var(--muted); background: rgba(236, 233, 225, 0.03); border: 1px solid var(--line-2); transition: all 0.2s; }
+  .roots button:hover { color: var(--text); border-color: var(--line-3); }
+  .roots button.on { color: var(--text); border-color: var(--chunk); background: color-mix(in srgb, var(--chunk) 14%, transparent); box-shadow: 0 0 18px -6px var(--chunk); }
+  /* The direction of the page: chunked on the left, atomized on the right. */
+  .scale { flex: 1; max-width: 520px; display: flex; align-items: center; gap: 12px; margin-left: auto; font: 600 10px var(--mono); letter-spacing: 0.16em; text-transform: uppercase; }
+  .scale .c { color: var(--chunk); }
+  .scale .a { color: var(--atom); }
+  .scale .bar { flex: 1; height: 2px; border-radius: 1px; background: linear-gradient(90deg, var(--chunk), var(--atom)); box-shadow: 0 0 12px -2px color-mix(in srgb, var(--chunk) 60%, var(--atom)); position: relative; }
+  .scale .bar i { position: absolute; top: -3px; width: 8px; height: 8px; margin-left: -4px; border-radius: 50%; background: var(--bg); border: 1.5px solid currentColor; transition: left 0.5s var(--ease); }
+
+  #stage { position: fixed; left: 0; right: 380px; top: 116px; bottom: 0; overflow: auto; }
+  #stage::before { content: ""; position: fixed; inset: 116px 380px 0 0; pointer-events: none; z-index: 0;
+    background: radial-gradient(ellipse 60% 70% at 18% 45%, color-mix(in srgb, var(--chunk) 7%, transparent), transparent 70%),
+                radial-gradient(ellipse 50% 60% at 85% 60%, color-mix(in srgb, var(--atom) 5%, transparent), transparent 70%); }
+  #tree { position: relative; z-index: 1; }
+  svg#links { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; transition: opacity 0.25s; }
+  svg#links .w { transition: opacity 0.25s, stroke-width 0.25s; }
+  svg#links.focus .w { opacity: 0.12; }
+  svg#links.focus .w.hot { opacity: 1; stroke-width: 2.2; }
+
+  /* Each group of parts sits on a soft glow, named for the idea it belongs to. */
+  .grp { position: absolute; border-radius: 40px; pointer-events: none; transition: left 0.5s var(--ease), top 0.5s var(--ease), height 0.5s var(--ease), opacity 0.4s;
+    background: radial-gradient(ellipse 70% 60% at 40% 50%, color-mix(in srgb, var(--hue) 9%, transparent), transparent 75%); }
+  .grp .gl { position: absolute; left: 4px; top: 4px; font: 600 9.5px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: color-mix(in srgb, var(--hue) 80%, var(--muted)); white-space: nowrap; }
+  .grp .gl b { color: var(--text); font-weight: 600; letter-spacing: 0.06em; }
+
+  /* One idea: a pill with its name. Its color moves from purple to teal as the parts get smaller. */
+  .pill { position: absolute; width: 230px; height: 42px; display: flex; align-items: center; gap: 10px; padding: 0 14px 0 13px; border-radius: 21px; cursor: pointer;
+    font-size: 14px; font-weight: 500; color: var(--text); white-space: nowrap;
+    border: 1px solid color-mix(in srgb, var(--hue) 38%, transparent);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--hue) 11%, #2e2d2b), color-mix(in srgb, var(--hue) 4%, #282725));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 6px 18px -10px rgba(0, 0, 0, 0.8);
+    transition: left 0.5s var(--ease), top 0.5s var(--ease), opacity 0.3s, border-color 0.2s, box-shadow 0.25s, background 0.25s; }
+  .pill:hover { border-color: var(--hue); box-shadow: 0 0 0 1px var(--hue), 0 0 26px -6px var(--hue); }
+  .pill .d { width: 9px; height: 9px; border-radius: 50%; flex: none; border: 1.5px solid var(--hue); }
+  .pill .n { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+  .pill .c { font: 600 10.5px var(--mono); color: color-mix(in srgb, var(--hue) 85%, var(--muted)); }
+  .pill .chev { width: 7px; height: 7px; border-right: 1.5px solid var(--hue); border-top: 1.5px solid var(--hue); transform: rotate(45deg); opacity: 0.7; transition: transform 0.3s var(--ease); margin-right: 2px; }
+  .pill.open { background: linear-gradient(180deg, color-mix(in srgb, var(--hue) 26%, #2e2d2b), color-mix(in srgb, var(--hue) 12%, #282725)); border-color: var(--hue);
+    box-shadow: 0 0 0 1px var(--hue), 0 0 34px -8px var(--hue); }
+  .pill.open .d { background: var(--hue); box-shadow: 0 0 10px var(--hue); }
+  .pill.open .chev { transform: rotate(-135deg); }
+  .pill.atom { cursor: default; }
+  .pill.atom .d { border-radius: 2px; transform: rotate(45deg); width: 8px; height: 8px; background: color-mix(in srgb, var(--hue) 40%, transparent); }
+  .pill.known { --hue: #8d8a81; border-style: dashed; background: transparent; color: var(--muted); box-shadow: none; }
+  .pill.known .d { border-style: dashed; background: none; }
+  .pill.dim { opacity: 0.35; }
+  /* The selected pill: the one the panel on the right stays on. */
+  .pill.sel { outline: 2px solid #ece9e1; outline-offset: 3px; }
+  /* How many open ideas this one is part of, when it is more than one. Each of them is wired to this one pill. */
+  /* The Examine capsule above the selected pill's top right: it opens that idea in Graph and Page. */
+  .pill .ex { position: absolute; right: 12px; top: -12px; height: 22px; display: inline-flex; align-items: center; gap: 5px; padding: 0 10px 0 8px; border-radius: 11px; cursor: pointer;
+    font: 600 11px var(--sans); color: var(--bg-deep); background: #ece9e1; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3), 0 0 22px -4px var(--hue);
+    animation: pop 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s backwards; transition: transform 0.15s, background 0.15s; z-index: 2; }
+  .pill .ex:hover { transform: scale(1.06); background: #fff; }
+  .pill .ex svg { width: 11px; height: 11px; }
+  @keyframes pop { from { opacity: 0; transform: scale(0.4) translateY(6px); } }
+  #tree { transition: opacity 0.35s; }
+  #tree.leaving { opacity: 0; }
+  .pill .sh { position: absolute; left: 16px; top: -8px; font: 700 9px var(--mono); letter-spacing: 0.06em; padding: 1px 6px; border-radius: 8px;
+    color: var(--bg-deep); background: var(--hue); box-shadow: 0 0 10px -2px var(--hue); }
+  .pill.entering, .grp.entering { opacity: 0; }
+
+  /* The idea under the pointer: what it is, where it sits, and what it is made of. */
+  .card { position: fixed; right: 0; top: 116px; bottom: 0; z-index: 8; width: 380px; padding: 26px 26px 26px; --serif: ui-serif, "New York", "Iowan Old Style", Georgia, serif;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--hue, var(--chunk)) 7%, var(--bg-deep)), var(--bg-deep) 40%); border-left: 1px solid color-mix(in srgb, var(--hue, var(--chunk)) 30%, var(--line));
+    transition: border-color 0.25s, background 0.25s; overflow: auto; }
+  .card .k0 { font: 600 10px var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--faint); margin-bottom: 14px; }
+  .card .crumb { font: 500 11px var(--mono); color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card .crumb b { color: var(--muted); font-weight: 500; }
+  .card h2 { margin: 8px 0 8px; font-size: 24px; font-weight: 600; letter-spacing: -0.01em; display: flex; align-items: center; gap: 10px; }
+  .card h2 .kind { white-space: nowrap; font: 600 9.5px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; padding: 2px 7px; border-radius: 6px; color: var(--hue, var(--chunk)); border: 1px solid color-mix(in srgb, var(--hue, var(--chunk)) 45%, transparent); }
+  .card p { margin: 0; font-family: var(--serif); font-size: 17px; line-height: 1.55; color: var(--text); }
+  .card .parts { margin-top: 18px; display: flex; flex-direction: column; gap: 6px; }
+  .card .parts div { display: flex; align-items: center; gap: 9px; font-size: 13.5px; color: var(--muted); padding: 4px 8px; margin: 0 -8px; border-radius: 8px; cursor: pointer; }
+  .card .parts div:hover { background: rgba(236, 233, 225, 0.05); }
+  .card .pick { cursor: pointer; text-decoration: underline; text-decoration-color: var(--line-3); text-underline-offset: 3px; }
+  .card .pick:hover { text-decoration-color: var(--text); }
+  /* The way into the study of the selected idea: a small button to the right of its name. */
+  .card .title-row { display: flex; align-items: center; gap: 12px; margin: 8px 0 8px; }
+  .card .title-row h2 { margin: 0; flex: 1; min-width: 0; }
+  .card .go { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 11px; border-radius: 8px; text-decoration: none; white-space: nowrap;
+    font-size: 12px; font-weight: 600; color: var(--text); border: 1px solid color-mix(in srgb, var(--hue, var(--chunk)) 60%, transparent);
+    background: color-mix(in srgb, var(--hue, var(--chunk)) 14%, transparent); transition: background 0.15s, border-color 0.15s; }
+  .card .go:hover { background: color-mix(in srgb, var(--hue, var(--chunk)) 26%, transparent); border-color: var(--hue, var(--chunk)); }
+  .card .parts span { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid currentColor; flex: none; }
+  .card .meta { margin-top: 10px; font-size: 12.5px; color: var(--muted); }
+  .card .meta b { color: var(--text); font-weight: 600; }
+  .tools { display: flex; gap: 8px; }
+</style>
+</head>
+<body class="dots">
+<div class="top">
+  <a class="back" href="index.html">← Home</a>
+  <span class="title">Expand to Parts</span>
+  <span style="color:var(--faint);font-size:13px">from a whole idea to its smallest parts</span>
+  <span class="grow"></span>
+</div>
+<div class="head">
+  <div class="roots" id="roots"></div>
+  <div class="scale"><span class="c">Chunk</span><div class="bar" id="bar"></div><span class="a">Atom</span></div>
+  <div class="tools"><button class="btn" id="expandAll">Open everything</button><button class="btn" id="collapseAll">Close everything</button></div>
+</div>
+<div id="stage"><div id="tree"><svg id="links"></svg></div></div>
+<div class="card" id="card"></div>
+
+<div class="note" style="top:auto;bottom:18px;right:398px">
+  <p><b>Expand to Parts.</b> A whole idea on the left: a chunk. Click it, and what it is made of opens to its right. Keep clicking until you reach the atoms: parts that cannot be split any further.</p>
+  <p>Each idea appears once, in the first column that shows it. When another idea is also made of it, a dashed line wires back to that same pill, and the pill shows how many open ideas use it. Point at a pill to light its lines.</p>
+</div>
+
+<script src="shared.js"></script>
+<script src="library-data.js"></script>
+<script src="library.js"></script>
+<script src="pages.js"></script>
+<script>
+  const COLW = 310, W = 230, H = 42, ROW = 12, LABEL = 30, PAD = 14, GGAP = 26, LEFT = 50, TOP = 30;
+  const tree = document.getElementById('tree'), links = document.getElementById('links'), stage = document.getElementById('stage');
+  let root = STUDYING.id, hovered = null, selected = STUDYING.id, lastLayout = null;
+  const open = new Set();      // The ideas that are open. Each idea is on the page at most once, so an id is enough.
+  const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  // The color for a place between the whole idea (t = 0) and an atom (t = 1).
+  function mix(t) { const a = [175, 169, 236], b = [93, 202, 165]; return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(',')})`; }
+  // How many times an idea can still be split: 0 for an atom.
+  const height = id => PIECES[id].of.length ? 1 + Math.max(...PIECES[id].of.map(height)) : 0;
+  function hue(id) { return mix(PIECES[id].of.length ? 1 - height(id) / Math.max(1, height(root)) : 1); }
+  // Every idea below this one, each counted once.
+  function below(id, seen = new Set()) { PIECES[id].of.forEach(c => { if (!seen.has(c)) { seen.add(c); below(c, seen); } }); return seen; }
+  // Every idea under the root that is made of this one.
+  const usedIn = id => [root, ...below(root)].filter(p => PIECES[p].of.includes(id));
+
+  // Which open idea shows each idea. The page goes column by column from the root, so an idea belongs to the first open idea,
+  // in the leftmost column, that is made of it. Every other open idea that is made of it gets a line back to it instead of a copy.
+  function build() {
+    const owner = { [root]: null }, depth = { [root]: 0 }, back = [];
+    let column = [root];
+    while (column.length) {
+      const next = [];
+      column.forEach(id => {
+        if (!open.has(id)) return;
+        PIECES[id].of.forEach(c => {
+          if (c in depth) { back.push([id, c]); return; }
+          owner[c] = id; depth[c] = depth[id] + 1; next.push(c);
+        });
+      });
+      column = next;
+    }
+    return { owner, depth, back };
+  }
+
+  // The layout: each idea in the column for its depth, and an open idea level with the middle of the ideas it shows.
+  function layout() {
+    const g = build();
+    const pills = {}, groups = [];
+    let cursor = TOP;
+    (function place(id) {
+      const kids = open.has(id) ? PIECES[id].of.filter(c => g.owner[c] === id) : [];
+      const x = LEFT + g.depth[id] * COLW;
+      if (!kids.length) { pills[id] = { id, x, y: cursor, kids: [] }; cursor += H + ROW; return pills[id]; }
+      const gTop = cursor;
+      cursor += LABEL;
+      const placed = kids.map(place);
+      const gBottom = cursor - ROW + PAD;
+      cursor = gBottom + GGAP;
+      pills[id] = { id, x, y: (placed[0].y + placed[placed.length - 1].y) / 2, kids: placed };
+      groups.push({ parent: id, x: x + COLW - 6, y: gTop, h: gBottom - gTop });
+      return pills[id];
+    })(root);
+
+    // The whole idea starts in the middle of the window, from top to bottom. Everything moves together only as much as it has to:
+    // down, so nothing goes above the top, and then up, so the parts below still fit in the window when they can.
+    const viewH = stage.clientHeight, ps = Object.values(pills);
+    const minY = Math.min(...ps.map(p => p.y)), maxY = Math.max(...ps.map(p => p.y)) + H;
+    let shift = viewH / 2 - (pills[root].y + H / 2);
+    if (maxY + shift > viewH - 40) shift = viewH - 40 - maxY;
+    if (minY + shift < TOP) shift = TOP - minY;
+    ps.forEach(p => p.y += shift);
+    groups.forEach(gr => gr.y += shift);
+    return { ...g, pills, groups };
+  }
+
+  function render(fromId) {
+    const L = layout();
+    lastLayout = L;
+    const from = fromId && L.pills[fromId];
+    const ids = new Set(Object.keys(L.pills)), gids = new Set(L.groups.map(x => x.parent));
+    tree.querySelectorAll('.pill').forEach(el => { if (!ids.has(el.dataset.id)) { el.classList.add('entering'); el.dataset.id = ''; setTimeout(() => el.remove(), 300); } });
+    tree.querySelectorAll('.grp').forEach(el => { if (!gids.has(el.dataset.parent)) { el.classList.add('entering'); el.dataset.parent = ''; setTimeout(() => el.remove(), 300); } });
+
+    L.groups.forEach(gr => {
+      let el = tree.querySelector(`.grp[data-parent="${gr.parent}"]`);
+      const isNew = !el;
+      if (isNew) { el = document.createElement('div'); el.className = 'grp entering'; el.dataset.parent = gr.parent; el.style.left = gr.x + 'px'; el.style.top = gr.y + 'px'; tree.insertBefore(el, links.nextSibling); }
+      el.style.setProperty('--hue', hue(PIECES[gr.parent].of[0]));
+      el.innerHTML = `<span class="gl">What <b>${esc(PIECES[gr.parent].name)}</b> is made of</span>`;
+      Object.assign(el.style, { width: (COLW - 10) + 'px', height: gr.h + 'px' });
+      setTimeout(() => { el.style.left = gr.x + 'px'; el.style.top = gr.y + 'px'; el.classList.remove('entering'); }, isNew ? 60 : 0);
+    });
+
+    // How many open ideas each idea is part of.
+    const uses = {};
+    Object.values(L.pills).forEach(p => p.kids.forEach(k => uses[k.id] = (uses[k.id] || 0) + 1));
+    L.back.forEach(([, to]) => uses[to] = (uses[to] || 0) + 1);
+
+    Object.values(L.pills).forEach(p => {
+      let el = tree.querySelector(`.pill[data-id="${p.id}"]`);
+      const isNew = !el;
+      if (isNew) {
+        el = document.createElement('div');
+        el.dataset.id = p.id;
+        // A new pill starts where the idea that opened it is, so it moves out to the right from there.
+        el.style.left = (from ? from.x : p.x) + 'px'; el.style.top = (from ? from.y : p.y) + 'px';
+        tree.appendChild(el);
+      }
+      const P = PIECES[p.id], n = P.of.length;
+      el.className = 'pill' + (n ? '' : ' atom') + (open.has(p.id) ? ' open' : '') + (KNOWN_PIECES.has(p.id) ? ' known' : '') + (isNew ? ' entering' : '');
+      if (KNOWN_PIECES.has(p.id)) el.style.removeProperty('--hue'); else el.style.setProperty('--hue', hue(p.id));
+      const exam = p.id === selected ? `<span class="ex" data-examine="${p.id}" title="Open ${esc(P.name)} in Graph and Page"><svg viewBox="0 0 12 12"><circle cx="5" cy="5" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M7.8 7.8 L10.6 10.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>Examine</span>` : '';
+      el.innerHTML = `${exam}${uses[p.id] > 1 ? `<span class="sh">in ${uses[p.id]}</span>` : ''}<span class="d"></span><span class="n">${esc(P.name)}</span>${n ? `<span class="c">${n}</span><span class="chev"></span>` : ''}`;
+      setTimeout(() => { el.style.left = p.x + 'px'; el.style.top = p.y + 'px'; el.classList.remove('entering'); }, isNew ? 30 : 0);
+    });
+
+    const maxDepth = Math.max(...Object.keys(L.pills).map(id => L.depth[id]));
+    const h = Math.max(stage.clientHeight, Math.max(...Object.values(L.pills).map(p => p.y)) + H + 60), w = LEFT + (maxDepth + 1) * COLW + 120;
+    tree.style.height = h + 'px'; tree.style.width = w + 'px';
+    links.setAttribute('width', w); links.setAttribute('height', h);
+    document.getElementById('bar').innerHTML = Array.from({ length: maxDepth + 1 }, (_, d) => `<i style="left:${d / Math.max(1, height(root)) * 100}%;color:${mix(d / Math.max(1, height(root)))}"></i>`).join('');
+
+    // The lines are drawn once the pills have moved.
+    clearTimeout(render.t);
+    links.style.opacity = 0;
+    render.t = setTimeout(() => { drawLinks(L, fromId); links.style.opacity = 1; }, 520);
+    // The selected pill has a ring, and the page remembers its place, so coming back from a study finds it as it was.
+    tree.querySelectorAll('.pill').forEach(el => el.classList.toggle('sel', el.dataset.id === selected));
+    try { sessionStorage.setItem('expand', JSON.stringify({ root, open: [...open], selected, x: stage.scrollLeft, y: stage.scrollTop })); } catch (e) {}
+    showCard(hovered || selected);
+    return L;
+  }
+
+  // One curved line, in a gradient from color ca to color cb. d is the path. The line is tagged with the two ideas it joins.
+  let gid = 0;
+  function wire(d, a, b, ca, cb, opts = {}) {
+    const ns = 'http://www.w3.org/2000/svg';
+    const id = 'w' + (gid++);
+    const g = document.createElementNS(ns, 'linearGradient');
+    g.setAttribute('id', id); g.setAttribute('gradientUnits', 'userSpaceOnUse');
+    g.setAttribute('x1', a.x); g.setAttribute('y1', a.y); g.setAttribute('x2', b.x); g.setAttribute('y2', b.y);
+    g.innerHTML = `<stop offset="0" stop-color="${ca}"/><stop offset="1" stop-color="${cb}"/>`;
+    links.appendChild(g);
+    const p = document.createElementNS(ns, 'path');
+    p.setAttribute('d', d); p.setAttribute('fill', 'none'); p.setAttribute('stroke', `url(#${id})`);
+    p.setAttribute('stroke-width', opts.width || 1.6); p.setAttribute('stroke-linecap', 'round');
+    p.setAttribute('stroke-opacity', opts.op ?? 0.75);
+    p.setAttribute('class', 'w');
+    p.dataset.ends = `${opts.from} ${opts.to}`;
+    if (opts.dash) p.setAttribute('stroke-dasharray', opts.dash);
+    links.appendChild(p);
+    if (opts.animate) {
+      const len = p.getTotalLength();
+      p.style.strokeDasharray = len; p.style.strokeDashoffset = len; p.style.animation = 'draw 0.8s var(--ease) forwards';
+    }
+    if (opts.travel) {
+      const dot = document.createElementNS(ns, 'circle');
+      dot.setAttribute('r', '2.6'); dot.setAttribute('fill', cb); dot.setAttribute('class', 'w'); dot.dataset.ends = p.dataset.ends;
+      dot.innerHTML = `<animateMotion dur="${opts.travel}s" repeatCount="indefinite" path="${d}"/>`;
+      links.appendChild(dot);
+    }
+    return p;
+  }
+
+  function drawLinks(L, fresh) {
+    links.innerHTML = '';
+    // From an open idea to each idea it shows: a curve that leaves to the right and bends into the next column.
+    Object.values(L.pills).forEach(p => p.kids.forEach((k, i) => {
+      const a = { x: p.x + W, y: p.y + H / 2 }, b = { x: k.x, y: k.y + H / 2 };
+      const dx = b.x - a.x, bend = 0.42 + 0.12 * Math.sin(i * 1.7 + p.y);
+      // Two pills at the same height would be joined by a straight line, so the line bows a little: every line is curved.
+      const bow = Math.max(0, 22 - Math.abs(b.y - a.y) * 0.25) * (i % 2 ? 1 : -1);
+      const d = `M${a.x},${a.y} C${a.x + dx * bend},${a.y + bow} ${b.x - dx * (0.9 - bend)},${b.y + bow} ${b.x},${b.y}`;
+      const known = KNOWN_PIECES.has(k.id);
+      wire(d, a, b, hue(p.id), known ? '#8d8a81' : hue(k.id), { from: p.id, to: k.id, op: 0.8, dash: known ? '4 5' : '', animate: p.id === fresh, travel: p.id === fresh ? 2.2 : 0 });
+    }));
+    // From any other open idea that is made of an idea already on the page: a dashed curve back to that one pill.
+    L.back.forEach(([from, to]) => {
+      const f = L.pills[from], t = L.pills[to];
+      if (!f || !t) return;
+      let a, b, d;
+      if (t.x > f.x) {
+        a = { x: f.x + W, y: f.y + H / 2 }; b = { x: t.x, y: t.y + H / 2 };
+        const dx = b.x - a.x, bow = Math.max(0, 26 - Math.abs(b.y - a.y) * 0.25);
+        d = `M${a.x},${a.y} C${a.x + dx * 0.5},${a.y - bow} ${b.x - dx * 0.5},${b.y - bow} ${b.x},${b.y}`;
+      } else if (t.x === f.x) {
+        // In the same column: the line leaves to the left and curves round into the other pill.
+        a = { x: f.x, y: f.y + H / 2 }; b = { x: t.x, y: t.y + H / 2 };
+        const out = 46 + Math.abs(b.y - a.y) * 0.18;
+        d = `M${a.x},${a.y} C${a.x - out},${a.y} ${b.x - out},${b.y} ${b.x},${b.y}`;
+      } else {
+        // In a column to the left: the line leaves to the left and comes into the right side of the other pill.
+        a = { x: f.x, y: f.y + H / 2 }; b = { x: t.x + W, y: t.y + H / 2 };
+        const dx = a.x - b.x, bow = Math.max(0, 30 - Math.abs(b.y - a.y) * 0.25);
+        d = `M${a.x},${a.y} C${a.x - dx * 0.5},${a.y + bow} ${b.x + dx * 0.5},${b.y + bow} ${b.x},${b.y}`;
+      }
+      wire(d, a, b, hue(from), KNOWN_PIECES.has(to) ? '#8d8a81' : hue(to), { from, to, op: 0.55, width: 1.4, dash: '2 6', animate: from === fresh });
+    });
+  }
+
+  // Pointing at a pill lights every line that joins it, and the pills at the other ends.
+  function light(id) {
+    links.classList.toggle('focus', !!id);
+    const near = new Set([id]);
+    links.querySelectorAll('.w').forEach(w => {
+      const [a, b] = (w.dataset.ends || '').split(' ');
+      const hot = !!id && (a === id || b === id);
+      w.classList.toggle('hot', hot);
+      if (hot) { near.add(a); near.add(b); }
+    });
+    tree.querySelectorAll('.pill').forEach(p => p.classList.toggle('dim', !!id && !near.has(p.dataset.id)));
+  }
+
+  // Where the study of an idea is: studyHref, in pages.js. A concept with an entry has a full study in Graph and Page,
+  // and every other idea opens in the same layout, built from what this page knows about it.
+
+  // The panel for the pill under the pointer, or for the selected idea.
+  function showCard(id) {
+    const P = PIECES[id];
+    const card = document.getElementById('card');
+    const isAtom = !P.of.length, known = KNOWN_PIECES.has(id);
+    card.style.setProperty('--hue', known ? '#8d8a81' : hue(id));
+    const all = below(id), atoms = [...all].filter(i => !PIECES[i].of.length).length;
+    const parents = id === root ? [] : usedIn(id);
+    card.innerHTML = `<div class="k0">${hovered && hovered !== selected ? 'Under the pointer · click it to keep it here' : 'Selected'}</div>
+      <div class="title-row"><h2>${esc(P.name)}<span class="kind">${known ? 'Known' : isAtom ? 'Atom' : id === root ? 'Chunk' : 'Made of parts'}</span></h2>
+        <a class="go" href="${studyHref(id, root, 'expand')}" title="${LIB.hasStudy(id) ? 'Its full study' : 'Its graph and its page'}">Graph and Page →</a></div>
+      <p>${esc(P.first)}</p>
+      <div class="meta">${isAtom ? 'It cannot be split any further.' : `Made of <b>${P.of.length}</b> ${P.of.length === 1 ? 'idea' : 'ideas'}. Under it are <b>${all.size}</b> ideas in all, and <b>${atoms}</b> of them are atoms.`}</div>
+      ${isAtom ? '' : `<div class="parts">${P.of.map(c => `<div data-pick="${c}" style="color:${KNOWN_PIECES.has(c) ? '#8d8a81' : hue(c)}"><span></span><b style="color:var(--text);font-weight:500">${esc(PIECES[c].name)}</b></div>`).join('')}</div>`}
+      ${parents.length ? `<div class="meta" style="margin-top:18px">Part of ${parents.map(x => `<b class="pick" data-pick="${x}">${esc(PIECES[x].name)}</b>`).join(', ')}.</div>` : ''}`;
+  }
+
+  // Selecting an idea keeps the panel on it. An idea that is not on the page yet is shown by opening the selected idea, which is made of it.
+  function select(id) {
+    selected = id;
+    if (!lastLayout || !lastLayout.pills[id]) {
+      const via = PIECES[selected] && Object.keys(PIECES).find(p => lastLayout && lastLayout.pills[p] && PIECES[p].of.includes(id));
+      if (via) open.add(via);
+    }
+    render();
+    showCard(id);
+  }
+
+  function toggle(id) {
+    if (open.has(id)) {
+      // Closing an idea closes every open idea that is only on the page because of it.
+      open.delete(id);
+      const g = build();
+      [...open].forEach(o => { if (!(o in g.depth)) open.delete(o); });
+      render(); return;
+    }
+    open.add(id);
+    const L = render(id);
+    const p = L.pills[id];
+    // The page scrolls sideways to the new parts. It scrolls up or down only when some of them are out of view.
+    if (p && p.kids.length) setTimeout(() => {
+      const top = p.kids[0].y, bottom = p.kids[p.kids.length - 1].y + H, vt = stage.scrollTop, vb = vt + stage.clientHeight;
+      const y = top < vt || bottom > vb ? Math.max(0, top - 120) : vt;
+      stage.scrollTo({ left: Math.max(0, p.x - 260), top: y, behavior: 'smooth' });
+    }, 80);
+  }
+  function openAllBelow(id) {
+    (function walk(x) { if (!PIECES[x].of.length || open.has(x)) return; open.add(x); PIECES[x].of.forEach(walk); })(id);
+    render(id);
+  }
+  function setRoot(id) {
+    root = id; open.clear(); hovered = null; selected = id;
+    tree.querySelectorAll('.pill, .grp').forEach(el => el.remove());
+    renderRoots();
+    stage.scrollTo({ left: 0, top: 0 });
+    render();
+  }
+  // The whole ideas to start from: the one opened from the home page, if any, and the examples.
+  function renderRoots() {
+    const list = ROOTS.includes(root) ? ROOTS : [root, ...ROOTS];
+    document.getElementById('roots').innerHTML = list.map(id => `<button data-root="${id}" class="${id === root ? 'on' : ''}">${esc(PIECES[id].name)}</button>`).join('');
+  }
+
+  // Examining an idea opens it in Graph and Page. The page fades first, and this page keeps its place for the way back.
+  function examine(id) {
+    selected = id;
+    render();
+    tree.classList.add('leaving');
+    setTimeout(() => { location.href = studyHref(id, root, 'expand'); }, 300);
+  }
+
+  document.addEventListener('click', e => {
+    const r = e.target.closest('[data-root]');
+    if (r) { setRoot(r.dataset.root); return; }
+    const ex = e.target.closest('[data-examine]');
+    if (ex) { e.stopPropagation(); examine(ex.dataset.examine); return; }
+    const pk = e.target.closest('[data-pick]');
+    if (pk) { select(pk.dataset.pick); return; }
+    const c = e.target.closest('.pill');
+    if (!c || !c.dataset.id) return;
+    selected = c.dataset.id;
+    if (PIECES[c.dataset.id].of.length) toggle(c.dataset.id); else render();
+  });
+  tree.addEventListener('mouseover', e => {
+    const c = e.target.closest('.pill');
+    const id = c && c.dataset.id ? c.dataset.id : null;
+    if (id === hovered) return;
+    hovered = id; light(id);
+    if (id) showCard(id);
+  });
+  tree.addEventListener('mouseleave', () => { hovered = null; light(null); showCard(selected); });
+  document.getElementById('expandAll').onclick = () => openAllBelow(root);
+  document.getElementById('collapseAll').onclick = () => { open.clear(); selected = root; render(); stage.scrollTo({ left: 0, top: 0, behavior: 'smooth' }); };
+
+  window.addEventListener('resize', () => { clearTimeout(window.rt); window.rt = setTimeout(() => render(), 150); });
+  // Coming back from a study, the page opens as it was left.
+  let saved = null;
+  try { saved = JSON.parse(sessionStorage.getItem('expand') || 'null'); } catch (e) {}
+  // Opened from the home page with an idea: the page starts on that idea, as it was left if it was the last one open here.
+  const asked = new URLSearchParams(location.search).get('root');
+  if (asked && PIECES[asked] && !(saved && saved.root === asked)) saved = { root: asked, open: PIECES[asked].of.length ? [asked] : [], selected: asked };
+  if (saved && PIECES[saved.root] && !location.search.includes('preview')) {
+    setRoot(saved.root);
+    saved.open.forEach(o => PIECES[o] && open.add(o));
+    selected = PIECES[saved.selected] ? saved.selected : saved.root;
+    render();
+    setTimeout(() => stage.scrollTo({ left: saved.x || 0, top: saved.y || 0 }), 60);
+  } else setRoot(STUDYING.id);
+  if (location.search.includes('preview')) { setRoot(STUDYING.id); open.add(STUDYING.id); open.add('closure'); selected = 'closure'; render('closure'); }
+</script>
+</body>
+</html>

@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Graph and Page</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+  body { overflow: hidden; }
+
+  /* ---------- The graph, on the left ---------- */
+  .side { position: fixed; left: 0; top: 52px; bottom: 0; width: 440px; padding: 22px 22px 28px; background: var(--bg-deep); border-right: 1px solid var(--line); overflow: auto; }
+  .side .lead { font-size: 14px; color: var(--muted); line-height: 1.55; margin: 0 0 18px; }
+  .side .lead b { color: var(--text); font-weight: 600; }
+  .gscroll { overflow-x: auto; overflow-y: hidden; margin: 0 -6px; padding: 4px 6px 10px; }
+  .gwrap { position: relative; transform-origin: 0 0; }
+  .gwrap svg { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+  .gn { position: absolute; width: 112px; min-height: 52px; padding: 7px 9px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 600; line-height: 1.3;
+    border: 1px solid color-mix(in srgb, var(--concept) 40%, transparent); background: color-mix(in srgb, var(--concept) 9%, var(--panel));
+    transition: box-shadow 0.3s, border-color 0.3s, opacity 0.3s; animation: rise 0.35s var(--ease) backwards; }
+  .gn:hover { border-color: var(--concept); }
+  .gn .o { display: block; font: 600 9.5px var(--mono); letter-spacing: 0.1em; color: var(--concept); margin-bottom: 2px; }
+  .gn.atom { border-color: color-mix(in srgb, var(--fact) 45%, transparent); background: color-mix(in srgb, var(--fact) 8%, var(--panel)); }
+  .gn.atom .o { color: var(--fact); }
+  .gn.read { opacity: 0.6; }
+  .gn.on { opacity: 1; border-color: var(--concept); box-shadow: 0 0 0 1px var(--concept), 0 0 26px -6px var(--concept); background: color-mix(in srgb, var(--concept) 20%, var(--panel)); }
+  .gn.root { border-color: color-mix(in srgb, var(--concept) 75%, transparent); }
+  /* A concept the reader knows: grey, dashed, and no number, because it is not in the teaching order. */
+  .gn.known { border: 1px dashed color-mix(in srgb, var(--known) 80%, transparent); background: transparent; color: var(--muted); font-weight: 500; opacity: 0.75; }
+  .gn.known .o { color: var(--known); }
+  .gn.known.on { opacity: 1; border-color: var(--muted); box-shadow: 0 0 26px -6px var(--known); background: color-mix(in srgb, var(--known) 10%, transparent); }
+  .legend { margin-top: 16px; font-size: 12px; color: var(--faint); line-height: 1.5; }
+
+  /* ---------- The page, on the right ---------- */
+  .main { position: fixed; left: 440px; right: 0; top: 52px; bottom: 0; overflow: auto; }
+  .page { max-width: 860px; margin: 0 auto; padding: 34px 44px 120px; --serif: ui-serif, "New York", "Iowan Old Style", Georgia, serif; }
+  .crumb { font: 600 10.5px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); margin-bottom: 14px; }
+  .crumb b { color: var(--concept); }
+  .tabs { display: flex; gap: 2px; margin: 18px 0 26px; border-bottom: 1px solid var(--line); }
+  .tab { padding: 9px 14px 10px; font-size: 13px; font-weight: 600; color: var(--faint); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tab.on { color: var(--text); border-bottom-color: var(--concept); }
+  .tab small { font-weight: 500; margin-left: 6px; }
+  .view { animation: rise 0.35s var(--ease); }
+  .q { margin: 0 0 26px; }
+  .q h4 { margin: 0 0 6px; font-size: 14px; font-weight: 600; color: #a6e3cd; }
+  .q p { margin: 0; font-family: var(--serif); font-size: 18px; line-height: 1.6; }
+  .parts { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+  .part { display: grid; grid-template-columns: 12px 1fr; gap: 12px; padding: 11px 14px; border-radius: 12px; cursor: pointer; border: 1px solid var(--line); background: rgba(236, 233, 225, 0.02); transition: border-color 0.2s, background 0.2s; }
+  .part:hover { border-color: color-mix(in srgb, var(--concept) 50%, transparent); background: color-mix(in srgb, var(--concept) 6%, transparent); }
+  .part .dt { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--concept); margin-top: 5px; }
+  .part.atom .dt { border-color: var(--fact); border-radius: 2px; transform: rotate(45deg); }
+  .part .pn { font-size: 15px; font-weight: 600; }
+  .part .pf { font-family: var(--serif); font-size: 15px; line-height: 1.5; color: var(--muted); margin-top: 2px; }
+  .pick { cursor: pointer; font-weight: 600; text-decoration: underline; text-decoration-color: var(--line-3); text-underline-offset: 3px; }
+  .pick:hover { text-decoration-color: var(--text); }
+  .unwritten { margin-top: 8px; padding: 14px 16px; border-radius: 12px; border: 1px dashed var(--line-3); color: var(--muted); font-size: 14px; line-height: 1.55; }
+  .unwritten b { color: var(--text); font-weight: 600; }
+  .full { display: inline-flex; margin-top: 18px; padding: 10px 16px; border-radius: 10px; color: var(--text); text-decoration: none; font-size: 14px;
+    border: 1px solid color-mix(in srgb, var(--concept) 55%, transparent); background: color-mix(in srgb, var(--concept) 14%, transparent); }
+  .pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 34px; padding-top: 20px; border-top: 1px solid var(--line); }
+  .pager button { max-width: 48%; text-align: left; padding: 12px 16px; border-radius: 12px; cursor: pointer; background: var(--panel); border: 1px solid var(--line-2); color: var(--text); }
+  .pager button:hover { border-color: var(--line-3); }
+  .pager button small { display: block; font: 600 10px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); margin-bottom: 2px; }
+  .pager button.next { margin-left: auto; text-align: right; border-color: color-mix(in srgb, var(--concept) 45%, transparent); }
+  .note { top: auto; bottom: 18px; }
+</style>
+</head>
+<body class="dots">
+<div class="top">
+  <a class="back" href="map-expand.html">← Back to Expand to Parts</a>
+  <span class="title">Graph and Page</span>
+  <span class="grow"></span>
+  <div class="hud"><span>←  →</span><span>before · next</span></div>
+</div>
+
+<aside class="side">
+  <p class="lead" id="lead"></p>
+  <div class="gscroll"><div class="gwrap" id="gwrap"><svg id="glinks"></svg></div></div>
+  <p class="legend">Each box is an idea, and a line goes from an idea down to an idea it is made of. The numbers are the order you learn them in: the parts first, then what they make. A teal box is an atom. A dashed box is an idea you know: it has no number, and you can still click it to open its page.</p>
+</aside>
+<main class="main" id="main"><div class="page" id="page"></div></main>
+
+<div class="note">
+  <p><b>Graph and Page, for any idea.</b> This is the layout of Graph and Page, built from what Expand to Parts knows about each idea: what it is, and what it is made of.</p>
+  <p>Its other answers are not written yet. Each idea with an entry in the concept library, such as Captured variables, has its full study in the original Graph and Page.</p>
+</div>
+
+<script src="shared.js"></script>
+<script src="library-data.js"></script>
+<script src="library.js"></script>
+<script src="pages.js"></script>
+<script>
+  const params = new URLSearchParams(location.search);
+  const ROOT = PIECES[params.get('idea')] ? params.get('idea') : STUDYING.id;
+  const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const gwrap = document.getElementById('gwrap'), glinks = document.getElementById('glinks');
+  const read = new Set();
+  let current = ROOT;
+
+  // Every idea in this study: the idea that was opened, and everything it is made of, each idea once.
+  // Its row is the first row that reaches it, going down from the top.
+  const row = { [ROOT]: 0 }, rows = [[ROOT]];
+  for (let r = 0; rows[r] && rows[r].length; r++) {
+    const next = [];
+    rows[r].forEach(id => PIECES[id].of.forEach(c => { if (!(c in row)) { row[c] = r + 1; next.push(c); } }));
+    if (next.length) rows.push(next);
+  }
+  const ids = Object.keys(row);
+
+  // Teaching order: each idea after the ideas it is made of, and only the ideas the reader does not know.
+  const order = [];
+  (function walk(id) { if (order.includes(id)) return; PIECES[id].of.forEach(walk); if (!KNOWN_PIECES.has(id)) order.push(id); })(ROOT);
+
+  // The layout: one row for each step down, with the ideas of each row side by side.
+  const BW = 112, GAPX = 12, ROWH = 88;
+  const pos = {};
+  const widest = Math.max(...rows.map(r => r.length));
+  const width = widest * (BW + GAPX) - GAPX;
+  rows.forEach((r, i) => {
+    const rw = r.length * (BW + GAPX) - GAPX, x0 = (width - rw) / 2;
+    r.forEach((id, j) => pos[id] = { x: x0 + j * (BW + GAPX), y: i * ROWH });
+  });
+
+  function renderGraph() {
+    gwrap.style.width = width + 'px'; gwrap.style.height = (rows.length * ROWH) + 'px';
+    // A wide graph is drawn smaller, down to a size that can still be read, and scrolls sideways after that.
+    const fit = Math.max(0.62, Math.min(1, 392 / width));
+    gwrap.style.transform = `scale(${fit})`;
+    gwrap.parentElement.style.height = (rows.length * ROWH * fit + 14) + 'px';
+    gwrap.querySelectorAll('.gn').forEach(n => n.remove());
+    ids.forEach((id, i) => {
+      const n = document.createElement('div');
+      const known = KNOWN_PIECES.has(id), atom = !PIECES[id].of.length;
+      n.className = 'gn' + (id === ROOT ? ' root' : '') + (known ? ' known' : '') + (atom && !known ? ' atom' : '') + (id === current ? ' on' : '') + (read.has(id) && id !== current ? ' read' : '');
+      n.dataset.id = id;
+      n.style.left = pos[id].x + 'px'; n.style.top = pos[id].y + 'px'; n.style.animationDelay = (i * 0.015) + 's';
+      n.innerHTML = `<span class="o">${known ? 'known' : order.indexOf(id) + 1}</span>${esc(PIECES[id].name)}`;
+      gwrap.appendChild(n);
+    });
+    // The lines: from an idea down to each idea it is made of. A line to an idea in the same row or a row above curves round, dashed.
+    glinks.innerHTML = '';
+    ids.forEach(a => PIECES[a].of.forEach(b => {
+      const A = pos[a], B = pos[b];
+      const lit = a === current || b === current, known = KNOWN_PIECES.has(b);
+      const col = known ? KIND_COLOR.known : PIECES[b].of.length ? KIND_COLOR.concept : KIND_COLOR.fact;
+      if (row[b] > row[a]) {
+        curve(glinks, { x: A.x + BW / 2, y: A.y + 52 }, { x: B.x + BW / 2, y: B.y }, KIND_COLOR.concept, col, { op: lit ? 0.95 : 0.3, width: lit ? 2 : 1.2, dash: known ? '4 4' : '', travel: lit ? 1.8 : 0 });
+      } else {
+        const side = B.x > A.x ? 1 : -1;
+        curve(glinks, { x: A.x + (side > 0 ? BW : 0), y: A.y + 26 }, { x: B.x + (side > 0 ? 0 : BW), y: B.y + 26 }, KIND_COLOR.concept, col, { horizontal: true, op: lit ? 0.9 : 0.22, width: lit ? 1.8 : 1.1, dash: '2 5' });
+      }
+    }));
+    document.getElementById('lead').innerHTML = `<b>${esc(PIECES[ROOT].name)}</b> is made of ${ids.length - 1} ideas. ${order.length - 1} of them are new to you, so the study teaches ${order.length} ideas, ending with ${esc(PIECES[ROOT].name)}.`;
+  }
+
+  function show(id) {
+    current = id;
+    read.add(id);
+    const P = PIECES[id], known = KNOWN_PIECES.has(id), atom = !P.of.length;
+    const i = order.indexOf(id), prev = order[i - 1], next = order[i + 1];
+    // Parts the reader knows leave the explanation entirely. They are still on the graph.
+    const parts = P.of.filter(c => !KNOWN_PIECES.has(c));
+    const usedBy = ids.filter(x => PIECES[x].of.includes(id));
+    document.getElementById('page').innerHTML = `
+      <div class="crumb">${id === ROOT ? '<b>The idea you opened</b>' : known ? 'An idea you know' : `Idea <b>${i + 1}</b> of ${order.length}`}</div>
+      <article class="lesson view">
+        <h2 class="l-name">${esc(P.name)}</h2>
+        <div class="tabs"><span class="tab on">What it is</span><span class="tab">Parts and Steps<small>not written yet</small></span></div>
+        <div class="q"><h4>What is it?</h4><p>${esc(P.first)}</p></div>
+        ${atom ? '<div class="q"><h4>What is it made of?</h4><p>Nothing smaller: it is an atom, a part that cannot be split any further.</p></div>'
+          : parts.length ? `<div class="q"><h4>What is it made of?</h4><div class="parts">${parts.map(c => `<div class="part ${PIECES[c].of.length ? '' : 'atom'}" data-go="${c}"><span class="dt"></span><div><div class="pn">${esc(PIECES[c].name)}</div><div class="pf">${esc(PIECES[c].first)}</div></div></div>`).join('')}</div></div>` : ''}
+        ${usedBy.length ? `<div class="q"><h4>Where is it used?</h4><p>It is part of ${usedBy.map(u => `<span class="pick" data-go="${u}">${esc(PIECES[u].name)}</span>`).join(', ')}.</p></div>` : ''}
+        <div class="unwritten"><b>What problem does it solve? How does it work? When do you use it, and when don't you?</b><br>These answers are not written yet. In Stoicheia, they are written the first time a study is opened, and every fact is checked before you see it.</div>
+        ${LIB.hasStudy(id) ? `<a class="full" href="${studyHref(id, params.get('root'), 'expand')}">Open its full study in Graph and Page →</a>` : ''}
+      </article>
+      ${known ? '' : `<div class="pager">
+        ${prev ? `<button data-go="${prev}"><small>← Before this</small>${esc(PIECES[prev].name)}</button>` : ''}
+        ${next ? `<button class="next" data-go="${next}"><small>Next →</small>${esc(PIECES[next].name)}</button>` : ''}
+      </div>`}`;
+    document.getElementById('main').scrollTop = 0;
+    renderGraph();
+    // The graph scrolls so the idea on the page is in view.
+    const n = gwrap.querySelector(`.gn[data-id="${id}"]`);
+    if (n) n.scrollIntoView({ block: 'nearest', inline: 'center' });
+  }
+
+  document.addEventListener('click', e => {
+    const g = e.target.closest('[data-go]') || e.target.closest('.gn');
+    if (g) show(g.dataset.go || g.dataset.id);
+  });
+  document.addEventListener('keydown', e => {
+    const i = order.indexOf(current);
+    if (e.key === 'ArrowRight' && order[i + 1]) show(order[i + 1]);
+    if (e.key === 'ArrowLeft' && order[i - 1]) show(order[i - 1]);
+  });
+  // The study opens on the idea that was selected in Expand to Parts. The numbers on the graph show where to start learning it.
+  show(ROOT);
+</script>
+</body>
+</html>

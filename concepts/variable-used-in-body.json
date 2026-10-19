@@ -1,0 +1,6 @@
+{
+  "id": "variable-used-in-body",
+  "name": "Variable used in the body",
+  "first": "A place where a closure's body changes or reads a variable from outside its braces. It is the same variable, not a copy.",
+  "parts": []
+}

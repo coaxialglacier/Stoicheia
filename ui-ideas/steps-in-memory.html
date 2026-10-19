@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Steps in Memory</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+  .stage { max-width: 1240px; margin: 0 auto; padding: 84px 36px 80px; }
+
+  /* The steps happen in time, so they sit on a line from left to right. */
+  .rail { position: relative; height: 40px; margin: 0 24px 6px; }
+  .rail .line { position: absolute; left: 0; right: 0; top: 19px; height: 2px; background: var(--line-2); border-radius: 1px; }
+  .rail .done { position: absolute; left: 0; top: 19px; height: 2px; background: var(--step); border-radius: 1px; transition: width 0.6s var(--ease); box-shadow: 0 0 10px var(--step); }
+  .rail .st { position: absolute; top: 7px; width: 26px; height: 26px; margin-left: -13px; border-radius: 50%; cursor: pointer; display: grid; place-items: center;
+    font: 700 11px var(--mono); background: var(--bg-deep); color: var(--step); border: 1.5px solid color-mix(in srgb, var(--step) 55%, transparent); transition: all 0.3s; }
+  .rail .st.past { background: color-mix(in srgb, var(--step) 28%, var(--bg-deep)); color: var(--text); }
+  .rail .st.on { background: var(--step); color: var(--bg-deep); box-shadow: 0 0 18px -2px var(--step); transform: scale(1.12); }
+  .now { display: flex; align-items: center; gap: 16px; margin: 10px 0 30px; min-height: 64px; }
+  .now .txt { flex: 1; font-size: 17px; line-height: 1.55; animation: rise 0.35s var(--ease); }
+  .now .txt code { font-size: 0.86em; }
+  .now .ctl { display: flex; gap: 8px; }
+
+  .cols { display: grid; grid-template-columns: 430px 1fr; gap: 40px; align-items: start; }
+  .cb .cl { height: 28px; }
+  .cb .cl .s { font-size: 13.5px; }
+
+  /* The memory drawing. The stack and the heap have the same look on every page. */
+  .mem { position: relative; height: 430px; border-radius: 14px; border: 1px solid var(--line); background: rgba(31, 30, 29, 0.55); }
+  .mem .area { position: absolute; top: 16px; font: 600 10.5px var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--faint); }
+  .mem .divider { position: absolute; top: 14px; bottom: 14px; left: 52%; width: 1px; background: var(--line); }
+  .blk { position: absolute; border-radius: 10px; padding: 10px 12px 12px; transition: opacity 0.5s, transform 0.5s var(--ease), border-color 0.3s, box-shadow 0.3s; }
+  .blk.frame { border: 1px solid #8c9aa8; background: #262c33; }
+  .blk.heap { border: 1px solid #a18ff2; background: #2a2540; }
+  .blk.gone { opacity: 0; transform: translateY(-10px) scale(0.97); pointer-events: none; }
+  .blk.changed { box-shadow: 0 0 0 1px var(--step), 0 0 24px -4px var(--step); }
+  .blk .bh { font: 600 12px var(--sans); color: var(--muted); margin-bottom: 8px; display: flex; justify-content: space-between; gap: 10px; }
+  .blk .bh i { font-style: normal; font: 600 9.5px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); }
+  .fld { display: grid; grid-template-columns: 70px 1fr; align-items: center; gap: 8px; height: 30px; }
+  .fld .fn { font: 13px var(--mono); color: var(--text); }
+  .fld .fv { font: 13px var(--mono); height: 26px; border-radius: 6px; padding: 0 9px; display: flex; align-items: center; background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(236, 233, 225, 0.1); color: #f1ead7; transition: background 0.3s; }
+  .fld .fv.ptr { color: var(--muted); font-size: 11.5px; font-family: var(--sans); gap: 8px; }
+  .fld .fv.ptr::after { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #ece6d6; margin-left: auto; }
+  .fld .fv.none { color: var(--faint); font-family: var(--sans); font-size: 11.5px; }
+  .fld .fv.flash { background: color-mix(in srgb, var(--step) 40%, transparent); }
+  svg#arrows { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+  .note-mem { margin-top: 10px; font-size: 12.5px; color: var(--faint); }
+</style>
+</head>
+<body class="dots">
+<div class="top">
+  <a class="back" href="index.html">← Home</a>
+  <span class="title">Steps in Memory</span>
+  <span class="grow"></span>
+  <div class="hud"><span>Captured variables</span><span class="sep"></span><span>what is in memory</span></div>
+</div>
+
+<div class="stage">
+  <div class="question prose"><span class="qk">The question</span><code>makeCounter(step:)</code> has returned, but each call of <code>counter()</code> still adds to <code>count</code>. Where is <code>count</code> kept?</div>
+
+  <div class="rail" id="rail"><div class="line"></div><div class="done" id="done"></div></div>
+  <div class="now prose"><div class="txt" id="now"></div>
+    <div class="ctl"><button class="btn" id="prev">←</button><button class="btn" id="play">▶ Play</button><button class="btn primary" id="next">Next <kbd>space</kbd></button></div></div>
+
+  <div class="cols">
+    <div><div id="code"></div><div class="output" id="out"></div></div>
+    <div>
+      <div class="mem" id="mem">
+        <span class="area" style="left:18px">Stack</span>
+        <span class="area" style="left:calc(52% + 18px)">Heap</span>
+        <div class="divider"></div>
+        <div class="blk frame" id="b-mc" style="left:18px; top:52px; width:44%"><div class="bh">makeCounter(step:)<i>stack frame</i></div>
+          <div class="fld"><span class="fn">step</span><span class="fv" id="v-mc-step">2</span></div>
+          <div class="fld"><span class="fn">count</span><span class="fv ptr" id="v-mc-count">address of the box</span></div></div>
+        <div class="blk frame" id="b-run" style="left:18px; top:250px; width:44%"><div class="bh">run()<i>stack frame</i></div>
+          <div class="fld"><span class="fn">counter</span><span class="fv none" id="v-run-code">no value yet</span></div>
+          <div class="fld" id="f-run-ctx"><span class="fn"></span><span class="fv ptr" id="v-run-ctx">address of the context</span></div></div>
+        <div class="blk heap" id="b-box" style="left:calc(52% + 18px); top:52px; width:40%"><div class="bh">box<i>heap object</i></div>
+          <div class="fld"><span class="fn">count</span><span class="fv" id="v-box">0</span></div></div>
+        <div class="blk heap" id="b-ctx" style="left:calc(52% + 18px); top:220px; width:40%"><div class="bh">context<i>heap object</i></div>
+          <div class="fld"><span class="fn">step</span><span class="fv" id="v-ctx-step">2</span></div>
+          <div class="fld"><span class="fn">count</span><span class="fv ptr" id="v-ctx-count">address of the box</span></div></div>
+        <svg id="arrows"></svg>
+      </div>
+      <div class="note-mem">A grey box is a stack frame. A purple box is a heap object. A white dot is an address, and its line goes to the memory it names.</div>
+    </div>
+  </div>
+</div>
+
+<div class="note">
+  <p><b>Steps in Memory.</b> A candidate format, rebuilt from idea E. It is used for the second level: what is in memory while the code runs.</p>
+  <p>The steps sit on a time line. At each step, the line that runs is marked, and the drawing of the stack and the heap changes to match. The memory that changed glows.</p>
+  <p>This is mockup content. Its steps have not been checked with swiftc yet.</p>
+</div>
+
+<script src="shared.js"></script>
+<script>
+  const LINES = [
+    '<span class="kw">func</span> makeCounter(step: Int) -> () -> Int {',
+    '    <span class="kw">var</span> count = 0',
+    '    <span class="kw">return</span> {',
+    '        count += step',
+    '        <span class="kw">return</span> count',
+    '    }',
+    '}',
+    '',
+    '<span class="kw">func</span> run() {',
+    '    <span class="kw">let</span> counter = makeCounter(step: 2)',
+    '    print(counter())',
+    '    print(counter())',
+    '}',
+    'run()',
+  ];
+
+  // What memory holds after each step: which blocks exist, and the value of each field.
+  const STEPS = [
+    { html: 'Line 14 calls <code>run()</code>. A stack frame is made for it. <code>counter</code> has no value yet.',
+      lines: [14], show: ['run'], changed: ['run'] },
+    { html: 'Line 10 calls <code>makeCounter(step: 2)</code>. A stack frame is made for it, and <code>step</code> is 2.',
+      lines: [10], show: ['run', 'mc'], changed: ['mc'] },
+    { html: 'Line 2: the closure captures <code>count</code>, so <code>count</code> is kept in a box on the heap, and the box holds 0. The stack frame holds the address of the box.',
+      lines: [2], show: ['run', 'mc', 'box'], changed: ['box'], box: 0, arrows: [['v-mc-count', 'b-box']] },
+    { html: 'Line 3 makes the closure. Its context is made on the heap. The context holds <code>step</code>, which is 2, and the address of the box.',
+      lines: [3, 4, 5, 6], show: ['run', 'mc', 'box', 'ctx'], changed: ['ctx'], box: 0, arrows: [['v-mc-count', 'b-box'], ['v-ctx-count', 'b-box']] },
+    { html: '<code>makeCounter</code> returns the closure, and its stack frame is removed. <code>counter</code> holds the closure: the address of its code, and the address of its context. The box stays, because the context holds its address.',
+      lines: [10], show: ['run', 'box', 'ctx'], changed: ['run'], box: 0, counter: true, arrows: [['v-ctx-count', 'b-box'], ['v-run-ctx', 'b-ctx']] },
+    { html: 'Line 11 calls <code>counter()</code>. The body runs: <code>count += step</code> makes the box hold 2. The call returns 2, and line 11 prints it.',
+      lines: [11, 4, 5], show: ['run', 'box', 'ctx'], changed: ['box'], box: 2, counter: true, out: ['2'], arrows: [['v-ctx-count', 'b-box'], ['v-run-ctx', 'b-ctx']] },
+    { html: 'Line 12 calls <code>counter()</code> again. The box holds 4, and line 12 prints 4.',
+      lines: [12, 4, 5], show: ['run', 'box', 'ctx'], changed: ['box'], box: 4, counter: true, out: ['2', '4'], arrows: [['v-ctx-count', 'b-box'], ['v-run-ctx', 'b-ctx']] },
+  ];
+
+  document.getElementById('code').innerHTML = codeLinesHTML(LINES);
+  const rail = document.getElementById('rail');
+  rail.insertAdjacentHTML('beforeend', STEPS.map((s, i) => `<div class="st" data-s="${i}" style="left:${i / (STEPS.length - 1) * 100}%">${i + 1}</div>`).join(''));
+  const mem = document.getElementById('mem');
+  const arrows = document.getElementById('arrows');
+  const BLK = { run: 'b-run', mc: 'b-mc', box: 'b-box', ctx: 'b-ctx' };
+
+  // An arrow from an address to the memory it names: a dot where the address is, and a line to the edge of that memory.
+  // When the memory is to the right, the line enters its left edge. When the memory is in the same column, the line goes around the right side and enters its right edge.
+  function arrow(fromId, toId) {
+    const base = mem.getBoundingClientRect();
+    const f = document.getElementById(fromId).getBoundingClientRect();
+    const t = document.getElementById(toId).getBoundingClientRect();
+    const a = { x: f.right - 12 - base.left, y: f.top + f.height / 2 - base.top };
+    const right = t.left - base.left > a.x;
+    const b = right ? { x: t.left - base.left - 2, y: t.top + 22 - base.top } : { x: t.right - base.left + 2, y: t.top + 22 - base.top };
+    const head = right ? -9 : 9;
+    const mx = right ? (a.x + b.x) / 2 : Math.max(a.x, b.x) + 34;
+    const d = `M${a.x},${a.y} C${mx},${a.y} ${mx},${b.y} ${b.x - head + (right ? 1 : -1)},${b.y}`;
+    arrows.insertAdjacentHTML('beforeend', `<path d="${d}" fill="none" stroke="#ece6d6" stroke-width="1.4" stroke-opacity="0.8"/>
+      <path d="M${b.x + head},${b.y - 5} L${b.x},${b.y} L${b.x + head},${b.y + 5}" fill="none" stroke="#ece6d6" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>`);
+  }
+
+  let cur = 0, timer = null;
+  function show(i) {
+    cur = Math.max(0, Math.min(STEPS.length - 1, i));
+    const s = STEPS[cur];
+    rail.querySelectorAll('.st').forEach((el, k) => { el.classList.toggle('on', k === cur); el.classList.toggle('past', k < cur); });
+    document.getElementById('done').style.width = (cur / (STEPS.length - 1) * 100) + '%';
+    const now = document.getElementById('now');
+    now.innerHTML = s.html; now.style.animation = 'none'; void now.offsetWidth; now.style.animation = '';
+
+    document.querySelectorAll('.cl').forEach(l => l.classList.remove('run', 'also'));
+    s.lines.forEach((n, k) => document.querySelector(`.cl[data-ln="${n}"]`).classList.add(k === 0 ? 'run' : 'also'));
+
+    Object.entries(BLK).forEach(([k, id]) => {
+      const el = document.getElementById(id);
+      el.classList.toggle('gone', !s.show.includes(k));
+      el.classList.toggle('changed', s.changed.includes(k));
+    });
+    const box = document.getElementById('v-box');
+    if (s.box !== undefined && box.textContent !== String(s.box)) { box.textContent = s.box; box.classList.add('flash'); setTimeout(() => box.classList.remove('flash'), 700); }
+    const code = document.getElementById('v-run-code');
+    code.className = s.counter ? 'fv ptr' : 'fv none';
+    code.textContent = s.counter ? 'address of the code' : 'no value yet';
+    document.getElementById('f-run-ctx').style.display = s.counter ? '' : 'none';
+
+    document.getElementById('out').innerHTML = '<div class="k">Output</div>' + ((s.out || []).length ? s.out.map(o => `<div class="o">${o}</div>`).join('') : '<div class="none">Nothing printed yet.</div>');
+    arrows.innerHTML = '';
+    setTimeout(() => (s.arrows || []).forEach(([a, b]) => arrow(a, b)), 520);
+  }
+
+  rail.addEventListener('click', e => { const st = e.target.closest('.st'); if (st) { clearInterval(timer); show(+st.dataset.s); } });
+  document.getElementById('prev').onclick = () => { clearInterval(timer); show(cur - 1); };
+  document.getElementById('next').onclick = () => { clearInterval(timer); show(cur + 1); };
+  document.getElementById('play').onclick = () => {
+    clearInterval(timer); show(0);
+    timer = setInterval(() => { if (cur >= STEPS.length - 1) clearInterval(timer); else show(cur + 1); }, 2400);
+  };
+  document.addEventListener('keydown', e => {
+    if (e.key === ' ' || e.key === 'ArrowRight') { e.preventDefault(); clearInterval(timer); show(cur + 1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); clearInterval(timer); show(cur - 1); }
+  });
+  window.addEventListener('resize', () => show(cur));
+  show(location.search.includes('preview') ? 4 : 0);
+</script>
+</body>
+</html>

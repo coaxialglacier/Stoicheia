@@ -1,0 +1,6 @@
+{
+  "id": "local-value",
+  "name": "Local constant or variable",
+  "first": "A constant or variable declared inside a function's body.",
+  "parts": []
+}

@@ -1,0 +1,73 @@
+{
+  "id": "closure",
+  "name": "Closure",
+  "area": "swift",
+  "first": "A function with no name, written between braces.",
+  "parts": ["braces", "parameter-list", "in-keyword", "body", "capture"],
+  "dependsOn": [
+    { "id": "function", "views": ["what", "parts"], "why": "A closure is a function with no name, so it has a parameter list and a body, and its body runs when it is called." }
+  ],
+  "example": {
+    "code": [
+      "func sayHello() {",
+      "    let greeting = \"Hello\"",
+      "    let greet = { (name: String) in",
+      "        print(\"\\(greeting), \\(name)\")",
+      "    }",
+      "    greet(\"Ana\")",
+      "    greet(\"Bo\")",
+      "}",
+      "sayHello()"
+    ]
+  },
+  "snippets": {
+    "map": {
+      "code": [
+        "let doubled = [1, 2, 3].map { (n: Int) in n * 2 }",
+        "print(doubled)  // [2, 4, 6]"
+      ],
+      "output": ["[2, 4, 6]"]
+    }
+  },
+  "views": {
+    "what": {
+      "is": "A closure is a function with no name, written between braces. It can be stored in a constant, such as `greet`, and called later.",
+      "marks": [
+        { "line": 3, "text": "{", "part": "braces", "label": "braces" },
+        { "line": 5, "text": "}", "part": "braces" }
+      ],
+      "problem": "Some code is not run where it is written. It is handed to other code, which runs it later, or many times. A closure lets you write that code right where it is handed over, without naming a separate function.",
+      "how": "Writing a closure does not run its body. It makes a value, which `greet` holds, and the body runs each time that value is called: line 6 runs it once, and line 7 runs it again.",
+      "when": [
+        { "text": "Use one when you hand code to a function that runs it, such as `map`, which runs the closure once for each item:", "snippet": "map" },
+        { "text": "Don't use one when the code is a job of its own, which other code calls by its name. Then write a function with `func`, as `sayHello()` is." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "braces", "name": "The braces, `{` and `}`", "text": "The closure starts at `{` on line 3 and ends at the matching `}` on line 5. Everything between them belongs to the closure." },
+        { "part": "parameter-list", "name": "The parameter list, `(name: String)`", "text": "The inputs that the closure takes. `name` is a parameter, and `String` is its type." },
+        { "part": "in-keyword", "name": "`in`", "text": "It ends the parameter list. The body comes after it." },
+        { "part": "body", "name": "The body", "text": "The code that runs each time the closure is called. Here it prints a greeting." },
+        { "part": "capture", "name": "Capture, the last part", "text": "The body uses `greeting`, which is declared on line 2, outside the braces. A closure captures each constant and variable from outside its braces that its body uses: it keeps `greeting`, so the body can use it each time it runs." }
+      ],
+      "marks": [
+        { "line": 2, "text": "greeting", "part": "capture", "label": "declared outside the braces" },
+        { "line": 3, "text": "{", "part": "braces", "label": "braces" },
+        { "line": 3, "text": "(name: String)", "part": "parameter-list", "label": "parameter list" },
+        { "line": 3, "text": "in", "part": "in-keyword" },
+        { "line": 4, "text": "print(\"\\(greeting), \\(name)\")", "part": "body", "label": "body" },
+        { "line": 4, "text": "greeting", "part": "capture", "label": "used in the body" },
+        { "line": 5, "text": "}", "part": "braces" }
+      ],
+      "steps": [
+        { "text": "Line 9 calls `sayHello()`.", "line": 9 },
+        { "text": "Line 2 sets `greeting` to `\"Hello\"`.", "line": 2 },
+        { "text": "Line 3 stores the closure in `greet`. The body, on line 4, does not run.", "line": 3, "dim": [4] },
+        { "text": "Line 6 calls `greet` with the argument `\"Ana\"`. The body runs with `name` set to `\"Ana\"`, and prints {{Hello, Ana}}.", "line": 6, "also": [4], "value": { "line": 4, "name": "name", "is": "\"Ana\"" }, "prints": ["Hello, Ana"] },
+        { "text": "Line 7 calls `greet` with `\"Bo\"`, and the body prints {{Hello, Bo}}.", "line": 7, "also": [4], "value": { "line": 4, "name": "name", "is": "\"Bo\"" }, "prints": ["Hello, Bo"] }
+      ],
+      "end": { "kind": "answer", "text": "`greet` holds the closure: its code, and the `greeting` that it captured. The body runs each time `greet` is called, not where it is written." }
+    }
+  }
+}

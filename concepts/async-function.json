@@ -1,0 +1,139 @@
+{
+  "id": "async-function",
+  "name": "Async function",
+  "area": "conc",
+  "first": "A function that can stop partway through while it waits, free its thread for other code, and go on later from the same place.",
+  "parts": ["function", "async-keyword", "await", "suspension-point"],
+  "dependsOn": [
+    { "id": "function", "views": ["what", "parts"],
+      "why": "An async function is a function, with a name, parameters, a return type, and a body, that can also suspend.",
+      "whyInExample": "`makeTea(cups:)` is declared with `func`, as `greet` is. It has a name, a parameter, a return type, and a body." },
+    { "id": "thread", "views": ["what", "parts", "memory"],
+      "why": "An async function frees its thread while it is suspended, so that thread can run other code.",
+      "whyInExample": "On line 4, `makeTea(cups:)` waits one second without using its thread." },
+    { "id": "stack-frame", "views": ["memory"],
+      "why": "The values of an async function cannot be kept in a stack frame, because its thread's stack is used by other code while it is suspended.",
+      "whyInExample": "`water` is set on line 3, before the wait, and used on line 5, after it. While `makeTea(cups:)` waits, its thread is free to run other code, so `water` is not kept in a stack frame on that thread's stack." },
+    { "id": "heap-object", "views": ["memory"],
+      "why": "Swift keeps the values of an async function on the heap, so they stay while its thread runs other code.",
+      "whyInExample": "Swift keeps `water` on the heap, so it still holds 500 when `makeTea(cups:)` goes on after the wait." }
+  ],
+  "example": {
+    "code": [
+      "func makeTea(cups: Int) async -> String {",
+      "    print(\"Boiling water\")",
+      "    let water = cups * 250",
+      "    try? await Task.sleep(for: .seconds(1))",
+      "    return \"\\(water) ml of tea\"",
+      "}",
+      "print(\"Start\")",
+      "let tea = await makeTea(cups: 2)",
+      "print(tea)"
+    ],
+    "probes": [
+      { "after": 1, "print": "cups", "values": ["2"] },
+      { "after": 3, "print": "water", "values": ["500"] }
+    ],
+    "sil": [
+      { "in": "makeTea(cups:)", "has": "$@convention(thin) @async (Int) -> @owned String", "shows": "async on line 1 makes makeTea(cups:) an async function." }
+    ],
+    "ir": [
+      { "in": "async_Main", "has": "call swiftcc ptr @swift_task_alloc(", "shows": "Line 8 makes an async frame for the call of makeTea(cups:) with swift_task_alloc, which takes its memory from the heap, not from the thread's stack." },
+      { "in": "makeTea(cups:)", "has": "%cups.debug = getelementptr inbounds %\"$s7Example7makeTea4cupsSSSi_tYaF.Frame\"", "shows": "cups is kept in the async frame of makeTea(cups:)." },
+      { "in": "makeTea(cups:)", "has": "%water.debug = getelementptr inbounds %\"$s7Example7makeTea4cupsSSSi_tYaF.Frame\"", "shows": "water is kept in the async frame of makeTea(cups:)." },
+      { "in": "makeTea(cups:)", "lacks": "= alloca ", "shows": "makeTea(cups:) keeps none of its values on the thread's stack." },
+      { "in": "async_Main", "has": "call swiftcc void @swift_task_dealloc(", "shows": "After makeTea(cups:) returns, the code of line 8 frees its async frame." }
+    ]
+  },
+  "snippets": {
+    "double": {
+      "code": [
+        "func double(_ n: Int) -> Int {",
+        "    return n * 2",
+        "}",
+        "print(double(4))  // 8"
+      ],
+      "output": ["8"]
+    }
+  },
+  "views": {
+    "what": {
+      "is": "An async function is a function that can suspend: stop partway through its body, free its thread, and go on later from the same place. You write `async` in its declaration, and `await` where it is called.",
+      "marks": [
+        { "line": 1, "text": "async", "part": "async-keyword", "label": "async" },
+        { "line": 8, "text": "await", "part": "await", "label": "await" }
+      ],
+      "afterExample": "`makeTea(cups:)` is an async function. It suspends at the `await` on line 4 while it waits one second. Then it goes on, and returns.",
+      "problem": "Some work has to wait: for data from the network, for a file, or for a timer. A plain function that waits keeps its thread the whole time, so the thread can run nothing else. When that thread is the main thread, the app's screen stops responding until the wait ends.",
+      "how": "An async function can suspend only at an `await`. While it is suspended, it does not use its thread, so the thread is free to run other code. When the call after `await` returns, the function goes on from there, and its constants and variables still hold their values.",
+      "when": [
+        { "text": "Use one when a function has to wait for something, such as data from the network, a file, or a timer. Many of Apple's functions for these are async functions, such as `Task.sleep`, and code can call them with `await` only where it can suspend, such as in an async function." },
+        { "text": "Don't use one to run two pieces of work at the same time. The code that calls an async function with `await` waits until it returns, as line 8 waits for `makeTea(cups:)`. Work that runs at the same time as other work is a task." },
+        { "text": "Don't make a function async when it never waits. Each call of an async function needs `await`, and can be made only from code that can suspend. `double(_:)` never waits, so it is a plain function, and any code can call it:", "snippet": "double" }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "function", "name": "The function, `makeTea(cups:)`", "text": "`makeTea(cups:)` is declared with `func`, as any function is. It has a name, the parameter `cups`, the return type `String`, and a body, on lines 2 to 5." },
+        { "part": "async-keyword", "name": "`async`", "text": "The word `async`, on line 1, makes `makeTea(cups:)` an async function: a function that can suspend. It is written after the parameter list, before `->`." },
+        { "part": "await", "name": "`await`", "text": "`await` is written before each call of an async function. Line 4 calls `Task.sleep(for: .seconds(1))`, an async function from Swift's standard library that waits for the time it is given. Line 8 calls `makeTea(cups: 2)`. A call of an async function without `await` does not build. `await` can be written only in code that can suspend: in the body of an async function, as on line 4, or at the top level of a program's main file, as on line 8. On line 4, `try?` comes before `await`, because `Task.sleep(for: .seconds(1))` can also throw an error, and `try?` ignores that error." },
+        { "part": "suspension-point", "name": "Suspension points, on lines 4 and 8", "text": "Each `await` marks a suspension point: a place where the code can suspend. To suspend is to stop running, and free the thread, until the call after `await` returns. At line 4, `makeTea(cups:)` can suspend while `Task.sleep(for: .seconds(1))` waits. At line 8, the top-level code can suspend until `makeTea(cups:)` returns. In this program, these are the only two places where code can suspend, and both are marked with `await`." }
+      ],
+      "marks": [
+        { "line": 1, "text": "func", "part": "function", "label": "a function" },
+        { "line": 1, "text": "async", "part": "async-keyword", "label": "async" },
+        { "line": 4, "text": "try? await Task.sleep(for: .seconds(1))", "part": "suspension-point", "label": "suspension point" },
+        { "line": 4, "text": "await", "part": "await", "label": "await" },
+        { "line": 8, "text": "await makeTea(cups: 2)", "part": "suspension-point", "label": "suspension point" },
+        { "line": 8, "text": "await", "part": "await", "label": "await" }
+      ],
+      "steps": [
+        { "text": "Line 7 prints {{Start}}.", "line": 7, "prints": ["Start"] },
+        { "text": "Line 8 calls `makeTea(cups: 2)` with `await`. The top-level code waits at line 8 until the call returns.", "line": 8 },
+        { "text": "The body runs, and line 2 prints {{Boiling water}}.", "line": 2, "prints": ["Boiling water"] },
+        { "text": "Line 3 sets `water` to 500.", "line": 3, "value": { "line": 3, "name": "water", "is": "500" } },
+        { "text": "Line 4 calls `Task.sleep(for: .seconds(1))` with `await`, and `makeTea(cups:)` suspends: it stops running, and frees its thread. No other code in this program is waiting to run, so for one second none of the program's code runs.", "line": 4, "dim": [5] },
+        { "text": "One second later, the wait ends, and `makeTea(cups:)` goes on from line 4, where it stopped. `water` still holds 500, so line 5 returns the string \"500 ml of tea\", and the call ends.", "line": 5, "also": [4], "value": { "line": 5, "name": "water", "is": "500" } },
+        { "text": "Line 8 stores the returned string in `tea`, and line 9 prints {{500 ml of tea}}.", "line": 9, "also": [8], "value": { "line": 8, "name": "tea", "is": "\"500 ml of tea\"" }, "prints": ["500 ml of tea"] }
+      ],
+      "end": { "kind": "question", "text": "`makeTea(cups:)` stopped at line 4 and freed its thread, but when it went on, `water` still held 500. Where was `water` kept while `makeTea(cups:)` was suspended?" }
+    },
+    "memory": {
+      "question": "`makeTea(cups:)` suspended at line 4, and its thread was free to run other code. When it went on, `water` still held 500. Where was `water` kept while `makeTea(cups:)` was suspended?",
+      "steps": [
+        { "text": "Line 7 prints {{Start}}. Line 8 calls `makeTea(cups: 2)`, and Swift makes an async frame for the call: memory that holds the call's parameters, constants, and variables, as a stack frame does, but on the heap, not on the thread's stack. `cups` in it is 2.",
+          "line": 8, "also": [7], "prints": ["Start"],
+          "blocks": [
+            { "id": "af", "kind": "async", "title": "makeTea(cups:)", "fields": [["cups", "2"], ["water", null]] }
+          ],
+          "highlight": ["af"] },
+        { "text": "Line 2 prints {{Boiling water}}, and line 3 sets `water` to 500, in the async frame.",
+          "line": 3, "also": [2], "prints": ["Boiling water"],
+          "blocks": [
+            { "id": "af", "kind": "async", "title": "makeTea(cups:)", "fields": [["cups", "2"], ["water", "500"]] }
+          ],
+          "highlight": ["af"] },
+        { "text": "Line 4 suspends `makeTea(cups:)`. Its code stops running, and its thread is free to run other code. `cups` and `water` are not on the thread's stack, so nothing has to be kept there: they stay in the async frame, on the heap.",
+          "line": 4,
+          "blocks": [
+            { "id": "af", "kind": "async", "title": "makeTea(cups:)", "fields": [["cups", "2"], ["water", "500"]] }
+          ],
+          "highlight": ["af"] },
+        { "text": "One second later, `makeTea(cups:)` goes on from line 4, on a thread that is free. Line 5 reads `water` from the async frame, and returns the string \"500 ml of tea\". The call has ended, so Swift frees its async frame.",
+          "line": 5, "also": [4],
+          "blocks": [
+            { "id": "af", "kind": "removed", "where": "heap", "title": "makeTea(cups:)", "text": "its async frame is freed" }
+          ],
+          "highlight": [] },
+        { "text": "Line 8 stores the returned string in `tea`, a constant at the top level of the file, and line 9 prints {{500 ml of tea}}.",
+          "line": 9, "also": [8], "prints": ["500 ml of tea"],
+          "blocks": [
+            { "id": "af", "kind": "removed", "where": "heap", "title": "makeTea(cups:)", "text": "its async frame is freed" },
+            { "id": "tea", "kind": "global", "title": "tea", "tag": "constant", "fields": [["tea", "\"500 ml of tea\""]] }
+          ],
+          "highlight": ["tea"] }
+      ],
+      "answer": "`water` was kept in the async frame of `makeTea(cups:)`, on the heap, from line 3 until the call returned. The thread's stack held none of the call's values, so the thread was free while `makeTea(cups:)` was suspended."
+    }
+  }
+}

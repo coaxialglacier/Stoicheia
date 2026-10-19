@@ -1,0 +1,6 @@
+{
+  "id": "stack",
+  "name": "Stack",
+  "first": "The memory of one thread, which holds a stack frame for each call that the thread is running.",
+  "parts": []
+}

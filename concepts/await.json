@@ -1,0 +1,6 @@
+{
+  "id": "await",
+  "name": "await",
+  "first": "The word written before each call of an async function. It can be written only in code that can suspend.",
+  "parts": []
+}

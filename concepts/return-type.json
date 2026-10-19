@@ -1,0 +1,6 @@
+{
+  "id": "return-type",
+  "name": "Return type",
+  "first": "The type of the value that a function gives back, written after an arrow.",
+  "parts": []
+}
