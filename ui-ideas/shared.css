@@ -111,10 +111,10 @@ kbd {
 .cb.tall .cl.run::before { top: auto; bottom: 12px; margin-top: 0; }
 .cl.also { background: color-mix(in srgb, var(--step) 6%, transparent); }
 
-/* A part marked on the code, with its name above it. */
+/* A part marked on the code, with its name above it. --dx moves the name sideways, so that it does not overlap a name beside it (spreadLabels in shared.js). */
 .mk { position: relative; border-radius: 4px; transition: background 0.25s, box-shadow 0.25s, opacity 0.25s; }
 .mk[data-part] { background: color-mix(in srgb, var(--fact) 13%, transparent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--fact) 42%, transparent); padding: 1px; }
-.mk[data-label]::before { content: attr(data-label); position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); white-space: nowrap;
+.mk[data-label]::before { content: attr(data-label); position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); margin-left: var(--dx, 0px); white-space: nowrap;
   font: 600 10px var(--sans); color: #8fd9bd; pointer-events: none; }
 .mk[data-part].on { background: color-mix(in srgb, var(--fact) 26%, transparent); box-shadow: 0 0 0 1px var(--fact), 0 0 16px -2px color-mix(in srgb, var(--fact) 70%, transparent); }
 .mk[data-part].on::before { color: #fff; }

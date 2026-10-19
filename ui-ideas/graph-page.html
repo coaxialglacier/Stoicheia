@@ -87,21 +87,24 @@
     font-family: var(--serif); font-size: 16.5px; line-height: 1.6; max-width: 84ch; }
   .ps-wrap { position: relative; }
   .ps-wrap > svg.links { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; z-index: 2; }
+  /* The parts column is never narrower than its widest name with "I know this" beside it, on one line.
+     The three columns sit side by side only when the code still fits between them. A narrower page puts the code on top. */
   .ps { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; align-items: start; }
   .ps-code { order: -1; }
   @container (min-width: 700px) {
-    .ps { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .ps { grid-template-columns: minmax(min-content, 1fr) minmax(0, 1fr); }
     .ps-code { grid-column: 1 / -1; }
   }
-  @container (min-width: 900px) {
-    .ps { grid-template-columns: minmax(190px, 235px) minmax(0, 1fr) minmax(210px, 255px); gap: 22px; }
+  @container (min-width: 1120px) {
+    .ps { grid-template-columns: minmax(min-content, 400px) minmax(0, 1fr) minmax(210px, 255px); gap: 22px; }
     .ps-code { grid-column: auto; order: 0; }
     .ps-cb .cl .s { font-size: 13px; }
   }
   .ps-part { padding-left: 14px; border-left: 2px solid color-mix(in srgb, var(--fact) 35%, transparent); margin-bottom: 16px; transition: border-color 0.2s, opacity 0.25s, transform 0.25s; }
   .ps-part.lit { border-left-color: var(--fact); }
   .ps-part.leaving { opacity: 0; transform: translateX(8px); }
-  .ps-part h4 { margin: 0 0 3px; font-size: 14.5px; font-weight: 600; color: #a6e3cd; }
+  .ps-part h4 { margin: 0 0 3px; font-size: 14.5px; font-weight: 600; color: #a6e3cd; white-space: nowrap; }
+  .ps-part .pknow { margin-left: auto; }
   .ps-part p { margin: 0; font-family: var(--serif); font-size: 15.5px; line-height: 1.6; }
   .ps .none { color: var(--faint); font-size: 13px; margin: 0; }
   .ps-cb .cl { grid-template-columns: 40px 1fr 34px; }
@@ -395,11 +398,11 @@
   // Parts and Steps: the short answer to how it works, then its parts, one copy of the code, and the steps that run it.
   function partsHTML(c, C, isKnown) {
     const P = C.parts;
-    const list = P.list.filter(p => isKnown || !known.has(p.id));
+    const list = P.list.filter(p => !partGone(p.id, isKnown));
     return `<p class="ps-lead say"><span class="k">${QUESTIONS[2][1]}</span>${C.what.how}</p>
       <div class="ps-wrap"><svg class="links"></svg><div class="ps">
         <section class="ps-parts"><div class="col-k">Its parts</div>
-          ${list.map(p => `<section class="ps-part" data-part-id="${p.id}"><div class="l-ph"><h4>${p.name}</h4>${isKnown ? '' : `<button class="pknow" data-know-part="${p.id}">I know this</button>`}</div><p class="say">${p.html}</p></section>`).join('') || '<p class="none">You know every part of it.</p>'}
+          ${list.map(p => `<section class="ps-part" data-part-id="${p.id}"><div class="l-ph"><h4>${p.name}</h4><button class="pknow" data-know-part="${p.id}">I know this</button></div><p class="say">${p.html}</p></section>`).join('') || '<p class="none">You know every part of it.</p>'}
         </section>
         <section class="ps-code main-code"><div class="col-k">The code</div>${stepCodeHTML(P.code, P.steps)}<div class="output" id="out"></div></section>
         <section class="ps-steps"><div class="col-k">What happens when it runs</div>
@@ -473,8 +476,9 @@
     const v = document.getElementById('view');
     // Each view's code has only that view's marks: What it is marks what its first answer names, and In memory marks nothing.
     // A part the reader knows leaves the code too: its mark and its name vanish.
-    if (!isKnown) v.querySelectorAll('.mk[data-part]').forEach(m => m.classList.toggle('known', known.has(m.dataset.part)));
+    v.querySelectorAll('.mk[data-part]').forEach(m => m.classList.toggle('known', partGone(m.dataset.part, isKnown)));
     v.querySelectorAll('.cb.tall .cl').forEach(l => l.classList.toggle('short', !l.querySelector('.mk[data-label]:not(.known)')));
+    spreadLabels(v);
     prepareMentions(v, view === 'parts' ? [C.parts.end.html] : view === 'memory' ? C.memory.steps.map(s => s.html).concat(C.memory.answer) : []);
     linkMentions(v);
     if (view === 'parts') showPartsStep(opts.keep ? stepAt : opts.atEnd ? C.parts.steps.length - 1 : -1);
@@ -690,21 +694,26 @@
   // ---------- What the reader knows ----------
 
   // When the concept on the page becomes known, it stays on the graph as a dashed box, and the page moves on to the next view
-  // that is still in the order. Anything else that changes keeps the reader where they were. saveKnown writes each change to known.json, when the server can.
+  // that is still in the order. When the page's box was on the graph and is not any more, the page goes back to the first page of the study.
+  // Anything else that changes keeps the reader where they were, such as a part marked on the page of a known concept whose box is not drawn,
+  // like Function's Parts and Steps when only a copy of its box is drawn. saveKnown writes each change to known.json, when the server can.
   const kl = knownList(NAMES, known, () => {
-    const oldPages = pages.slice(), idx = oldPages.findIndex(p => same(p, cur)), wasTaught = order.includes(cur.box);
+    const oldPages = pages.slice(), idx = oldPages.findIndex(p => same(p, cur)), wasTaught = order.includes(cur.box), wasDrawn = onGraph.includes(cur.box);
     renderGraph();
     if (wasTaught && !order.includes(cur.box)) show(oldPages.slice(idx + 1).find(p => pages.some(q => same(q, p))) || pages[pages.length - 1]);
-    else if (!onGraph.includes(cur.box)) show(pages[0]);
+    else if (wasDrawn && !onGraph.includes(cur.box) && pages[0]) show(pages[0]);
     else show(cur.box, cur.view, { keep: true });
   }, saveKnown);
-  // "I know this" on a part takes it off the page. When it was the concept's last unknown part, the concept is known too.
+  // A part the reader knows leaves the page. The page of a known concept shows the whole concept, so there a part leaves
+  // only when known.json lists it, which "I know this" on that part does.
+  function partGone(id, isKnownPage) { return isKnownPage ? known.lists(id) : known.has(id); }
+  // "I know this" on a part takes it off the page. When it was the last unknown part of a concept the reader did not know, the concept is known too.
   function partKnown(btn) {
     btn.closest('.ps-part').classList.add('leaving');
     setTimeout(() => {
-      const c = BOXES[cur.box].concept;
+      const c = BOXES[cur.box].concept, wasKnown = known.has(c);
       kl.add(btn.dataset.knowPart);
-      if (c !== STUDY.root && CONCEPTS[c].parts.list.every(p => known.has(p.id))) kl.add(c);
+      if (!wasKnown && c !== STUDY.root && CONCEPTS[c].parts.list.every(p => known.has(p.id))) kl.add(c);
     }, 220);
   }
 
@@ -750,7 +759,8 @@
     e.preventDefault();
     stepGo(e.key === 'ArrowLeft' ? -1 : 1);
   });
-  window.addEventListener('resize', () => { const v = document.getElementById('view'); if (v) drawArrows(v); drawLinks(); });
+  // The code's font is smaller when the three columns of Parts and Steps sit side by side, so the names above it are spread again.
+  window.addEventListener('resize', () => { const v = document.getElementById('view'); if (v) { drawArrows(v); spreadLabels(v); } drawLinks(); });
 
   renderGraph();
   // Opened from Expand to Parts: the page starts on the idea that was selected there, and the top bar leads back to it.

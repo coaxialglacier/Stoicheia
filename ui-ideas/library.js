@@ -359,6 +359,8 @@ const Library = (() => {
       }
       return this.implied.has(id);
     }
+    // Whether known.json lists the id itself, and not only an idea that is made of it.
+    lists(id) { return this.ids.has(id); }
     add(id) { this.ids.add(id); this.implied = null; return this; }
     delete(id) { const out = this.ids.delete(id); this.implied = null; return out; }
     get size() { return this.ids.size; }
