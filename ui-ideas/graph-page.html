@@ -106,6 +106,8 @@
   .ps-part h4 { margin: 0 0 3px; font-size: 14.5px; font-weight: 600; color: #a6e3cd; white-space: nowrap; }
   .ps-part .pknow { margin-left: auto; }
   .ps-part p { margin: 0; font-family: var(--serif); font-size: 15.5px; line-height: 1.6; }
+  /* A part inside a part is explained under the outer part's sentences. */
+  .ps-part .ps-part { margin: 12px 0 0; }
   .ps .none { color: var(--faint); font-size: 13px; margin: 0; }
   .ps-cb .cl { grid-template-columns: 40px 1fr 34px; }
   .cl .badge { justify-self: center; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font: 700 10.5px var(--mono);
@@ -414,7 +416,7 @@
     return `<p class="ps-lead say"><span class="k">${QUESTIONS[2][1]}</span>${C.what.how}</p>
       <div class="ps-wrap"><svg class="links"></svg><div class="ps">
         <section class="ps-parts"><div class="col-k">Its parts</div>
-          ${list.map(p => `<section class="ps-part" data-part-id="${p.id}"><div class="l-ph"><h4>${p.name}</h4><button class="pknow" data-know-part="${p.id}">I know this</button></div><p class="say">${p.html}</p></section>`).join('') || '<p class="none">You know every part of it.</p>'}
+          ${list.map(function part(p) { return `<section class="ps-part" data-part-id="${p.id}"><div class="l-ph"><h4>${p.name}</h4><button class="pknow" data-know-part="${p.id}">I know this</button></div><p class="say">${p.html}</p>${(p.parts || []).filter(q => !partGone(q.id, isKnown)).map(part).join('')}</section>`; }).join('') || '<p class="none">You know every part of it.</p>'}
         </section>
         <section class="ps-code main-code"><div class="col-k">The code</div>${stepCodeHTML(P.code, P.steps)}<div class="output" id="out"></div></section>
         <section class="ps-steps"><div class="col-k">What happens when it runs</div>

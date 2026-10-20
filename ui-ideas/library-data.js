@@ -2268,7 +2268,19 @@ const LIBRARY = {
       {
        "part": "generic-parameter-clause",
        "name": "The generic parameter clause, `<T: Comparable>`",
-       "text": "`<T: Comparable>`, in angle brackets right after the name `largest`, is a generic parameter clause. A function that has one is a generic function. The parameter list, `(_ a: T, _ b: T)`, declares the values that each call gives the function. The generic parameter clause declares the types that each call gives it. `T` is a type parameter: a parameter that gets a type, not a value. `_ a: T`, `_ b: T`, and `-> T` use it as a type, so in one call, `a`, `b`, and the return value all have the same type. The name `T` exists only inside `largest(_:_:)`. `: Comparable`, after `T`, is a type constraint: every type that `T` gets must conform to `Comparable`, a protocol in Swift's standard library for values that can be put in order. Its requirements include the comparison that `a > b` uses on line 2. Without the constraint, swiftc does not build line 2, because it cannot know that every type `T` might get can be compared that way."
+       "text": "The angle brackets right after the name `largest` make it a generic function. The parameter list, in parentheses after them, declares the values that each call gives the function. The generic parameter clause declares the types that each call gives it.",
+       "parts": [
+        {
+         "part": "type-parameter",
+         "name": "The type parameter, `T`",
+         "text": "A type parameter is a parameter that gets a type, not a value. The parameters `a` and `b` have the type `T`, and the return type, after `->`, is `T` too. So in one call, both arguments and the return value have the same type. The name `T` exists only inside `largest(_:_:)`."
+        },
+        {
+         "part": "type-constraint",
+         "name": "The type constraint, `: Comparable`",
+         "text": "A type constraint is written after a type parameter, with a colon. Here it requires every type that `T` gets to conform to `Comparable`, a protocol in Swift's standard library for values that can be put in order. The protocol's requirements include the comparison that `a > b` uses, on line 2. Without the constraint, swiftc does not build line 2, because it cannot know that every type `T` might get can be compared that way."
+        }
+       ]
       },
       {
        "part": "type-argument",
@@ -2285,13 +2297,13 @@ const LIBRARY = {
       {
        "line": 1,
        "text": "T",
-       "part": "generic-parameter-clause",
+       "part": "type-parameter",
        "label": "type parameter"
       },
       {
        "line": 1,
        "text": ": Comparable",
-       "part": "generic-parameter-clause",
+       "part": "type-constraint",
        "label": "type constraint"
       },
       {

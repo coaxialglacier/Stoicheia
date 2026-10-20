@@ -192,7 +192,10 @@ const Library = (() => {
       }
     }
     if (V.parts) {
-      (V.parts.parts || []).forEach((p, i) => { add(`Parts and Steps, the name of part ${i + 1}`, p.name); add(`Parts and Steps, part ${i + 1}`, p.text); });
+      (V.parts.parts || []).forEach((p, i) => {
+        add(`Parts and Steps, the name of part ${i + 1}`, p.name); add(`Parts and Steps, part ${i + 1}`, p.text);
+        (p.parts || []).forEach((q, j) => { add(`Parts and Steps, the name of part ${i + 1}.${j + 1}`, q.name); add(`Parts and Steps, part ${i + 1}.${j + 1}`, q.text); });
+      });
       (V.parts.steps || []).forEach((s, i) => add(`Parts and Steps, step ${i + 1}`, s.text));
       if (V.parts.end) add('Parts and Steps, its end', V.parts.end.text);
     }
@@ -293,9 +296,14 @@ const Library = (() => {
       }
       if (views.parts) {
         const P = views.parts;
+        // A part can explain its own parts under it, as a generic parameter clause explains its type parameter and its type constraint.
         const listed = (P.parts || []).map(p => p.part);
         listed.forEach(p => { if (!e.parts.includes(p)) say(id, `Parts and Steps explains "${p}", which is not one of its parts`); });
-        checkMarks(P.marks, 'Parts and Steps', listed);
+        const inner = (P.parts || []).flatMap(p => (p.parts || []).map(q => {
+          if (!has(p.part) || !(entries[p.part].parts || []).includes(q.part)) say(id, `Parts and Steps explains "${q.part}" under "${p.part}", which is not made of it`);
+          return q.part;
+        }));
+        checkMarks(P.marks, 'Parts and Steps', [...listed, ...inner]);
         if (!(P.steps || []).length) say(id, 'Parts and Steps has no steps');
         (P.steps || []).forEach((s, i) => {
           checkLines(s, `Parts and Steps, step ${i + 1}`);
@@ -498,7 +506,7 @@ const Library = (() => {
       const P = V.parts, outs = withOutput(P.steps);
       C.parts = {
         code: codeHTML(code, P.marks),
-        list: P.parts.map(p => ({ id: p.part, name: textHTML(p.name), html: textHTML(p.text) })),
+        list: P.parts.map(p => ({ id: p.part, name: textHTML(p.name), html: textHTML(p.text), parts: (p.parts || []).map(q => ({ id: q.part, name: textHTML(q.name), html: textHTML(q.text) })) })),
         steps: P.steps.map((s, i) => ({ html: textHTML(s.text), line: s.line, also: s.also, dim: s.dim, value: s.value ? [s.value.line, `${s.value.name} = ${s.value.is}`] : null, out: outs[i] })),
         end: { kind: P.end.kind, title: P.end.kind === 'question' ? 'The question for In memory' : 'So', html: textHTML(P.end.text) },
       };
