@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panel Styles</title>
+<!-- Four ways a panel could look, in place of the gold corners, each holding the same content: the Selected panel of Expand to Parts. -->
+<link rel="stylesheet" href="sky.css">
+<style>
+.nebula{background:
+  radial-gradient(ellipse 40% 45% at 20% 50%,rgba(150,90,230,.26),transparent 70%),
+  radial-gradient(ellipse 40% 50% at 70% 45%,rgba(40,120,200,.18),transparent 70%),
+  radial-gradient(ellipse 120% 90% at 40% 50%,#0e1533,#05070f 80%)}
+body{overflow:auto}
+.wrap{position:relative;z-index:1;display:grid;grid-template-columns:repeat(4,1fr);gap:26px;padding:40px 30px 30px;align-items:start}
+.name{font-family:Cinzel;font-size:15px;letter-spacing:.14em;color:var(--gold2);margin:16px 4px 4px}
+.note{font-size:14.5px;line-height:1.4;color:var(--ink2);margin:0 4px}
+
+/* The content, the same in all four. */
+.p .caps.top{color:var(--gold)}
+.p h2{font-family:Cinzel;font-weight:500;font-size:23px;letter-spacing:.04em;color:var(--gold2);margin:8px 0 10px}
+.p .first{font-size:17.5px;line-height:1.45;color:var(--ink)}
+.p .facts{font-size:14.5px;color:var(--ink2);margin-top:10px;line-height:1.45}
+.p .facts b{color:var(--gold2);font-weight:500}
+.p ul{list-style:none;margin-top:6px}
+.p li{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(230,196,119,.08);font-family:Jost;font-size:13.5px;color:var(--known)}
+.p li i{width:10px;height:10px;border-radius:50%;border:1px dashed var(--known)}
+.p li small{margin-left:auto;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink3)}
+.p .btn{display:inline-block;margin-top:14px}
+.p .sec{margin-top:18px}
+
+/* A. Veil: no edge at all. A pool of darker sky behind the text, fading out on every side, and a fine line of light above the title. */
+.veil{position:relative;isolation:isolate;padding:30px 30px}
+.veil::before{content:"";position:absolute;inset:-60px -50px;z-index:-1;background:radial-gradient(closest-side,rgba(5,7,18,.92) 62%,rgba(5,7,18,.5) 82%,rgba(5,7,18,0) 100%)}
+.veil .hair{height:1px;margin:2px 0 14px;background:linear-gradient(90deg,transparent,rgba(230,196,119,.7),transparent)}
+.veil .sec .caps{display:block;padding-top:12px;background:linear-gradient(90deg,transparent,rgba(230,196,119,.35),transparent) top/100% 1px no-repeat}
+
+/* B. Plate: one fine line all the way round, rounded corners, and a small star resting on the top edge. */
+.plate{position:relative;padding:28px 26px 22px;border:1px solid rgba(230,196,119,.2);border-radius:16px;background:rgba(8,11,26,.74);backdrop-filter:blur(8px)}
+.plate::before{content:"✦";position:absolute;top:-9px;left:50%;transform:translateX(-50%);width:20px;height:18px;line-height:18px;text-align:center;font-size:10px;color:var(--gold);background:#0b1024;border-radius:50%;text-shadow:0 0 8px var(--gold)}
+
+/* C. Meridian: no box. The text sits on the sky, along a thin vertical line of light, with a star where each section starts. */
+.meridian{position:relative;padding:6px 6px 6px 30px;text-shadow:0 0 12px #05070f,0 0 3px #05070f}
+.meridian::before{content:"";position:absolute;left:8px;top:0;bottom:0;width:1px;background:linear-gradient(transparent,rgba(230,196,119,.65) 12%,rgba(230,196,119,.65) 70%,transparent)}
+.meridian .mark{position:relative}
+.meridian .mark::before{content:"✦";position:absolute;left:-28px;top:-1px;font-size:10px;color:var(--gold2);text-shadow:0 0 8px var(--gold)}
+.meridian::after{content:"";position:absolute;left:-30px;top:-20px;right:-30px;bottom:-20px;z-index:-1;background:radial-gradient(ellipse 60% 55% at 35% 45%,rgba(5,7,18,.75),transparent 75%)}
+
+/* D. Orbit: a soft rounded card whose edge is lit gold at one corner and blue at the opposite one, with a small star circling its corner. */
+.orbit{position:relative;padding:28px 26px 22px;border-radius:24px;border:1px solid transparent;
+  background:linear-gradient(rgba(8,11,26,.8),rgba(8,11,26,.8)) padding-box,
+             linear-gradient(140deg,rgba(230,196,119,.65),rgba(230,196,119,0) 35%,rgba(154,217,255,0) 65%,rgba(154,217,255,.4)) border-box;
+  backdrop-filter:blur(8px)}
+.orbit svg{position:absolute;top:-14px;right:-14px;width:70px;height:70px;overflow:visible}
+</style>
+</head>
+<body>
+<div class="nebula"></div>
+<canvas id="sky"></canvas>
+<div class="wrap" id="wrap"></div>
+<div id="card"></div>
+<script src="sky.js"></script>
+<script>
+// The same content in each of the four styles.
+const body = () => `
+  <div class="caps top">Selected</div>
+  <h2>Closure</h2>
+  <p class="first">A function with no name, written between braces.</p>
+  <p class="facts">Made of <b>5</b> ideas. Under it are <b>8</b> ideas in all, and <b>6</b> of them are atoms.</p>
+  <a class="hex gold btn"><span>Graph and Page →</span></a>
+  <div class="sec mark"><span class="caps">What it is made of</span>
+    <ul>${['Braces', 'Parameter list', 'in', 'Body', 'Capture'].map(n => `<li><i></i>${n}<small>Known</small></li>`).join('')}</ul></div>`;
+const STYLES = [
+  ['veil', 'A · Veil', 'No edge at all: a pool of darker sky behind the text that fades out on every side, with a fine line of light above the title.'],
+  ['plate', 'B · Plate', 'One fine line all the way round, rounded corners, and a small star resting on the top edge.'],
+  ['meridian', 'C · Meridian', 'No box: the text sits on the sky along a thin vertical line of light, with a star where each section starts, like notes on a star chart.'],
+  ['orbit', 'D · Orbit', 'A soft rounded card whose edge is lit gold at one corner and blue at the other, with a small star circling its corner.'],
+];
+document.getElementById('wrap').innerHTML = STYLES.map(([cls, name, note]) => `<div>
+  <div class="p ${cls}">${cls === 'veil' ? body().replace('<h2>Closure</h2>', '<h2>Closure</h2><div class="hair"></div>') : body()}${cls === 'orbit' ? `<svg viewBox="-35 -35 70 70"><circle r="22" fill="none" stroke="rgba(230,196,119,.25)" stroke-dasharray="1 3"/><g><animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="14s" repeatCount="indefinite"/><circle cx="22" cy="0" r="2.2" fill="#fbe7b0"/></g></svg>` : ''}${cls === 'meridian' ? '' : ''}</div>
+  <div class="name">${name}</div><p class="note">${note}</p></div>`).join('');
+// In Meridian, the title also gets a star on the line.
+document.querySelector('.meridian h2').classList.add('mark');
+</script>
+</body>
+</html>

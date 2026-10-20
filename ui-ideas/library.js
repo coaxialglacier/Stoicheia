@@ -19,7 +19,8 @@ const Library = (() => {
     ['how', 'How does it work?'],
     ['when', 'When do you use it, and when don\'t you?'],
   ];
-  const BLOCK_KINDS = ['frame', 'async', 'heap', 'global', 'code', 'removed'];
+  // data is memory that Swift keeps about a type, such as its type metadata, or its witness table for a protocol.
+  const BLOCK_KINDS = ['frame', 'async', 'heap', 'global', 'code', 'data', 'removed'];
 
   // ---------- Sentences ----------
 
@@ -311,11 +312,17 @@ const Library = (() => {
           if (new Set(ids).size !== ids.length) say(id, `${where}: two blocks have the same id`);
           (s.blocks || []).forEach(b => {
             if (!BLOCK_KINDS.includes(b.kind)) say(id, `${where}: block "${b.id}" is a "${b.kind}", which is not one of ${BLOCK_KINDS.join(', ')}`);
-            if (['frame', 'async', 'heap', 'global'].includes(b.kind) && !isList(b.fields)) say(id, `${where}: block "${b.id}" has no fields`);
+            if (['frame', 'async', 'heap', 'global', 'data'].includes(b.kind) && !isList(b.fields)) say(id, `${where}: block "${b.id}" has no fields`);
             if (b.where !== undefined && (b.kind !== 'removed' || !['stack', 'heap'].includes(b.where))) say(id, `${where}: block "${b.id}" has a where, which only a removed block has, as stack or heap`);
             if (['code', 'removed'].includes(b.kind) && !b.text) say(id, `${where}: block "${b.id}" has no text`);
-            if (['global', 'code'].includes(b.kind) && !b.tag) say(id, `${where}: block "${b.id}" needs a tag that says what it is`);
-            (b.fields || []).forEach(([, v]) => { if (v && v.to && !ids.includes(v.to)) say(id, `${where}: block "${b.id}" holds the address of "${v.to}", which the step does not show`); });
+            if (['global', 'code', 'data'].includes(b.kind) && !b.tag) say(id, `${where}: block "${b.id}" needs a tag that says what it is`);
+            // An address names a block, or one field of a block: { "to": "top", "field": "first argument" }.
+            (b.fields || []).forEach(([, v]) => {
+              if (!v || !v.to) return;
+              const target = (s.blocks || []).find(t => t.id === v.to);
+              if (!target) say(id, `${where}: block "${b.id}" holds the address of "${v.to}", which the step does not show`);
+              else if (v.field !== undefined && !(target.fields || []).some(([n]) => n === v.field)) say(id, `${where}: block "${b.id}" holds the address of the field "${v.field}" of "${v.to}", which has no such field`);
+            });
           });
           (s.highlight || []).forEach(h => { if (!ids.includes(h)) say(id, `${where}: it highlights "${h}", which the step does not show`); });
         });
@@ -446,6 +453,8 @@ const Library = (() => {
       case 'heap': return { id: b.id, area: 'heap', kind: 'heap', title: b.title, tag: 'heap object', fields };
       case 'global': return { id: b.id, area: 'top', kind: 'plain', title: b.title, tag: b.tag, fields };
       case 'code': return { id: b.id, area: 'code', kind: 'plain', title: b.title, tag: b.tag, note: escapeHTML(b.text), mono: true };
+      // Data about a type is neither on the stack nor on the heap: it has an area of its own.
+      case 'data': return { id: b.id, area: 'data', kind: 'data', title: b.title, tag: b.tag, fields };
       // A removed block is drawn where its memory was: on the stack, or on the heap for an async frame that is freed.
       default: return { id: b.id, area: b.where === 'heap' ? 'heap' : 'stack', kind: 'ghost', title: b.title, tag: 'removed', note: escapeHTML(b.text) };
     }

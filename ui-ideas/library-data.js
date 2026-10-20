@@ -139,7 +139,7 @@ const LIBRARY = {
    },
    "views": {
     "what": {
-     "is": "An async function is a function that can suspend: stop partway through its body, free its thread, and go on later from the same place. You write `async` in its declaration, and `await` where it is called.",
+     "is": "An async function is a function that can suspend: stop partway through its body, free its thread, and go on later from the same place. Swift's documentation calls it an asynchronous function. You write `async` in its declaration, and `await` where it is called.",
      "marks": [
       {
        "line": 1,
@@ -155,17 +155,17 @@ const LIBRARY = {
       }
      ],
      "afterExample": "`makeTea(cups:)` is an async function. It suspends at the `await` on line 4 while it waits one second. Then it goes on, and returns.",
-     "problem": "Some work has to wait: for data from the network, for a file, or for a timer. A plain function that waits keeps its thread the whole time, so the thread can run nothing else. When that thread is the main thread, the app's screen stops responding until the wait ends.",
+     "problem": "Some work has to wait: for data from the network, for a file, or for a timer. A synchronous function, one without `async`, keeps its thread the whole time it waits, so the thread can run nothing else. When that thread is the main thread, the app's screen stops responding until the wait ends.",
      "how": "An async function can suspend only at an `await`. While it is suspended, it does not use its thread, so the thread is free to run other code. When the call after `await` returns, the function goes on from there, and its constants and variables still hold their values.",
      "when": [
       {
-       "text": "Use one when a function has to wait for something, such as data from the network, a file, or a timer. Many of Apple's functions for these are async functions, such as `Task.sleep`, and code can call them with `await` only where it can suspend, such as in an async function."
+       "text": "Use one when a function has to wait for something, such as data from the network, a file, or a timer. Many functions that wait for these, in Swift's standard library and in Apple's frameworks, are async functions, such as `Task.sleep`. Code can call them with `await` only where it can suspend, such as in an async function."
       },
       {
        "text": "Don't use one to run two pieces of work at the same time. The code that calls an async function with `await` waits until it returns, as line 8 waits for `makeTea(cups:)`. Work that runs at the same time as other work is a task."
       },
       {
-       "text": "Don't make a function async when it never waits. Each call of an async function needs `await`, and can be made only from code that can suspend. `double(_:)` never waits, so it is a plain function, and any code can call it:",
+       "text": "Don't make a function async when it never waits. Code calls an async function with `await`, and only where it can suspend. `double(_:)` never waits, so it is a synchronous function, and any code can call it:",
        "snippet": "double"
       }
      ]
@@ -180,17 +180,17 @@ const LIBRARY = {
       {
        "part": "async-keyword",
        "name": "`async`",
-       "text": "The word `async`, on line 1, makes `makeTea(cups:)` an async function: a function that can suspend. It is written after the parameter list, before `->`."
+       "text": "The keyword `async`, on line 1, makes `makeTea(cups:)` an async function: a function that can suspend. It is written after the parameter list, before the return arrow, `->`."
       },
       {
        "part": "await",
        "name": "`await`",
-       "text": "`await` is written before each call of an async function. Line 4 calls `Task.sleep(for: .seconds(1))`, an async function from Swift's standard library that waits for the time it is given. Line 8 calls `makeTea(cups: 2)`. A call of an async function without `await` does not build. `await` can be written only in code that can suspend: in the body of an async function, as on line 4, or at the top level of a program's main file, as on line 8. On line 4, `try?` comes before `await`, because `Task.sleep(for: .seconds(1))` can also throw an error, and `try?` ignores that error."
+       "text": "`await` is a keyword, written before a call of an async function. Line 4 calls `Task.sleep(for: .seconds(1))`, an async method of the `Task` type in Swift's standard library, which waits for the time it is given. Line 8 calls `makeTea(cups: 2)`. Without `await`, neither call builds. `await` can be written only in code that can suspend, which Swift's documentation calls an asynchronous context, such as the body of an async function, as on line 4, or the top level of a program's main file, as on line 8. Line 4 also has `try?`, because `Task.sleep(for: .seconds(1))` can throw an error: if it throws, `try?` makes the result nil, and line 4 goes on. Swift's rules put `try?` before `await`, and swiftc warns when it comes after."
       },
       {
        "part": "suspension-point",
        "name": "Suspension points, on lines 4 and 8",
-       "text": "Each `await` marks a suspension point: a place where the code can suspend. To suspend is to stop running, and free the thread, until the call after `await` returns. At line 4, `makeTea(cups:)` can suspend while `Task.sleep(for: .seconds(1))` waits. At line 8, the top-level code can suspend until `makeTea(cups:)` returns. In this program, these are the only two places where code can suspend, and both are marked with `await`."
+       "text": "Each `await` marks a suspension point: a place where the code can suspend. Swift's documentation calls it a possible suspension point, because the code can suspend there, but does not have to. To suspend is to stop running, and free the thread, until the call after `await` returns. At line 4, `makeTea(cups:)` can suspend while `Task.sleep(for: .seconds(1))` waits. At line 8, the top-level code can suspend until `makeTea(cups:)` returns. In this program, these are the only two places where code can suspend, and both are marked with `await`."
       }
      ],
      "marks": [
@@ -445,13 +445,13 @@ const LIBRARY = {
   "async-keyword": {
    "id": "async-keyword",
    "name": "async",
-   "first": "The word, written after a function's parameter list, that makes it an async function.",
+   "first": "The keyword, written after a function's parameter list, that makes it an async function.",
    "parts": []
   },
   "await": {
    "id": "await",
    "name": "await",
-   "first": "The word written before each call of an async function. It can be written only in code that can suspend.",
+   "first": "The keyword written before a call of an async function. It can be written only in code that can suspend.",
    "parts": []
   },
   "body": {
@@ -479,7 +479,7 @@ const LIBRARY = {
    "id": "capture",
    "name": "Capture",
    "area": "swift",
-   "first": "A closure keeps each outside constant and variable that its body uses.",
+   "first": "A closure keeps each constant and variable from the function around it that its body uses.",
    "parts": [
     "declared-outside",
     "used-in-body"
@@ -491,7 +491,7 @@ const LIBRARY = {
       "what",
       "parts"
      ],
-     "why": "Capture is what a closure does with a constant or variable from outside its braces that its body uses."
+     "why": "Capture is what a closure does with a constant or variable from the function around it that its body uses."
     }
    ],
    "example": {
@@ -516,7 +516,7 @@ const LIBRARY = {
    },
    "views": {
     "what": {
-     "is": "Capture is what a closure does with a constant or variable that is declared outside its braces and used in its body: the closure keeps it, so the body can use it each time the closure runs.",
+     "is": "Capture is what a closure does with a constant or variable that is declared in the function around it, outside its braces, and used in its body: the closure keeps it, so the body can use it each time the closure runs.",
      "marks": [
       {
        "line": 2,
@@ -536,7 +536,7 @@ const LIBRARY = {
      "how": "When line 3 makes the closure, the closure captures `greeting`. Each call of `greet` runs the body, and the body uses the captured `greeting`.",
      "when": [
       {
-       "text": "Capture happens on its own, whenever the body uses a name from outside the braces. So the choice is between a captured value and a parameter. A captured value, such as `greeting`, is the same at every call. A parameter, such as `name`, gets a new value from each call."
+       "text": "Capture happens on its own, whenever the body uses a constant or variable from the function around the closure. So the choice is between a captured value and a parameter. A captured value, such as `greeting`, is the same at every call. A parameter, such as `name`, gets a new value from each call."
       }
      ]
     },
@@ -550,7 +550,7 @@ const LIBRARY = {
       {
        "part": "used-in-body",
        "name": "Used in the body",
-       "text": "The body uses `greeting` on line 4. Each name that the body uses, and that is declared outside the braces, is a name the closure captures."
+       "text": "The body uses `greeting` on line 4. Each constant or variable that the body uses, and that is declared in `sayHello()` outside the braces, is one that the closure captures."
       }
      ],
      "marks": [
@@ -624,14 +624,14 @@ const LIBRARY = {
   "captured-constant": {
    "id": "captured-constant",
    "name": "Captured constant",
-   "first": "A constant from outside a closure's braces, such as a parameter of the function around it, that the body uses. The body can read it, but not change it.",
+   "first": "A constant from the function around a closure, such as one of that function's parameters, that the closure's body uses. The body can read it, but not change it.",
    "parts": []
   },
   "captured-variables": {
    "id": "captured-variables",
    "name": "Captured variables",
    "area": "memory",
-   "first": "A variable, declared outside a closure, that the closure's body uses.",
+   "first": "A variable, declared in the function around a closure, that the closure's body uses.",
    "parts": [
     "closure",
     "variable-outside-closure",
@@ -756,7 +756,7 @@ const LIBRARY = {
    },
    "views": {
     "what": {
-     "is": "A captured variable is a variable, declared outside a closure, that the closure's body uses. The closure uses that same variable, not a copy of it.",
+     "is": "A captured variable is a variable, declared in the function around a closure, that the closure's body uses. The closure uses that same variable, not a copy of it.",
      "marks": [
       {
        "line": 2,
@@ -1613,7 +1613,7 @@ const LIBRARY = {
    "id": "closure",
    "name": "Closure",
    "area": "swift",
-   "first": "A function with no name, written between braces.",
+   "first": "A function with no name, written between braces, which Swift's documentation calls a closure expression.",
    "parts": [
     "braces",
     "parameter-list",
@@ -1657,7 +1657,7 @@ const LIBRARY = {
    },
    "views": {
     "what": {
-     "is": "A closure is a function with no name, written between braces. It can be stored in a constant, such as `greet`, and called later.",
+     "is": "A closure is a function with no name, written between braces. Swift's documentation calls this form a closure expression. It can be stored in a constant, such as `greet`, and called later.",
      "marks": [
       {
        "line": 3,
@@ -1698,7 +1698,7 @@ const LIBRARY = {
       {
        "part": "in-keyword",
        "name": "`in`",
-       "text": "It ends the parameter list. The body comes after it."
+       "text": "`in` is a keyword: a word that Swift reserves for its own use, as it does `func` and `let`. It ends the parameter list, and the body comes after it."
       },
       {
        "part": "body",
@@ -1708,7 +1708,7 @@ const LIBRARY = {
       {
        "part": "capture",
        "name": "Capture, the last part",
-       "text": "The body uses `greeting`, which is declared on line 2, outside the braces. A closure captures each constant and variable from outside its braces that its body uses: it keeps `greeting`, so the body can use it each time it runs."
+       "text": "The body uses `greeting`, which is declared on line 2, in `sayHello()` but outside the braces. A closure captures each constant and variable from the function around it that its body uses: it keeps `greeting`, so the body can use it each time it runs."
       }
      ],
      "marks": [
@@ -1807,6 +1807,12 @@ const LIBRARY = {
     }
    }
   },
+  "conformance": {
+   "id": "conformance",
+   "name": "Conformance",
+   "first": "A type's statement, written as a protocol's name after a colon, that it has everything the protocol requires.",
+   "parts": []
+  },
   "context": {
    "id": "context",
    "name": "Context",
@@ -1816,13 +1822,13 @@ const LIBRARY = {
   "declared-outside": {
    "id": "declared-outside",
    "name": "Declared outside the braces",
-   "first": "A constant or variable declared in the code around a closure, before its opening brace.",
+   "first": "A constant or variable declared in the function around a closure, before the closure's opening brace.",
    "parts": []
   },
   "func-keyword": {
    "id": "func-keyword",
    "name": "func",
-   "first": "The word that starts the declaration of a function.",
+   "first": "The keyword that declares a function. The function's name comes right after it.",
    "parts": []
   },
   "function-name": {
@@ -1835,7 +1841,7 @@ const LIBRARY = {
    "id": "function",
    "name": "Function",
    "area": "swift",
-   "first": "A named block of code that takes inputs and can return a value.",
+   "first": "A named block of code that can take inputs and can return a value.",
    "parts": [
     "func-keyword",
     "function-name",
@@ -1920,7 +1926,7 @@ const LIBRARY = {
       {
        "part": "func-keyword",
        "name": "`func`",
-       "text": "The word `func` starts the declaration of a function, on line 1."
+       "text": "`func` is a keyword: a word that Swift reserves for its own use, as it does `let` and `return`. On line 1, `func` declares a function, and the function's name comes right after it."
       },
       {
        "part": "function-name",
@@ -1934,8 +1940,8 @@ const LIBRARY = {
       },
       {
        "part": "return-type",
-       "name": "The return type, `-> String`",
-       "text": "The type of the value that the function gives back. `greet` gives back a `String`."
+       "name": "The return type, `String`",
+       "text": "`->` is the return arrow. The type after it is the type of the value that the function gives back, so `greet` gives back a `String`."
       },
       {
        "part": "body",
@@ -1945,12 +1951,12 @@ const LIBRARY = {
       {
        "part": "return-statement",
        "name": "`return`",
-       "text": "`return` on line 2 ends the call, and gives back the value after it. That value must have the return type, `String`."
+       "text": "Line 2 is a return statement: the keyword `return`, then the value to give back. It ends the call, and gives back that value, which must have the return type, `String`."
       },
       {
        "part": "call",
        "name": "The call, on line 4",
-       "text": "Line 4 calls `greet`. In the parentheses, `name:` is the argument label: it says which parameter the value is for. `\"Ana\"` is the argument: the value that the parameter `name` gets. Its type must be the parameter's type, `String`."
+       "text": "Line 4 calls `greet`. In the parentheses, `name:` is the argument label: it says which parameter the value is for. A parameter's name is also its argument label, unless the declaration gives it a different label or none, so the label here is `name`. `\"Ana\"` is the argument: the value that the parameter `name` gets. Its type must be the parameter's type, `String`."
       }
      ],
      "marks": [
@@ -2036,6 +2042,1158 @@ const LIBRARY = {
       "kind": "answer",
       "text": "`greet` runs only when it is called. Each call gives `name` the argument of that call, and gives back the value after `return`."
      }
+    }
+   }
+  },
+  "generic-parameter-clause": {
+   "id": "generic-parameter-clause",
+   "name": "Generic parameter clause",
+   "first": "The angle brackets right after the name of a function or a type, which make it generic: they declare its type parameters, and any type constraint on each one.",
+   "parts": [
+    "type-parameter",
+    "type-constraint"
+   ]
+  },
+  "generics": {
+   "id": "generics",
+   "name": "Generics",
+   "area": "swift",
+   "first": "Code written once, as a function or a type, that works with every type that meets the requirements it states.",
+   "parts": [
+    "generic-parameter-clause",
+    "type-argument"
+   ],
+   "dependsOn": [
+    {
+     "id": "function",
+     "views": [
+      "what",
+      "parts"
+     ],
+     "why": "A generic function is a function with a generic parameter clause after its name, and each call gives its type parameters types, as it gives its parameters values.",
+     "whyInExample": "`largest(_:_:)` is declared with `func`, as `greet` is. It has a name, two parameters, a return type, and a body. Its `T` is a parameter too: each call gives `T` a type, as `greet(name: \"Ana\")` gives `name` a value."
+    },
+    {
+     "id": "protocol",
+     "views": [
+      "what",
+      "parts",
+      "memory"
+     ],
+     "why": "A type constraint requires every type that a type parameter gets to conform to a protocol.",
+     "whyInExample": "`: Comparable` on line 1 requires every type that `T` gets to conform to `Comparable`, a protocol in Swift's standard library."
+    },
+    {
+     "id": "stack-frame",
+     "views": [
+      "memory"
+     ],
+     "why": "Each call of a generic function gets a stack frame, which holds the addresses of its values, and of what Swift keeps about their type.",
+     "whyInExample": "Each call of `largest(_:_:)` gets a stack frame. It holds the addresses of `a` and `b`, and two hidden arguments about `T`."
+    }
+   ],
+   "example": {
+    "code": [
+     "func largest<T: Comparable>(_ a: T, _ b: T) -> T {",
+     "    if a > b {",
+     "        return a",
+     "    }",
+     "    return b",
+     "}",
+     "let cups: Int = largest(3, 8)",
+     "let name: String = largest(\"Bo\", \"Ana\")",
+     "print(cups)  // 8",
+     "print(name)  // Bo"
+    ],
+    "probes": [
+     {
+      "after": 1,
+      "print": "T.self",
+      "values": [
+       "Int",
+       "String"
+      ]
+     },
+     {
+      "after": 1,
+      "print": "MemoryLayout<T>.size",
+      "values": [
+       "8",
+       "16"
+      ]
+     },
+     {
+      "after": 1,
+      "print": "a",
+      "values": [
+       "3",
+       "Bo"
+      ]
+     },
+     {
+      "after": 1,
+      "print": "b",
+      "values": [
+       "8",
+       "Ana"
+      ]
+     },
+     {
+      "after": 7,
+      "print": "cups",
+      "values": [
+       "8"
+      ]
+     },
+     {
+      "after": 8,
+      "print": "name",
+      "values": [
+       "Bo"
+      ]
+     }
+    ],
+    "sil": [
+     {
+      "in": "largest<A>(_:_:)",
+      "has": "<T where T : Comparable> (@in_guaranteed T, @in_guaranteed T) -> @out T",
+      "shows": "largest(_:_:) gets a and b by their addresses, and puts its result at an address that the call gives it."
+     },
+     {
+      "in": "largest<A>(_:_:)",
+      "has": "witness_method $T, #Comparable.\">\"",
+      "shows": "Line 2 finds > in the witness table of T for Comparable."
+     }
+    ],
+    "ir": [
+     {
+      "in": "largest<A>(_:_:)",
+      "has": "(ptr noalias sret(%swift.opaque) %0, ptr noalias %1, ptr noalias %2, ptr %T, ptr %T.Comparable)",
+      "shows": "largest(_:_:) takes the address for its result, the addresses of a and b, and two hidden arguments: the address of T's type metadata, and the address of T's witness table for Comparable."
+     },
+     {
+      "in": "largest<A>(_:_:)",
+      "has": "%InitializeWithCopy",
+      "shows": "Lines 3 and 5 copy a value of type T with the copy function that T's type metadata leads to."
+     },
+     {
+      "in": "main",
+      "has": "alloca %TSi",
+      "shows": "The top-level code keeps the Int arguments of line 7 in its own stack frame."
+     },
+     {
+      "in": "main",
+      "has": "call swiftcc void @\"$s7Example7largestyxx_xtSLRzlF\"(ptr noalias sret(%swift.opaque) @\"$s7Example4cupsSivp\"",
+      "shows": "Line 7 calls largest(_:_:) with the address of cups, where its result goes."
+     },
+     {
+      "in": "main",
+      "has": "ptr @\"$sSiN\", ptr @\"$sSiSLsWP\")",
+      "shows": "Line 7 passes the address of Int's type metadata, and of Int's witness table for Comparable."
+     },
+     {
+      "in": "main",
+      "has": "alloca %TSS",
+      "shows": "The top-level code keeps the String arguments of line 8 in its own stack frame."
+     },
+     {
+      "in": "main",
+      "has": "call swiftcc void @\"$s7Example7largestyxx_xtSLRzlF\"(ptr noalias sret(%swift.opaque) @\"$s7Example4nameSSvp\"",
+      "shows": "Line 8 calls the same largest(_:_:), with the address of name, where its result goes."
+     },
+     {
+      "in": "main",
+      "has": "ptr @\"$sSSN\", ptr @\"$sSSSLsWP\")",
+      "shows": "Line 8 passes the address of String's type metadata, and of String's witness table for Comparable."
+     }
+    ]
+   },
+   "snippets": {
+    "library": {
+     "code": [
+      "print(max(3, 8))  // 8",
+      "let scores: Array<Int> = [3, 8]",
+      "print(scores)  // [3, 8]"
+     ],
+     "output": [
+      "8",
+      "[3, 8]"
+     ]
+    },
+    "double": {
+     "code": [
+      "func double(_ n: Int) -> Int {",
+      "    return n * 2",
+      "}",
+      "print(double(4))  // 8"
+     ],
+     "output": [
+      "8"
+     ]
+    }
+   },
+   "views": {
+    "what": {
+     "is": "Generic code is a function or a type that is written once, for many types. In place of a type, it uses a type parameter, such as `T`: a parameter that gets a type, not a value, from each use of the code. A type constraint, such as `Comparable`, says what that type must be able to do.",
+     "marks": [
+      {
+       "line": 1,
+       "text": "T",
+       "part": "type-parameter",
+       "label": "type parameter"
+      },
+      {
+       "line": 1,
+       "text": ": Comparable",
+       "part": "type-constraint",
+       "label": "type constraint"
+      }
+     ],
+     "afterExample": "`largest(_:_:)` is a generic function. Line 7 calls it with two `Int` values, and line 8 with two `String` values, so `T` is `Int` in one call, and `String` in the other.",
+     "problem": "The same work is often needed for values of different types. Without generic code, finding the larger of two values takes one function for `Int` values, another for `String` values, and so on, each with the same body. Generic code is written once, and swiftc still checks every use of it, as it checks any other code.",
+     "how": "When swiftc builds the program, it works out which type each call of `largest(_:_:)` gives `T`, and checks that the type conforms to `Comparable`. The same body runs for every call, and line 2 compares the values the way their type compares them: as numbers for `Int`, and as text for `String`.",
+     "when": [
+      {
+       "text": "Use it when the same code works for many types, and needs only what a protocol requires, as `largest(_:_:)` needs only `Comparable`. Swift's standard library is full of generic code: its `max(_:_:)` does what `largest(_:_:)` does, and `Array` is a generic type, so `Array<Int>` is an array of `Int` values:",
+       "snippet": "library"
+      },
+      {
+       "text": "Don't use it for code that only ever works with one type. Then write that type itself, as `double(_:)` does with `Int`:",
+       "snippet": "double"
+      }
+     ]
+    },
+    "parts": {
+     "parts": [
+      {
+       "part": "generic-parameter-clause",
+       "name": "The generic parameter clause, `<T: Comparable>`",
+       "text": "`<T: Comparable>`, in angle brackets right after the name `largest`, is a generic parameter clause. A function that has one is a generic function. The parameter list, `(_ a: T, _ b: T)`, declares the values that each call gives the function. The generic parameter clause declares the types that each call gives it. `T` is a type parameter: a parameter that gets a type, not a value. `_ a: T`, `_ b: T`, and `-> T` use it as a type, so in one call, `a`, `b`, and the return value all have the same type. The name `T` exists only inside `largest(_:_:)`. `: Comparable`, after `T`, is a type constraint: every type that `T` gets must conform to `Comparable`, a protocol in Swift's standard library for values that can be put in order. Its requirements include the comparison that `a > b` uses on line 2. Without the constraint, swiftc does not build line 2, because it cannot know that every type `T` might get can be compared that way."
+      },
+      {
+       "part": "type-argument",
+       "name": "The type arguments, on lines 7 and 8",
+       "text": "The type that `T` gets in one call is that call's type argument, as 3 is the value that `a` gets on line 7. You do not write a type argument, and for a function Swift does not let you. swiftc works it out when it builds the program, from the types around the call. On line 7, `cups` is an `Int`, so `T` is `Int`, and 3 and 8 are `Int` values. On line 8, `name` is a `String`, so `T` is `String`. Each type argument must conform to `Comparable`, as `Int` and `String` do. A call with an `Int` and a `String` does not build, because `T` cannot be both."
+      }
+     ],
+     "marks": [
+      {
+       "line": 1,
+       "text": "<T: Comparable>",
+       "part": "generic-parameter-clause"
+      },
+      {
+       "line": 1,
+       "text": "T",
+       "part": "generic-parameter-clause",
+       "label": "type parameter"
+      },
+      {
+       "line": 1,
+       "text": ": Comparable",
+       "part": "generic-parameter-clause",
+       "label": "type constraint"
+      },
+      {
+       "line": 7,
+       "text": "largest(3, 8)",
+       "part": "type-argument",
+       "label": "T is Int"
+      },
+      {
+       "line": 8,
+       "text": "largest(\"Bo\", \"Ana\")",
+       "part": "type-argument",
+       "label": "T is String"
+      }
+     ],
+     "steps": [
+      {
+       "text": "Line 7 calls `largest(3, 8)`. Its type argument is `Int`, so in this call, `T` is `Int`.",
+       "line": 7
+      },
+      {
+       "text": "The body runs, with `a` set to 3 and `b` set to 8. Line 2 checks `a > b`: 3 is not greater than 8, so line 3 does not run.",
+       "line": 2,
+       "also": [
+        1
+       ],
+       "dim": [
+        3
+       ],
+       "value": {
+        "line": 1,
+        "name": "a",
+        "is": "3"
+       }
+      },
+      {
+       "text": "Line 5 returns `b`, so the call gives back 8, and line 7 stores it in `cups`.",
+       "line": 5,
+       "also": [
+        7
+       ],
+       "value": {
+        "line": 7,
+        "name": "cups",
+        "is": "8"
+       }
+      },
+      {
+       "text": "Line 8 calls `largest(\"Bo\", \"Ana\")`. Its type argument is `String`, so in this call, `T` is `String`, and the same body runs, with `a` set to \"Bo\" and `b` set to \"Ana\".",
+       "line": 8,
+       "also": [
+        1
+       ],
+       "value": {
+        "line": 1,
+        "name": "a",
+        "is": "\"Bo\""
+       }
+      },
+      {
+       "text": "Line 2 checks `a > b`. Two strings are compared from their first character, and \"B\" comes after \"A\", so \"Bo\" is greater than \"Ana\". Line 3 returns `a`, and line 8 stores \"Bo\" in `name`.",
+       "line": 3,
+       "also": [
+        2,
+        8
+       ],
+       "value": {
+        "line": 8,
+        "name": "name",
+        "is": "\"Bo\""
+       }
+      },
+      {
+       "text": "Line 9 prints {{8}}.",
+       "line": 9,
+       "prints": [
+        "8"
+       ]
+      },
+      {
+       "text": "Line 10 prints {{Bo}}.",
+       "line": 10,
+       "prints": [
+        "Bo"
+       ]
+      }
+     ],
+     "end": {
+      "kind": "question",
+      "text": "Line 2 compared two numbers in the first call, and two strings in the second, with the same `a > b`. How does the code of `largest(_:_:)` know which comparison to run?"
+     }
+    },
+    "memory": {
+     "question": "Line 2 compared two numbers in the first call, and two strings in the second. In a debug build, swiftc makes one `largest(_:_:)` for both calls. How does that one piece of code know which comparison to run, and how to copy a value of type `T`?",
+     "steps": [
+      {
+       "text": "Line 7 calls `largest(3, 8)`, and a stack frame is made for the call. In a debug build, swiftc makes one `largest(_:_:)` for every type, so its code does not know how big a `T` is. So it gets each value of type `T` by its address. The top-level code keeps 3 and 8 in its own stack frame, and passes their addresses as `a` and `b`. The result goes straight into `cups`, so the call also passes the address of `cups`.",
+       "line": 7,
+       "blocks": [
+        {
+         "id": "cups",
+         "kind": "global",
+         "title": "cups",
+         "tag": "constant",
+         "fields": [
+          [
+           "cups",
+           null
+          ]
+         ]
+        },
+        {
+         "id": "top",
+         "kind": "frame",
+         "title": "top-level code",
+         "fields": [
+          [
+           "for a",
+           "3"
+          ],
+          [
+           "for b",
+           "8"
+          ]
+         ]
+        },
+        {
+         "id": "lg",
+         "kind": "frame",
+         "title": "largest(_:_:)",
+         "fields": [
+          [
+           "a",
+           {
+            "to": "top",
+            "field": "for a"
+           }
+          ],
+          [
+           "b",
+           {
+            "to": "top",
+            "field": "for b"
+           }
+          ],
+          [
+           "result",
+           {
+            "to": "cups"
+           }
+          ]
+         ]
+        }
+       ],
+       "highlight": [
+        "lg"
+       ]
+      },
+      {
+       "text": "The call also passes two hidden arguments, which the code does not show. `T` is the address of `Int`'s type metadata: data that Swift keeps about each type. It gives the size of an `Int`, 8 bytes, and how to copy one. `T: Comparable` is the address of `Int`'s witness table for `Comparable`: a table that Swift makes for each type that conforms to a protocol. It holds where the type's own function for each requirement is.",
+       "line": 7,
+       "blocks": [
+        {
+         "id": "cups",
+         "kind": "global",
+         "title": "cups",
+         "tag": "constant",
+         "fields": [
+          [
+           "cups",
+           null
+          ]
+         ]
+        },
+        {
+         "id": "top",
+         "kind": "frame",
+         "title": "top-level code",
+         "fields": [
+          [
+           "for a",
+           "3"
+          ],
+          [
+           "for b",
+           "8"
+          ]
+         ]
+        },
+        {
+         "id": "lg",
+         "kind": "frame",
+         "title": "largest(_:_:)",
+         "fields": [
+          [
+           "a",
+           {
+            "to": "top",
+            "field": "for a"
+           }
+          ],
+          [
+           "b",
+           {
+            "to": "top",
+            "field": "for b"
+           }
+          ],
+          [
+           "result",
+           {
+            "to": "cups"
+           }
+          ],
+          [
+           "T",
+           {
+            "to": "intT"
+           }
+          ],
+          [
+           "T: Comparable",
+           {
+            "to": "intC"
+           }
+          ]
+         ]
+        },
+        {
+         "id": "intT",
+         "kind": "data",
+         "title": "Int",
+         "tag": "type metadata",
+         "fields": [
+          [
+           "size",
+           "8 bytes"
+          ],
+          [
+           "copy",
+           "copies an Int"
+          ]
+         ]
+        },
+        {
+         "id": "intC",
+         "kind": "data",
+         "title": "Int: Comparable",
+         "tag": "witness table",
+         "fields": [
+          [
+           "<",
+           "Int's <"
+          ],
+          [
+           "<=",
+           "Int's <="
+          ],
+          [
+           ">=",
+           "Int's >="
+          ],
+          [
+           ">",
+           "Int's >"
+          ]
+         ]
+        }
+       ],
+       "highlight": [
+        "intT",
+        "intC"
+       ]
+      },
+      {
+       "text": "Line 2 runs `a > b`. The code of `largest(_:_:)` does not know that `T` is `Int`, so it looks up > in the witness table, and calls the > that `Int` uses, with the addresses `a` and `b`. 3 is not greater than 8, so the answer is false.",
+       "line": 2,
+       "blocks": [
+        {
+         "id": "cups",
+         "kind": "global",
+         "title": "cups",
+         "tag": "constant",
+         "fields": [
+          [
+           "cups",
+           null
+          ]
+         ]
+        },
+        {
+         "id": "top",
+         "kind": "frame",
+         "title": "top-level code",
+         "fields": [
+          [
+           "for a",
+           "3"
+          ],
+          [
+           "for b",
+           "8"
+          ]
+         ]
+        },
+        {
+         "id": "lg",
+         "kind": "frame",
+         "title": "largest(_:_:)",
+         "fields": [
+          [
+           "a",
+           {
+            "to": "top",
+            "field": "for a"
+           }
+          ],
+          [
+           "b",
+           {
+            "to": "top",
+            "field": "for b"
+           }
+          ],
+          [
+           "result",
+           {
+            "to": "cups"
+           }
+          ],
+          [
+           "T",
+           {
+            "to": "intT"
+           }
+          ],
+          [
+           "T: Comparable",
+           {
+            "to": "intC"
+           }
+          ]
+         ]
+        },
+        {
+         "id": "intT",
+         "kind": "data",
+         "title": "Int",
+         "tag": "type metadata",
+         "fields": [
+          [
+           "size",
+           "8 bytes"
+          ],
+          [
+           "copy",
+           "copies an Int"
+          ]
+         ]
+        },
+        {
+         "id": "intC",
+         "kind": "data",
+         "title": "Int: Comparable",
+         "tag": "witness table",
+         "fields": [
+          [
+           "<",
+           "Int's <"
+          ],
+          [
+           "<=",
+           "Int's <="
+          ],
+          [
+           ">=",
+           "Int's >="
+          ],
+          [
+           ">",
+           "Int's >"
+          ]
+         ]
+        }
+       ],
+       "highlight": [
+        "intC"
+       ]
+      },
+      {
+       "text": "Line 5 returns `b`. `largest(_:_:)` copies the 8 at `b` into `cups`, with the size and the copy function that `Int`'s type metadata gives. The call ends, and its frame is removed.",
+       "line": 5,
+       "blocks": [
+        {
+         "id": "cups",
+         "kind": "global",
+         "title": "cups",
+         "tag": "constant",
+         "fields": [
+          [
+           "cups",
+           "8"
+          ]
+         ]
+        },
+        {
+         "id": "top",
+         "kind": "frame",
+         "title": "top-level code",
+         "fields": [
+          [
+           "for a",
+           "3"
+          ],
+          [
+           "for b",
+           "8"
+          ]
+         ]
+        },
+        {
+         "id": "lg",
+         "kind": "removed",
+         "title": "largest(_:_:)",
+         "text": "its frame is gone"
+        },
+        {
+         "id": "intT",
+         "kind": "data",
+         "title": "Int",
+         "tag": "type metadata",
+         "fields": [
+          [
+           "size",
+           "8 bytes"
+          ],
+          [
+           "copy",
+           "copies an Int"
+          ]
+         ]
+        },
+        {
+         "id": "intC",
+         "kind": "data",
+         "title": "Int: Comparable",
+         "tag": "witness table",
+         "fields": [
+          [
+           "<",
+           "Int's <"
+          ],
+          [
+           "<=",
+           "Int's <="
+          ],
+          [
+           ">=",
+           "Int's >="
+          ],
+          [
+           ">",
+           "Int's >"
+          ]
+         ]
+        }
+       ],
+       "highlight": [
+        "cups",
+        "intT"
+       ]
+      },
+      {
+       "text": "Line 8 calls `largest(\"Bo\", \"Ana\")`, and the same code runs again, in a new stack frame. This time `a` and `b` are the addresses of two `String` values, and the result goes into `name`. `T` is the address of `String`'s type metadata, which gives the size of a `String`, 16 bytes, and `T: Comparable` is the address of `String`'s witness table for `Comparable`.",
+       "line": 8,
+       "blocks": [
+        {
+         "id": "cups",
+         "kind": "global",
+         "title": "cups",
+         "tag": "constant",
+         "fields": [
+          [
+           "cups",
+           "8"
+          ]
+         ]
+        },
+        {
+         "id": "name",
+         "kind": "global",
+         "title": "name",
+         "tag": "constant",
+         "fields": [
+          [
+           "name",
+           null
+          ]
+         ]
+        },
+        {
+         "id": "top",
+         "kind": "frame",
+         "title": "top-level code",
+         "fields": [
+          [
+           "for a",
+           "\"Bo\""
+          ],
+          [
+           "for b",
+           "\"Ana\""
+          ]
+         ]
+        },
+        {
+         "id": "lg2",
+         "kind": "frame",
+         "title": "largest(_:_:)",
+         "fields": [
+          [
+           "a",
+           {
+            "to": "top",
+            "field": "for a"
+           }
+          ],
+          [
+           "b",
+           {
+            "to": "top",
+            "field": "for b"
+           }
+          ],
+          [
+           "result",
+           {
+            "to": "name"
+           }
+          ],
+          [
+           "T",
+           {
+            "to": "strT"
+           }
+          ],
+          [
+           "T: Comparable",
+           {
+            "to": "strC"
+           }
+          ]
+         ]
+        },
+        {
+         "id": "intT",
+         "kind": "data",
+         "title": "Int",
+         "tag": "type metadata",
+         "fields": [
+          [
+           "size",
+           "8 bytes"
+          ],
+          [
+           "copy",
+           "copies an Int"
+          ]
+         ]
+        },
+        {
+         "id": "intC",
+         "kind": "data",
+         "title": "Int: Comparable",
+         "tag": "witness table",
+         "fields": [
+          [
+           "<",
+           "Int's <"
+          ],
+          [
+           "<=",
+           "Int's <="
+          ],
+          [
+           ">=",
+           "Int's >="
+          ],
+          [
+           ">",
+           "Int's >"
+          ]
+         ]
+        },
+        {
+         "id": "strT",
+         "kind": "data",
+         "title": "String",
+         "tag": "type metadata",
+         "fields": [
+          [
+           "size",
+           "16 bytes"
+          ],
+          [
+           "copy",
+           "copies a String"
+          ]
+         ]
+        },
+        {
+         "id": "strC",
+         "kind": "data",
+         "title": "String: Comparable",
+         "tag": "witness table",
+         "fields": [
+          [
+           "<",
+           "String's <"
+          ],
+          [
+           "<=",
+           "String's <="
+          ],
+          [
+           ">=",
+           "String's >="
+          ],
+          [
+           ">",
+           "String's >"
+          ]
+         ]
+        }
+       ],
+       "highlight": [
+        "lg2",
+        "strT",
+        "strC"
+       ]
+      },
+      {
+       "text": "Line 2 looks up > in `String`'s witness table, so `a > b` compares text: \"Bo\" comes after \"Ana\", so line 3 returns `a`. `largest(_:_:)` copies \"Bo\" into `name`, with the copy function that `String`'s type metadata gives. The call ends, and its frame is removed.",
+       "line": 3,
+       "also": [
+        2
+       ],
+       "blocks": [
+        {
+         "id": "cups",
+         "kind": "global",
+         "title": "cups",
+         "tag": "constant",
+         "fields": [
+          [
+           "cups",
+           "8"
+          ]
+         ]
+        },
+        {
+         "id": "name",
+         "kind": "global",
+         "title": "name",
+         "tag": "constant",
+         "fields": [
+          [
+           "name",
+           "\"Bo\""
+          ]
+         ]
+        },
+        {
+         "id": "top",
+         "kind": "frame",
+         "title": "top-level code",
+         "fields": [
+          [
+           "for a",
+           "\"Bo\""
+          ],
+          [
+           "for b",
+           "\"Ana\""
+          ]
+         ]
+        },
+        {
+         "id": "lg2",
+         "kind": "removed",
+         "title": "largest(_:_:)",
+         "text": "its frame is gone"
+        },
+        {
+         "id": "intT",
+         "kind": "data",
+         "title": "Int",
+         "tag": "type metadata",
+         "fields": [
+          [
+           "size",
+           "8 bytes"
+          ],
+          [
+           "copy",
+           "copies an Int"
+          ]
+         ]
+        },
+        {
+         "id": "intC",
+         "kind": "data",
+         "title": "Int: Comparable",
+         "tag": "witness table",
+         "fields": [
+          [
+           "<",
+           "Int's <"
+          ],
+          [
+           "<=",
+           "Int's <="
+          ],
+          [
+           ">=",
+           "Int's >="
+          ],
+          [
+           ">",
+           "Int's >"
+          ]
+         ]
+        },
+        {
+         "id": "strT",
+         "kind": "data",
+         "title": "String",
+         "tag": "type metadata",
+         "fields": [
+          [
+           "size",
+           "16 bytes"
+          ],
+          [
+           "copy",
+           "copies a String"
+          ]
+         ]
+        },
+        {
+         "id": "strC",
+         "kind": "data",
+         "title": "String: Comparable",
+         "tag": "witness table",
+         "fields": [
+          [
+           "<",
+           "String's <"
+          ],
+          [
+           "<=",
+           "String's <="
+          ],
+          [
+           ">=",
+           "String's >="
+          ],
+          [
+           ">",
+           "String's >"
+          ]
+         ]
+        }
+       ],
+       "highlight": [
+        "strC",
+        "name"
+       ]
+      },
+      {
+       "text": "Line 9 prints {{8}}, and line 10 prints {{Bo}}.",
+       "line": 9,
+       "also": [
+        10
+       ],
+       "prints": [
+        "8",
+        "Bo"
+       ],
+       "blocks": [
+        {
+         "id": "cups",
+         "kind": "global",
+         "title": "cups",
+         "tag": "constant",
+         "fields": [
+          [
+           "cups",
+           "8"
+          ]
+         ]
+        },
+        {
+         "id": "name",
+         "kind": "global",
+         "title": "name",
+         "tag": "constant",
+         "fields": [
+          [
+           "name",
+           "\"Bo\""
+          ]
+         ]
+        },
+        {
+         "id": "intT",
+         "kind": "data",
+         "title": "Int",
+         "tag": "type metadata",
+         "fields": [
+          [
+           "size",
+           "8 bytes"
+          ],
+          [
+           "copy",
+           "copies an Int"
+          ]
+         ]
+        },
+        {
+         "id": "intC",
+         "kind": "data",
+         "title": "Int: Comparable",
+         "tag": "witness table",
+         "fields": [
+          [
+           "<",
+           "Int's <"
+          ],
+          [
+           "<=",
+           "Int's <="
+          ],
+          [
+           ">=",
+           "Int's >="
+          ],
+          [
+           ">",
+           "Int's >"
+          ]
+         ]
+        },
+        {
+         "id": "strT",
+         "kind": "data",
+         "title": "String",
+         "tag": "type metadata",
+         "fields": [
+          [
+           "size",
+           "16 bytes"
+          ],
+          [
+           "copy",
+           "copies a String"
+          ]
+         ]
+        },
+        {
+         "id": "strC",
+         "kind": "data",
+         "title": "String: Comparable",
+         "tag": "witness table",
+         "fields": [
+          [
+           "<",
+           "String's <"
+          ],
+          [
+           "<=",
+           "String's <="
+          ],
+          [
+           ">=",
+           "String's >="
+          ],
+          [
+           ">",
+           "String's >"
+          ]
+         ]
+        }
+       ],
+       "highlight": [
+        "cups",
+        "name"
+       ]
+      }
+     ],
+     "answer": "Each call passes `largest(_:_:)` two hidden arguments: the address of `T`'s type metadata, which gives the size of a `T` and how to copy one, and the address of `T`'s witness table for `Comparable`, where line 2 finds the comparison. So one piece of code works for `Int` and for `String`. A build with optimization can do less work: swiftc can put the body of `largest(_:_:)` right into each call, or make a copy of it for `Int` alone, which needs no hidden arguments."
     }
    }
   },
@@ -2131,7 +3289,7 @@ const LIBRARY = {
        "text": "while `makeScore()` runs, and after it returns."
       }
      },
-     "afterExample": "`Score()` on line 5 makes a heap object. `score` does not hold the object itself: it holds the object's address.",
+     "afterExample": "`Score()` on line 5 makes an instance of the class `Score`, and the instance is a heap object. `score` does not hold the object itself: it holds the object's address, which Swift calls a reference to the object.",
      "problem": "Some values must stay after the call that made them returns, and be used from more than one place. A stack frame cannot keep them, because it is removed when its call returns.",
      "how": "A heap object stays while something holds its address. When `makeScore()` returns, `score` is removed with its frame, but `mine` holds the same address, so the object stays."
     },
@@ -2242,10 +3400,16 @@ const LIBRARY = {
     }
    }
   },
+  "implementation": {
+   "id": "implementation",
+   "name": "Implementation",
+   "first": "A method or property of a conforming type that meets one of a protocol's requirements.",
+   "parts": []
+  },
   "in-keyword": {
    "id": "in-keyword",
    "name": "in",
-   "first": "The word that ends a closure's parameter list. The body comes after it.",
+   "first": "The keyword that comes after a closure's parameter list, and after its return type when it has one. The body starts after it.",
    "parts": []
   },
   "local-value": {
@@ -2265,19 +3429,207 @@ const LIBRARY = {
   "parameter": {
    "id": "parameter",
    "name": "Parameter",
-   "first": "One input of a function or closure: a name, a colon, and the type of the value it holds.",
+   "first": "One input of a function or closure. It has a name, and the type of the value it holds.",
+   "parts": []
+  },
+  "protocol-keyword": {
+   "id": "protocol-keyword",
+   "name": "protocol",
+   "first": "The keyword that declares a protocol. The protocol's name comes right after it.",
+   "parts": []
+  },
+  "protocol": {
+   "id": "protocol",
+   "name": "Protocol",
+   "area": "swift",
+   "first": "A named list of requirements, such as methods and properties, that a type conforms to by naming the protocol and having everything it requires.",
+   "parts": [
+    "protocol-keyword",
+    "requirement",
+    "conformance",
+    "implementation"
+   ],
+   "dependsOn": [
+    {
+     "id": "function",
+     "views": [
+      "what",
+      "parts"
+     ],
+     "why": "A protocol's method requirement is written as the first line of a function, with no body.",
+     "whyInExample": "Line 2 of `Greeter` is the first line of a function, `greet(name:)`, as line 1 of `greet` is, but with no body."
+    }
+   ],
+   "example": {
+    "code": [
+     "protocol Greeter {",
+     "    func greet(name: String) -> String",
+     "}",
+     "struct Friendly: Greeter {",
+     "    func greet(name: String) -> String {",
+     "        return \"Hello, \\(name)\"",
+     "    }",
+     "}",
+     "let host = Friendly()",
+     "print(host.greet(name: \"Ana\"))"
+    ]
+   },
+   "snippets": {
+    "two": {
+     "code": [
+      "protocol Greeter {",
+      "    func greet(name: String) -> String",
+      "}",
+      "struct Friendly: Greeter {",
+      "    func greet(name: String) -> String { \"Hello, \\(name)\" }",
+      "}",
+      "struct Formal: Greeter {",
+      "    func greet(name: String) -> String { \"Good day, \\(name)\" }",
+      "}",
+      "print(Friendly().greet(name: \"Ana\"))  // Hello, Ana",
+      "print(Formal().greet(name: \"Ana\"))    // Good day, Ana"
+     ],
+     "output": [
+      "Hello, Ana",
+      "Good day, Ana"
+     ]
+    }
+   },
+   "views": {
+    "what": {
+     "is": "A protocol is a named list of requirements: methods and properties that a type must have. A type conforms to a protocol when it writes the protocol's name after its own, with a colon, and has everything the protocol requires.",
+     "marks": [
+      {
+       "line": 2,
+       "text": "func greet(name: String) -> String",
+       "part": "requirement",
+       "label": "requirement"
+      },
+      {
+       "line": 4,
+       "text": ": Greeter",
+       "part": "conformance",
+       "label": "conforms to Greeter"
+      }
+     ],
+     "afterExample": "`Greeter` is a protocol with one requirement, the method `greet(name:)`. `Friendly` conforms to `Greeter`: line 4 says so, and lines 5 to 7 give `Friendly` its own `greet(name:)`.",
+     "problem": "Code often needs to know only what a value can do, not which type it is. A protocol states what a type must be able to do, as a list of requirements, and swiftc checks that every type that conforms to it has them all.",
+     "how": "A requirement has no body: it gives only a name, a parameter list, and a return type. Each type that conforms writes its own method, with a body. If `Friendly` had no `greet(name:)`, line 4 would not build: swiftc says that type `Friendly` does not conform to protocol `Greeter`.",
+     "when": [
+      {
+       "text": "Use one when several types must offer the same methods or properties, so that code can rely on them. Each type writes its own:",
+       "snippet": "two"
+      },
+      {
+       "text": "Don't write one for a single type that no other type has to match. Then the type's own methods are enough, as `Friendly`'s would be without `: Greeter`."
+      }
+     ]
+    },
+    "parts": {
+     "parts": [
+      {
+       "part": "protocol-keyword",
+       "name": "`protocol`",
+       "text": "`protocol` is a keyword. On line 1 it declares a protocol, and the protocol's name, `Greeter`, comes right after it. The protocol's requirements are between the braces on lines 1 and 3."
+      },
+      {
+       "part": "requirement",
+       "name": "The requirement, on line 2",
+       "text": "Line 2 is a requirement: a method that every type that conforms to `Greeter` must have. A method is a function that belongs to a type. A method requirement is written as the first line of a function, with no body, so it gives only the method's name, its parameter list, and its return type."
+      },
+      {
+       "part": "conformance",
+       "name": "The conformance, `: Greeter`",
+       "text": "On line 4, `: Greeter` after the name `Friendly` says that `Friendly` conforms to `Greeter`. swiftc then checks that `Friendly` has everything that `Greeter` requires. A type that has the method, but does not write `: Greeter`, does not conform to `Greeter`."
+      },
+      {
+       "part": "implementation",
+       "name": "The implementation, lines 5 to 7",
+       "text": "Lines 5 to 7 are `Friendly`'s own `greet(name:)`. It has the name, the parameter list, and the return type of the requirement on line 2, and a body. It meets that requirement, so it is called the requirement's implementation."
+      }
+     ],
+     "marks": [
+      {
+       "line": 1,
+       "text": "protocol",
+       "part": "protocol-keyword"
+      },
+      {
+       "line": 2,
+       "text": "func greet(name: String) -> String",
+       "part": "requirement",
+       "label": "requirement"
+      },
+      {
+       "line": 4,
+       "text": ": Greeter",
+       "part": "conformance",
+       "label": "conformance"
+      },
+      {
+       "line": 5,
+       "text": "func greet(name: String) -> String",
+       "part": "implementation",
+       "label": "implementation"
+      },
+      {
+       "line": 6,
+       "text": "return \"Hello, \\(name)\"",
+       "part": "implementation"
+      }
+     ],
+     "steps": [
+      {
+       "text": "Line 9 makes a `Friendly` value, and stores it in `host`.",
+       "line": 9
+      },
+      {
+       "text": "Line 10 calls `greet(name:)` on `host`, with the argument `\"Ana\"`.",
+       "line": 10
+      },
+      {
+       "text": "`host` is a `Friendly`, so `Friendly`'s own `greet(name:)` runs, with `name` set to `\"Ana\"`. Line 6 returns the string \"Hello, Ana\".",
+       "line": 6,
+       "also": [
+        5
+       ],
+       "value": {
+        "line": 6,
+        "name": "name",
+        "is": "\"Ana\""
+       }
+      },
+      {
+       "text": "Line 10 prints {{Hello, Ana}}.",
+       "line": 10,
+       "prints": [
+        "Hello, Ana"
+       ]
+      }
+     ],
+     "end": {
+      "kind": "answer",
+      "text": "A protocol lists what a type must have, with no bodies. `Friendly` conforms to `Greeter`, and its own `greet(name:)` is the code that runs."
+     }
+    }
+   }
+  },
+  "requirement": {
+   "id": "requirement",
+   "name": "Requirement",
+   "first": "One method or property that a protocol lists, which every type that conforms to it must have.",
    "parts": []
   },
   "return-statement": {
    "id": "return-statement",
    "name": "return",
-   "first": "The word that ends a call, and gives back the value written after it.",
+   "first": "The keyword that ends a call of a function, and gives back the value written after it.",
    "parts": []
   },
   "return-type": {
    "id": "return-type",
    "name": "Return type",
-   "first": "The type of the value that a function gives back, written after an arrow.",
+   "first": "The type of the value that a function gives back, written after the return arrow.",
    "parts": []
   },
   "stack-frame": {
@@ -2481,7 +3833,7 @@ const LIBRARY = {
   "stack": {
    "id": "stack",
    "name": "Stack",
-   "first": "The memory of one thread, which holds a stack frame for each call that the thread is running.",
+   "first": "A region of memory, one for each thread, that holds a stack frame for each call that the thread is running.",
    "parts": []
   },
   "suspension-point": {
@@ -2548,16 +3900,34 @@ const LIBRARY = {
     }
    }
   },
+  "type-argument": {
+   "id": "type-argument",
+   "name": "Type argument",
+   "first": "The type that a type parameter gets in one call or use of generic code, as an argument is the value that a parameter gets in one call.",
+   "parts": []
+  },
+  "type-constraint": {
+   "id": "type-constraint",
+   "name": "Type constraint",
+   "first": "A protocol or a class written after a type parameter, with a colon: every type the parameter gets must conform to it or inherit from it, which lets the generic code use what that protocol requires or that class has.",
+   "parts": []
+  },
+  "type-parameter": {
+   "id": "type-parameter",
+   "name": "Type parameter",
+   "first": "A parameter of generic code that gets a type, not a value: each call or use of that code gives it one type.",
+   "parts": []
+  },
   "used-in-body": {
    "id": "used-in-body",
    "name": "Used in the body",
-   "first": "A place where a closure's body uses a constant or variable that is declared outside its braces.",
+   "first": "A place where a closure's body uses a constant or variable from the function around the closure.",
    "parts": []
   },
   "variable-outside-closure": {
    "id": "variable-outside-closure",
    "name": "Variable outside the closure",
-   "first": "A variable declared in the code around a closure, which the closure's body can change.",
+   "first": "A variable declared in the function around a closure, which the closure's body can change.",
    "parts": []
   },
   "variable-used-in-body": {

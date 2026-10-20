@@ -4,91 +4,115 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Star Expand</title>
-<!-- A mockup of Expand to Parts in the constellation theme. It is a picture of the idea, not a working page: the data is written in, and nothing links here. -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<!-- Expand to Parts in the constellation theme. It reads the concept library, as map-expand.html does: library-data.js, library.js, and pages.js. -->
+<link rel="stylesheet" href="sky.css">
 <style>
-:root{--sky0:#05070f;--ink:#ece6d6;--ink2:#b9b3a4;--ink3:#7e7c90;--gold:#e6c477;--gold2:#fbe7b0;--goldDim:rgba(230,196,119,.38);--known:#8d92a8;--panel:rgba(9,13,30,.8);--hair:rgba(230,196,119,.16)}
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
-body{background:var(--sky0);color:var(--ink);font-family:'EB Garamond',Georgia,serif;overflow:hidden}
-.nebula{position:fixed;inset:0;pointer-events:none;background:
+.nebula{background:
   radial-gradient(ellipse 30% 45% at 8% 50%,rgba(150,90,230,.32),transparent 70%),
   radial-gradient(ellipse 40% 50% at 38% 45%,rgba(90,80,200,.22),transparent 70%),
   radial-gradient(ellipse 35% 40% at 62% 60%,rgba(40,120,200,.18),transparent 70%),
   radial-gradient(ellipse 25% 35% at 70% 25%,rgba(30,160,170,.14),transparent 70%),
   radial-gradient(ellipse 120% 90% at 40% 50%,#0e1533,#05070f 80%)}
-#sky{position:fixed;inset:0}
-.frame{background:
-  linear-gradient(var(--gold),var(--gold)) 0 0/16px 1px no-repeat,linear-gradient(var(--gold),var(--gold)) 0 0/1px 16px no-repeat,
-  linear-gradient(var(--gold),var(--gold)) 100% 0/16px 1px no-repeat,linear-gradient(var(--gold),var(--gold)) 100% 0/1px 16px no-repeat,
-  linear-gradient(var(--gold),var(--gold)) 0 100%/16px 1px no-repeat,linear-gradient(var(--gold),var(--gold)) 0 100%/1px 16px no-repeat,
-  linear-gradient(var(--gold),var(--gold)) 100% 100%/16px 1px no-repeat,linear-gradient(var(--gold),var(--gold)) 100% 100%/1px 16px no-repeat,
-  var(--panel);border:1px solid var(--hair);backdrop-filter:blur(10px)}
-.caps{font-family:Jost,sans-serif;text-transform:uppercase;letter-spacing:.2em;font-size:10.5px;color:var(--ink3)}
-.rule{display:flex;align-items:center;gap:10px;color:var(--gold);font-size:9px;margin:22px 0}
-.rule::before,.rule::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--goldDim))}
-.rule::after{transform:scaleX(-1)}
-.hex{--c:var(--goldDim);display:inline-block;padding:1px;background:var(--c);clip-path:polygon(9px 0,calc(100% - 9px) 0,100% 50%,calc(100% - 9px) 100%,9px 100%,0 50%);cursor:pointer;transition:filter .2s;white-space:nowrap}
-.hex>span{display:block;padding:8px 20px;background:#0c1129;clip-path:inherit;font-family:Jost;text-transform:uppercase;letter-spacing:.18em;font-size:10.5px;color:var(--gold2)}
-.hex.gold{--c:var(--gold)}
-.hex.gold>span{background:linear-gradient(180deg,#2a2412,#15120a);color:#fff3cf}
-.hex:hover{--c:var(--gold);filter:drop-shadow(0 0 10px rgba(230,196,119,.45))}
-
-header{position:fixed;top:0;left:0;right:0;height:58px;display:flex;align-items:center;gap:22px;padding:0 26px;z-index:3;border-bottom:1px solid var(--hair);background:linear-gradient(180deg,rgba(5,7,15,.88),rgba(5,7,15,.4))}
-.back{font-family:Jost;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink2)}
 .ttl{font-family:Cinzel;font-size:17px;letter-spacing:.14em;color:var(--gold2)}
-.bar{position:fixed;top:58px;left:0;right:0;height:56px;display:flex;align-items:center;gap:10px;padding:0 26px;z-index:3;border-bottom:1px solid rgba(230,196,119,.08)}
-.root{font-family:Jost;font-size:12px;letter-spacing:.06em;color:var(--ink2);border:1px solid rgba(185,179,164,.18);padding:5px 13px;border-radius:20px}
+.bar{position:fixed;top:58px;left:0;right:0;height:56px;display:flex;align-items:center;gap:10px;padding:0 26px;z-index:3;border-bottom:1px solid rgba(230,196,119,.08);background:rgba(5,7,15,.3)}
+.root{font-family:Jost;font-size:12px;letter-spacing:.06em;color:var(--ink2);border:1px solid rgba(185,179,164,.18);padding:5px 13px;border-radius:20px;cursor:pointer}
+.root:hover{border-color:var(--goldDim);color:var(--gold2)}
 .root.on{color:var(--gold2);border-color:var(--gold);background:rgba(230,196,119,.08);box-shadow:0 0 14px rgba(230,196,119,.18)}
-.grow{flex:1}
 .scale{display:flex;align-items:center;gap:12px;margin-right:18px}
 .scale svg{width:170px;height:24px}
 
-main{position:fixed;top:114px;left:0;right:392px;bottom:0;z-index:1}
-main svg{width:100%;height:100%;display:block}
-.halo{animation:tw 4.5s ease-in-out infinite}
-@keyframes tw{0%,100%{opacity:1}50%{opacity:.6}}
-.nm{font-family:Jost,sans-serif;font-size:13px;letter-spacing:.05em;fill:var(--ink);paint-order:stroke;stroke:#060814;stroke-width:3.5px;stroke-linejoin:round}
+main{position:fixed;top:114px;left:0;right:392px;bottom:0;z-index:1;overflow:auto}
+main svg{display:block}
+.nm{font-family:Jost,sans-serif;font-size:13px;letter-spacing:.05em;fill:var(--ink);paint-order:stroke;stroke:#060814;stroke-width:3.5px;stroke-linejoin:round;pointer-events:none;transition:fill .2s}
 .nm.known{fill:#8d92a8}
 .nm.sel{fill:var(--gold2)}
 .nm.root{font-family:Cinzel;font-size:19px;letter-spacing:.12em;fill:#f1e7ff}
-.cnt{font-family:Jost;font-size:11px;fill:rgba(230,196,119,.75);letter-spacing:.1em}
-.grp{font-family:Jost;font-size:9.5px;letter-spacing:.24em;fill:rgba(230,196,119,.6);text-transform:uppercase}
-.travel{stroke-dasharray:2 26;animation:flow 3.2s linear infinite}
-@keyframes flow{to{stroke-dashoffset:-56}}
+.cnt{font-family:Jost;font-size:11px;fill:rgba(230,196,119,.75);letter-spacing:.1em;pointer-events:none}
+.region .cloud{opacity:.75;transition:opacity .6s}
+.region.on .cloud,.region.lit .cloud{opacity:1}
+.region .gtitle{font-family:Jost;font-size:9.5px;letter-spacing:.22em;fill:rgba(230,196,119,.62);transition:fill .4s}
+.region .gname{font-family:Cinzel;font-size:12.5px;letter-spacing:.12em;fill:rgba(251,231,176,.82)}
+.region .gstar{font-size:9px;fill:rgba(230,196,119,.6)}
+.region.on .gtitle,.region.lit .gtitle{fill:var(--gold)}
+.region.on .gname,.region.lit .gname{fill:#fff6dc}
+.region.on .gstar,.region.lit .gstar{fill:var(--gold2)}
+main.dragging{cursor:grabbing;user-select:none}
+#roots{display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;max-width:640px;padding:2px 28px 2px 2px;-webkit-mask-image:linear-gradient(90deg,#000 90%,transparent);mask-image:linear-gradient(90deg,#000 90%,transparent)}
+#roots .root{white-space:nowrap}
+main{cursor:grab}
+.compass{opacity:.65;transition:opacity .2s}
+.compass:hover{opacity:1}
+.compass .head{transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.compass .way:hover .head{transform:translateX(-4px);filter:drop-shadow(0 0 4px rgba(230,196,119,.75))}
+.compass .way:hover .trail{animation:westward 1.1s ease-in-out infinite;animation-delay:calc(var(--k) * .14s)}
+@keyframes westward{0%,100%{opacity:.15}35%{opacity:1}}
+.compass .back-label{font-family:Jost;font-size:9px;letter-spacing:.24em;fill:var(--gold2);opacity:0;transition:opacity .12s;pointer-events:none;paint-order:stroke;stroke:#060814;stroke-width:3px}
+.compass .way:hover .back-label{opacity:1}
+.onward{cursor:pointer;opacity:.6;transition:opacity .2s}
+.onward:hover{opacity:1}
+.onward .head{transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.onward:hover .head{transform:translateX(4px);filter:drop-shadow(0 0 4px rgba(230,196,119,.75))}
+.onward:hover .trail{animation:westward 1.1s ease-in-out infinite;animation-delay:calc(var(--k) * .14s)}
+.onward .back-label{font-family:Jost;font-size:9px;letter-spacing:.24em;fill:var(--gold2);opacity:0;transition:opacity .12s;pointer-events:none;paint-order:stroke;stroke:#060814;stroke-width:3px}
+.onward:hover .back-label{opacity:1}
+.way{cursor:pointer}
+#map{transition:transform .42s cubic-bezier(.6,0,.9,.4),opacity .42s}
+#map.leave-east{transform:translateX(260px);opacity:0}
+#map.leave-west{transform:translateX(-260px);opacity:0}
+#map.arrive-east{animation:arriveEast .9s cubic-bezier(.2,.8,.2,1)}
+@keyframes arriveEast{from{transform:translateX(260px);opacity:0}to{transform:none;opacity:1}}
+#map.arrive-west{animation:arriveWest .9s cubic-bezier(.2,.8,.2,1)}
+@keyframes arriveWest{from{transform:translateX(-260px);opacity:0}to{transform:none;opacity:1}}
+.toggle{cursor:pointer}
+.toggle .tbg{fill:transparent;stroke:transparent;transition:fill .2s,stroke .2s}
+.toggle:hover .tbg{fill:rgba(230,196,119,.08);stroke:rgba(230,196,119,.4)}
+.toggle .cnt{pointer-events:none}
+.hit{cursor:pointer}
+.drag-hint{position:fixed;left:18px;bottom:16px;z-index:2;font-family:Jost;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink3);pointer-events:none;background:rgba(5,7,15,.78);border:1px solid rgba(230,196,119,.12);padding:7px 14px;border-radius:16px;backdrop-filter:blur(6px)}
+.drag-hint b{color:var(--gold);font-weight:400}
+.ln{transition:opacity .25s}
+svg.focus .ln{opacity:.12}
+svg.focus .ln.lit{opacity:1}
+svg.focus .nm{fill:#5d5b70}
+svg.focus .nm.lit{fill:var(--gold2)}
+.hit{cursor:pointer}
 
-aside{position:fixed;top:132px;right:18px;bottom:18px;width:358px;z-index:2;padding:26px 26px 22px;overflow-y:auto}
+aside{position:fixed;top:132px;right:18px;max-height:calc(100vh - 150px);width:358px;z-index:2;padding:26px 26px 22px;overflow-y:auto}
 aside .caps.top{color:var(--gold)}
 .selhead{display:flex;align-items:flex-start;gap:12px;margin-top:10px}
 .selhead h2{font-family:Cinzel;font-weight:500;font-size:24px;line-height:1.15;letter-spacing:.04em;color:var(--gold2);text-shadow:0 0 20px rgba(230,196,119,.35);flex:1}
-.mag{display:flex;gap:5px;align-items:center;margin-top:12px}
-.mag i{display:block;background:#fff;border-radius:50%;box-shadow:0 0 6px #a8c4ff}
-.mag i.off{background:transparent;border:1px solid rgba(160,180,255,.35);box-shadow:none}
+.mag{display:flex;gap:6px;align-items:center;margin-top:12px}
+.mag i{display:block;border-radius:50%;border:1px solid rgba(160,180,255,.35)}
+.mag i.on{background:#fff;border-color:#fff;box-shadow:0 0 8px #a8c4ff}
 .first{font-size:19px;line-height:1.45;margin-top:14px;color:var(--ink)}
 .facts{font-size:15px;color:var(--ink2);margin-top:12px;line-height:1.45}
 .facts b{color:var(--gold2);font-weight:500}
+.knownTag{display:inline-flex;align-items:center;gap:8px;margin-top:14px;font-family:Jost;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--known)}
+.knownTag i{width:12px;height:12px;border-radius:50%;border:1px dashed var(--known)}
 .parts{list-style:none;margin-top:6px}
-.parts li{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid rgba(230,196,119,.08);font-family:Jost;font-size:14px;letter-spacing:.04em;color:var(--ink)}
+.parts li{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid rgba(230,196,119,.08);font-family:Jost;font-size:14px;letter-spacing:.04em;color:var(--ink);cursor:pointer}
+.parts li:hover{color:var(--gold2)}
 .parts li small{margin-left:auto;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink3)}
 .parts li.known{color:var(--known)}
-.dot{width:12px;height:12px;border-radius:50%;background:radial-gradient(circle,#fff 0 25%,rgba(160,190,255,.5) 35%,transparent 70%)}
+.dot{width:12px;height:12px;border-radius:50%;flex:none;background:radial-gradient(circle,#fff 0 25%,rgba(160,190,255,.5) 35%,transparent 70%)}
+.dot.atom{background:radial-gradient(circle,#fff 0 25%,rgba(143,240,220,.6) 35%,transparent 70%)}
 .dot.known{background:none;border:1px dashed var(--known)}
 .used{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.used span{font-family:Jost;font-size:12px;color:var(--ink2);border:1px solid rgba(185,179,164,.2);padding:4px 11px;border-radius:20px}
+.used span{font-family:Jost;font-size:12px;color:var(--ink2);border:1px solid rgba(185,179,164,.2);padding:4px 11px;border-radius:20px;cursor:pointer}
+.used span:hover{border-color:var(--goldDim);color:var(--gold2)}
 </style>
 </head>
 <body>
 <div class="nebula"></div>
 <canvas id="sky"></canvas>
-
+<div id="stage">
 <header>
-  <span class="back">← Home</span>
+  <a class="back" id="home">← The library</a>
   <span class="ttl">EXPAND TO PARTS</span>
   <span class="caps">From a whole idea to its smallest parts</span>
 </header>
 <div class="bar">
-  <span class="root on">RxSwift</span><span class="root">Generics</span><span class="root">Captured variables</span>
+  <span id="roots"></span>
   <span class="grow"></span>
   <div class="scale">
     <span class="caps" style="color:#c9a6ff">Chunk</span>
@@ -102,227 +126,475 @@ aside .caps.top{color:var(--gold)}
     </svg>
     <span class="caps" style="color:#8ff0dc">Atom</span>
   </div>
-  <a class="hex"><span>Open everything</span></a><a class="hex"><span>Close everything</span></a>
+  <a class="hex" id="openAll"><span>Open everything</span></a><a class="hex" id="closeAll"><span>Close everything</span></a>
 </div>
 
-<main><svg id="map" viewBox="0 0 1050 786" preserveAspectRatio="xMidYMid meet"></svg></main>
+<main id="main"><svg id="map"></svg></main>
+<div class="drag-hint"><b>✧</b> Drag the sky to look around &nbsp;·&nbsp; Click a selected star again to examine it</div>
+<aside class="frame" id="panel"></aside>
+</div>
+<div id="flash"></div>
+<div id="card" class="frame"></div>
 
-<aside class="frame">
-  <div class="caps top">Selected</div>
-  <div class="selhead">
-    <h2>Escaping closure</h2>
-    <a class="hex gold" style="margin-top:2px"><span>Graph and Page →</span></a>
-  </div>
-  <div class="mag"><i style="width:7px;height:7px" class="off"></i><i style="width:6px;height:6px" class="off"></i><i style="width:5px;height:5px"></i><i style="width:4px;height:4px" class="off"></i><i style="width:3px;height:3px" class="off"></i><span class="caps" style="margin-left:8px">3 steps from the chunk</span></div>
-  <p class="first">A closure that can be called after the function it was passed to has returned.</p>
-  <p class="facts">Made of <b>2</b> ideas. Under it are <b>11</b> ideas in all, and <b>7</b> of them are atoms.</p>
-  <div class="rule">✦</div>
-  <div class="caps">What it is made of</div>
-  <ul class="parts">
-    <li class="known"><span class="dot known"></span>Closure<small>Known</small></li>
-    <li><span class="dot"></span>Stack frame<small>2 parts</small></li>
-  </ul>
-  <div class="rule">✦</div>
-  <div class="caps">Open ideas that use it</div>
-  <div class="used"><span>Subscribing</span></div>
-</aside>
-
+<script src="sky.js"></script>
+<script src="../library-data.js"></script>
+<script src="../library.js"></script>
+<script src="../pages.js"></script>
 <script>
-// The star field behind every page: fixed stars that twinkle slowly. A seeded random number keeps the same sky on each load.
-(function () {
-  const c = document.getElementById('sky'), x = c.getContext('2d'); let W, H, S = [];
-  function rnd(s) { return () => (s = (s * 16807) % 2147483647) / 2147483647; }
-  function init() {
-    const d = devicePixelRatio; W = c.width = innerWidth * d; H = c.height = innerHeight * d;
-    c.style.width = innerWidth + 'px'; c.style.height = innerHeight + 'px';
-    const r = rnd(23); S = [];
-    for (let i = 0; i < 560; i++) {
-      const big = r() > .94, h = r();
-      S.push({ x: r() * W, y: r() * H, s: (big ? 1.1 + r() * 1.2 : .35 + r() * .7) * d, a: .25 + r() * .6, p: r() * 6.3, v: .4 + r() * 1.5,
-        h: h < .14 ? '170,205,255' : h < .22 ? '255,226,180' : '236,236,255' });
-    }
-  }
-  function draw(t) {
-    x.clearRect(0, 0, W, H);
-    for (const s of S) {
-      const a = s.a * (.6 + .4 * Math.sin(s.p + t * .001 * s.v));
-      x.fillStyle = `rgba(${s.h},${a})`; x.beginPath(); x.arc(s.x, s.y, s.s, 0, 7); x.fill();
-      if (s.s > 1.4 * devicePixelRatio) { x.fillStyle = `rgba(${s.h},${a * .12})`; x.beginPath(); x.arc(s.x, s.y, s.s * 5, 0, 7); x.fill(); }
-    }
-    requestAnimationFrame(draw);
-  }
-  addEventListener('resize', init); init(); requestAnimationFrame(draw);
-})();
-
-// ---------- Drawing helpers ----------
-const NS = 'http://www.w3.org/2000/svg';
-function el(tag, a, parent) { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); if (parent) parent.appendChild(e); return e; }
-const svg = document.getElementById('map');
-const defs = el('defs', {}, svg);
-const soft = el('filter', { id: 'soft', x: '-50%', y: '-50%', width: '200%', height: '200%' }, defs); el('feGaussianBlur', { stdDeviation: 1.2 }, soft);
-const glow = el('filter', { id: 'glow', x: '-20%', y: '-20%', width: '140%', height: '140%' }, defs); el('feGaussianBlur', { stdDeviation: 3 }, glow);
-function radial(color, a0, a1) {
-  const id = 'r' + color.slice(1) + String(a0).replace('.', '') + String(a1).replace('.', '');
-  if (!defs.querySelector('#' + id)) {
-    const g = el('radialGradient', { id }, defs);
-    el('stop', { offset: 0, 'stop-color': color, 'stop-opacity': a0 }, g);
-    el('stop', { offset: .3, 'stop-color': color, 'stop-opacity': a1 }, g);
-    el('stop', { offset: 1, 'stop-color': color, 'stop-opacity': 0 }, g);
-  }
-  return `url(#${id})`;
-}
-let gid = 0;
-function lineGrad(x1, y1, x2, y2, c1, c2) {
-  const id = 'lg' + (gid++);
-  const g = el('linearGradient', { id, gradientUnits: 'userSpaceOnUse', x1, y1, x2, y2 }, defs);
-  el('stop', { offset: 0, 'stop-color': c1 }, g); el('stop', { offset: 1, 'stop-color': c2 }, g);
-  return `url(#${id})`;
-}
-
-// ---------- What is open: RxSwift, with some of its ideas opened ----------
-// Each id that is open lists what it is made of. An id that already has a star, further left or higher up, is not drawn again:
-// the idea that uses it gets a dashed line back to that one star.
-const NAME = { rxswift: 'RxSwift', observable: 'Observable', subscribe: 'Subscribing', operators: 'Operators', disposing: 'Disposing', subject: 'Subject',
-  scheduler: 'Scheduler', 'gen-type': 'Generic type', event: 'Event', closure: 'Closure', esc: 'Escaping closure', 'weak-self': '[weak self]',
-  disposable: 'Disposable', disposebag: 'DisposeBag', 'enum-assoc': 'Enumeration with associated values', error: 'Error', 'stack-frame': 'Stack frame',
-  'capture-list': 'Capture list', weak: 'Weak reference', arc: 'Reference counting', opt: 'Optional' };
-const OF = { rxswift: ['observable', 'subscribe', 'operators', 'disposing', 'subject', 'scheduler'], observable: ['gen-type', 'event'],
-  subscribe: ['closure', 'esc', 'weak-self', 'disposable'], disposing: ['disposable', 'disposebag'], event: ['enum-assoc', 'error'],
-  esc: ['closure', 'stack-frame'], 'weak-self': ['capture-list', 'weak'], weak: ['arc', 'opt'] };
-// How many ideas each one is made of, open or not. 0 is an atom.
-const PARTS = { rxswift: 6, observable: 2, subscribe: 4, operators: 3, disposing: 2, subject: 3, scheduler: 2, 'gen-type': 2, event: 2, closure: 5, esc: 2,
-  'weak-self': 2, disposable: 1, disposebag: 3, 'enum-assoc': 2, error: 1, 'stack-frame': 2, 'capture-list': 0, weak: 2, arc: 2, opt: 0 };
-const KNOWN = new Set(['closure', 'opt']);
-const SELECTED = 'esc';
+const { el } = Sky;
+const svg = document.getElementById('map'), main = document.getElementById('main');
+// The whole idea on the left: the one in the address, such as expand.html?root=closure, or the study in progress.
+const asked = new URLSearchParams(location.search).get('root');
+let ROOT = PIECES[asked] ? asked : STUDYING.id;
+// What is open and selected is kept for this tab, so coming back to this page finds it as it was.
+let saved = {};
+try { saved = JSON.parse(sessionStorage.getItem('starExpand') || '{}'); } catch (e) {}
+const OPEN = new Set(saved.root === ROOT ? saved.open : [ROOT]);
+let SELECTED = saved.root === ROOT && PIECES[saved.selected] ? saved.selected : ROOT;
+let shown = new Set();
+function remember() { try { sessionStorage.setItem('starExpand', JSON.stringify({ root: ROOT, open: [...OPEN], selected: SELECTED })); } catch (e) {} }
 const COL = ['#c9a6ff', '#b3b0ff', '#a0c0ff', '#93d2ff', '#8fd8ff'];
 const ATOM = '#8ff0dc';
-const R = [13, 8, 6, 5, 4.4];
-const X = [50, 290, 500, 705, 880];
+const R = c => [13, 8, 6, 5, 4.4][Math.min(c, 4)];
+// The first column starts after the whole idea's name, so a long name has room. The name is split onto lines of at most 14 characters.
+const ROOT_WRAP = 14;
+// Where the whole idea's star is. The space to its left holds the compass.
+const LEFT = 220;
+const X = c => {
+  const longest = Math.max(...Sky.wrap(PIECES[ROOT].name, ROOT_WRAP).map(l => l.length));
+  return c === 0 ? LEFT : Math.max(LEFT + 270, LEFT + 52 + longest * 13.5 + 36 + 90) + (c - 1) * 270;
+};
+// Each row is tall enough for the turning ring of a selected star, so selecting a star moves nothing, and each group has room for its title.
+const ROW = 84, GAP = 52;
 
-// Place each idea once: a tree layout where each open idea sits in the middle of what it is made of.
-const pos = {}, back = [], edges = [], groups = [];
-const ROW = 42, GAP = 20;
-function height(id, seen) {
-  seen.add(id);
-  const kids = (OF[id] || []).filter(k => !seen.has(k));
-  kids.forEach(k => seen.add(k));
-  if (!kids.length) return ROW;
-  return Math.max(ROW, kids.reduce((s, k) => s + height(k, seen), 0) + GAP);
-}
-function place(id, col, top, seen) {
-  seen.add(id);
-  const all = OF[id] || [], kids = all.filter(k => !seen.has(k));
-  kids.forEach(k => seen.add(k));
-  const hs = kids.map(k => { const s2 = new Set(seen); return height(k, s2); });
-  const h = Math.max(ROW, hs.reduce((a, b) => a + b, 0) + (kids.length ? GAP : 0));
-  pos[id] = { x: X[col], y: top + h / 2, col };
-  let y = top + (kids.length ? GAP : 0);
-  if (all.length) groups.push({ of: id, kids, col: col + 1 });
-  kids.forEach((k, i) => { place(k, col + 1, y, seen); y += hs[i]; edges.push([id, k]); });
-  all.filter(k => !kids.includes(k)).forEach(k => back.push([id, k]));
-  return h;
-}
-const total = height('rxswift', new Set());
-const VH = Math.max(786, total + 110);
-svg.setAttribute('viewBox', `0 0 1050 ${VH}`);
-place('rxswift', 0, (VH - total) / 2 + 10, new Set());
-
-// Each name, split onto lines. An open idea's name is split shorter, so that the lines to its parts have room.
-const LINES = {}, END = {};
-for (const id in pos) {
-  const max = id === 'rxswift' ? 30 : OF[id] ? 12 : 18, lines = [];
-  NAME[id].split(' ').forEach(w => { const l = lines[lines.length - 1]; if (l && (l + ' ' + w).length <= max) lines[lines.length - 1] = l + ' ' + w; else lines.push(w); });
-  LINES[id] = lines;
-  const r = R[pos[id].col], lx = pos[id].x + r * 1.6 + (id === 'rxswift' ? 16 : 10);
-  pos[id].lx = lx;
-  pos[id].cx = lx + Math.max(...lines.map(l => l.length)) * (id === 'rxswift' ? 13.5 : 7.6) + 10;
-  END[id] = pos[id].cx + 26;
+// Every idea under one, at any depth, and how many of those are atoms.
+function under(id) {
+  const all = new Set();
+  (function walk(n) { PIECES[n].of.forEach(c => { if (!all.has(c)) { all.add(c); walk(c); } }); })(id);
+  return { all: all.size, atoms: [...all].filter(c => !PIECES[c].of.length).length };
 }
 
-// Faint clouds behind each group, and the caption "What X is made of".
-groups.forEach(g => {
-  const ys = g.kids.map(k => pos[k].y); if (!ys.length) return;
-  const top = Math.min(...ys), bot = Math.max(...ys), x = X[g.col];
-  el('ellipse', { cx: x + 70, cy: (top + bot) / 2, rx: 150, ry: (bot - top) / 2 + 40, fill: radial(COL[g.col], .10, .05) }, svg);
-  const text = 'What ' + NAME[g.of] + ' is made of';
-  const t = el('text', { x: Math.min(x + 2, 1046 - text.length * 8), y: top - 22, class: 'grp' }, svg);
-  t.textContent = text;
-});
-
-// The rings that turn slowly behind the selected idea.
-const sel = pos[SELECTED];
-const turn = el('g', {}, svg);
-el('animateTransform', { attributeName: 'transform', type: 'rotate', from: `0 ${sel.x} ${sel.y}`, to: `360 ${sel.x} ${sel.y}`, dur: '120s', repeatCount: 'indefinite' }, turn);
-el('circle', { cx: sel.x, cy: sel.y, r: 40, fill: 'none', stroke: 'rgba(230,196,119,.22)' }, turn);
-for (let i = 0; i < 48; i++) {
-  const a = i / 48 * Math.PI * 2, r2 = i % 4 ? 44 : 49;
-  el('line', { x1: sel.x + Math.cos(a) * 40, y1: sel.y + Math.sin(a) * 40, x2: sel.x + Math.cos(a) * r2, y2: sel.y + Math.sin(a) * r2, stroke: 'rgba(230,196,119,.35)', 'stroke-width': .7 }, turn);
-}
-
-// The lines: one curve from each idea to each idea it is made of, from the right of one star to the left of the next.
-function sCurve(p, q, gp, gq) {
-  const x1 = p.x + gp, x2 = q.x - gq, dx = (x2 - x1) * .55;
-  return `M${x1} ${p.y}C${x1 + dx} ${p.y} ${x2 - dx} ${q.y} ${x2} ${q.y}`;
-}
-const color = id => KNOWN.has(id) ? '#8d92a8' : PARTS[id] === 0 ? ATOM : COL[pos[id].col];
-edges.forEach(([a, b]) => {
-  const p = pos[a], q = pos[b], d = sCurve(p, q, END[a] - p.x, R[q.col] * 2);
-  el('circle', { cx: END[a], cy: p.y, r: 1.6, fill: color(a), opacity: .9 }, svg);
-  const g = lineGrad(p.x, p.y, q.x, q.y, color(a), color(b));
-  el('path', { d, fill: 'none', stroke: g, 'stroke-width': 5, opacity: .28, filter: 'url(#glow)' }, svg);
-  el('path', { d, fill: 'none', stroke: g, 'stroke-width': 1.3, opacity: .9 }, svg);
-  el('path', { d, fill: 'none', stroke: '#ffffff', 'stroke-width': 1.8, opacity: .7, class: 'travel', style: `animation-delay:${(-Math.random() * 3).toFixed(2)}s`, 'stroke-linecap': 'round' }, svg);
-});
-// The dashed lines back to an idea that already has a star. They leave to the right and loop back, so they do not cover the names.
-back.forEach(([a, b]) => {
-  const p = pos[a], q = pos[b];
-  const x1 = END[a], x2 = q.x - R[q.col] * 2;
-  const reach = Math.max(70, Math.abs(q.y - p.y) * .35);
-  const d = q.col > p.col
-    ? `M${x1} ${p.y}C${x1 + 80} ${p.y} ${x2 - 80} ${q.y} ${x2} ${q.y}`
-    : `M${p.x - R[p.col] * 2} ${p.y}C${p.x - reach} ${p.y} ${q.x - reach} ${q.y} ${x2} ${q.y}`;
-  el('path', { d, fill: 'none', stroke: color(b), 'stroke-width': 1.1, 'stroke-dasharray': '3 5', opacity: .75 }, svg);
-});
-
-// The stars. Each column is one step smaller, from the chunk on the left to the atoms on the right.
-const uses = {};
-edges.concat(back).forEach(([a, b]) => { uses[b] = (uses[b] || 0) + 1; });
-for (const id in pos) {
-  const p = pos[id], r = R[p.col], c = color(id), g = el('g', { transform: `translate(${p.x},${p.y})`, style: 'cursor:pointer' }, svg);
-  if (KNOWN.has(id)) {
-    el('circle', { r: r * 2.2, fill: radial('#8d92a8', .3, .1) }, g);
-    el('circle', { r: r * 1.15, fill: 'none', stroke: '#8d92a8', 'stroke-dasharray': '2 2.6' }, g);
-    el('circle', { r: r * .32, fill: '#a3a8bd' }, g);
-  } else {
-    el('circle', { r: r * 4.4, fill: radial(c, id === 'rxswift' ? .85 : .6, .2), class: 'halo', style: `animation-delay:${(-Math.random() * 4).toFixed(2)}s` }, g);
-    const L = r * (id === 'rxswift' ? 6 : id === SELECTED ? 5 : 3.2), w = r * .16;
-    el('path', { d: `M${-L} 0L0 ${-w}L${L} 0L0 ${w}ZM0 ${-L}L${w} 0L0 ${L}L${-w} 0Z`, fill: '#fffbea', opacity: id === SELECTED || id === 'rxswift' ? .8 : .4, filter: 'url(#soft)' }, g);
-    el('circle', { r, fill: 'none', stroke: id === SELECTED ? '#e6c477' : c, 'stroke-width': id === SELECTED ? 1.3 : .8, opacity: .8 }, g);
-    el('circle', { r: r * .5, fill: '#fff' }, g);
+// ---------- Layout: each idea once, in the leftmost column that shows it ----------
+function layout() {
+  const place = { [ROOT]: { col: 0 } }, edges = [], back = [], queue = [ROOT];
+  while (queue.length) {
+    const n = queue.shift();
+    if (!OPEN.has(n)) continue;
+    PIECES[n].of.forEach(c => {
+      if (!place[c]) { place[c] = { col: place[n].col + 1 }; edges.push([n, c]); queue.push(c); }
+      else back.push([n, c]);
+    });
   }
-  // The name, to the right of the star.
-  const lines = LINES[id], lx = p.lx;
-  const t = el('text', { x: lx, y: p.y + 4.5 - (lines.length - 1) * 8, class: 'nm' + (id === 'rxswift' ? ' root' : '') + (KNOWN.has(id) ? ' known' : '') + (id === SELECTED ? ' sel' : '') }, svg);
-  lines.forEach((l, i) => { const s = el('tspan', { x: lx, dy: i ? 16 : 0 }, t); s.textContent = l; });
-  // How many parts it has, and whether it is open: ‹ when its parts are showing, › when they are not.
-  const cx = p.cx;
-  if (PARTS[id] > 0) { const n = el('text', { x: cx, y: p.y + 4.5 - (lines.length - 1) * 8, class: 'cnt' }, svg); n.textContent = PARTS[id] + (OF[id] ? ' ‹' : ' ›'); }
-  else { const n = el('text', { x: cx, y: p.y + 4.5, class: 'cnt', style: 'fill:#8ff0dc;opacity:.8' }, svg); n.textContent = '◆'; }
-  // An idea that more than one open idea is made of says how many.
-  if (uses[id] > 1) {
-    const bg = el('g', { transform: `translate(${cx + (PARTS[id] > 0 ? 50 : 34)},${p.y})` }, svg);
-    el('rect', { x: -19, y: -8, width: 38, height: 15, rx: 7.5, fill: 'rgba(8,10,24,.92)', stroke: color(id), 'stroke-width': .8 }, bg);
-    const bt = el('text', { y: 3.5, 'text-anchor': 'middle', style: 'font-family:Jost;font-size:9px;letter-spacing:.16em;fill:#ece6d6' }, bg);
-    bt.textContent = 'IN ' + uses[id];
-  }
+  const kids = id => edges.filter(([a]) => a === id).map(([, b]) => b);
+  const h = id => { const k = kids(id); return k.length ? Math.max(ROW, k.reduce((s, c) => s + h(c), 0) + GAP) : ROW; };
+  const total = h(ROOT);
+  const maxCol = Math.max(...Object.values(place).map(p => p.col));
+  const W = Math.max(main.clientWidth, X(maxCol) + 300), H = Math.max(main.clientHeight, total + 200);
+  (function put(id, top) {
+    const p = place[id], k = kids(id);
+    // Each star sits a little off its column and its row, by an amount that comes from its id, so it is the same on every load.
+    const off = id === ROOT ? [0, 0] : [(hashOf(id + 'x') - .5) * 46, (hashOf(id + 'y') - .5) * 14];
+    p.x = X(p.col) + off[0]; p.y = top + h(id) / 2 + off[1];
+    let y = top + (k.length ? GAP : 0);
+    k.forEach(c => { put(c, y); y += h(c); });
+  })(ROOT, (H - total) / 2 + 10);
+  return { place, edges, back, W, H };
 }
 
-// The Examine capsule above the top right of the selected star.
-const ex = el('g', { transform: `translate(${sel.cx + 50},${sel.y - 24})`, style: 'cursor:pointer' }, svg);
-el('polygon', { points: '-44,0 -37,-8 37,-8 44,0 37,8 -37,8', fill: 'rgba(10,13,32,.95)', stroke: '#e6c477', 'stroke-width': 4, opacity: .25, filter: 'url(#glow)' }, ex);
-el('polygon', { points: '-44,0 -37,-8 37,-8 44,0 37,8 -37,8', fill: 'rgba(10,13,32,.95)', stroke: '#e6c477', 'stroke-width': 1 }, ex);
-const et = el('text', { y: 3.4, 'text-anchor': 'middle', style: 'font-family:Jost;font-size:9.5px;letter-spacing:.24em;fill:#fbe7b0' }, ex);
-et.textContent = '✦ EXAMINE';
+const delay = (e, ms) => { e.style.animationDelay = ms + 'ms'; return e; };
+let layoutCache = { edges: [] };
+// A number from 0 to 1 that is always the same for the same text, so each border has the same small steps on every load.
+function hashOf(text) { let h = 2166136261; for (const c of text) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return ((h >>> 0) % 10000) / 10000; }
+
+// The filter that turns a group's puffs of light into a faint nebula: noise bends their edges, and a wide blur softens them.
+// Each group has its own noise, from its id.
+function nebula(defs, id) {
+  const fid = 'neb-' + id.replace(/[^\w-]/g, '');
+  const f = el('filter', { id: fid, x: '-40%', y: '-60%', width: '180%', height: '220%' }, defs);
+  el('feTurbulence', { type: 'fractalNoise', baseFrequency: '0.010 0.016', numOctaves: 2, seed: Math.floor(hashOf(id + 'seed') * 1000), result: 'bend' }, f);
+  el('feDisplacementMap', { in: 'SourceGraphic', in2: 'bend', scale: 44, xChannelSelector: 'R', yChannelSelector: 'G', result: 'frayed' }, f);
+  el('feGaussianBlur', { in: 'frayed', stdDeviation: 20 }, f);
+  return fid;
+}
+
+// Works out where everything goes, then moves the stars there over half a second, so nothing jumps: when an idea is selected,
+// the ideas next to it glide away, and when a group opens, the stars around it glide to make room. after(L) runs at the end.
+let lastPos = null, tweening = 0;
+function render(opts = {}) {
+  const L = layout(), from = lastPos, token = ++tweening;
+  const moves = !opts.jump && from && Object.keys(L.place).some(id => from[id] && Math.hypot(from[id].x - L.place[id].x, from[id].y - L.place[id].y) > 1);
+  const finish = () => { draw(L); if (opts.after) opts.after(L); };
+  if (!moves) { finish(); return L; }
+  const t0 = performance.now(), DUR = 560;
+  (function frame(now) {
+    if (token !== tweening) return;
+    const k = Math.min(1, (now - t0) / DUR), e = 1 - Math.pow(1 - k, 3);
+    if (k >= 1) { finish(); return; }
+    // Ideas that are new wait for the last frame, and then light up.
+    const place = {};
+    for (const id in L.place) if (from[id]) place[id] = { ...L.place[id], x: from[id].x + (L.place[id].x - from[id].x) * e, y: from[id].y + (L.place[id].y - from[id].y) * e };
+    draw(L, place);
+    requestAnimationFrame(frame);
+  })(t0);
+  return L;
+}
+
+function draw(L, tweenPlace) {
+  const P = tweenPlace || L.place, K = KNOWN, still = !!tweenPlace;
+  const E = L.edges.filter(([a, b]) => P[a] && P[b]), B = L.back.filter(([a, b]) => P[a] && P[b]);
+  svg.innerHTML = '';
+  svg.setAttribute('width', L.W); svg.setAttribute('height', L.H); svg.setAttribute('viewBox', `0 0 ${L.W} ${L.H}`);
+  const d = Sky.defsFor(svg);
+  // Ideas that were not showing before light up in a wave, one column after the next.
+  const fresh = still ? new Set() : new Set(Object.keys(P).filter(id => !shown.has(id)));
+  const firstFresh = Math.min(...[...fresh].map(id => P[id].col), 99);
+  const wave = id => (P[id].col - firstFresh) * 380;
+  const color = id => K.has(id) ? '#8d92a8' : PIECES[id].of.length === 0 ? ATOM : COL[Math.min(P[id].col, 4)];
+
+  // Each name, split onto lines. An open idea's name is split shorter, so that the lines to its parts have room.
+  for (const id in P) {
+    const p = P[id], max = id === ROOT ? ROOT_WRAP : OPEN.has(id) ? 12 : 18;
+    p.lines = Sky.wrap(PIECES[id].name, max);
+    p.lx = p.x + (id === ROOT ? 52 : 46);
+    p.cx = p.lx + Math.max(...p.lines.map(l => l.length)) * (id === ROOT ? 13.5 : 7.6) + 10;
+    p.end = p.cx + 26;
+  }
+
+  const uses = {};
+  E.concat(B).forEach(([, b]) => { uses[b] = (uses[b] || 0) + 1; });
+
+  // Each group of parts is a nebula: a cloud of colored light that follows the shape of its stars, with its title,
+  // "What X is made of", above it. Dotted borders are kept for the areas on Home. A cloud's shape and colors come from
+  // the group's id, so they are the same on every load. The group that holds the selected idea glows brighter.
+  L.regions = {};
+  const selGroup = (E.find(([, b]) => b === SELECTED) || [])[0];
+  const HUES = ['#9b7bff', '#5fb8ff', '#4fe0c8', '#b48cff', '#7f8cff', '#6fd0ff'];
+  // A clear patch of sky around the selected star: the nebulas fade out near it, so its ring and its name stand out.
+  const selP = P[SELECTED];
+  if (selP) {
+    const m = el('mask', { id: 'clearing', maskUnits: 'userSpaceOnUse', x: 0, y: 0, width: L.W, height: L.H }, d.defs);
+    el('rect', { x: 0, y: 0, width: L.W, height: L.H, fill: '#fff' }, m);
+    const rg = el('radialGradient', { id: 'clearGrad' }, d.defs);
+    el('stop', { offset: 0, 'stop-color': '#000', 'stop-opacity': 1 }, rg);
+    el('stop', { offset: .55, 'stop-color': '#000', 'stop-opacity': .85 }, rg);
+    el('stop', { offset: 1, 'stop-color': '#000', 'stop-opacity': 0 }, rg);
+    el('ellipse', { cx: selP.x + 40, cy: selP.y, rx: 150, ry: 78, fill: 'url(#clearGrad)' }, m);
+  }
+  for (const id in P) {
+    const ks = E.filter(([a]) => a === id).map(([, b]) => b); if (!ks.length) continue;
+    const ys = ks.map(k => P[k].y), last = P[ks[ks.length - 1]];
+    const name = PIECES[id].name.toUpperCase(), titleW = 5 * 8.4 + name.length * 11 + 11 * 8.4;
+    const left = Math.min(...ks.map(k => P[k].x)) - 40, top = Math.min(...ys) - 58;
+    const right = Math.max(left + titleW + 66, ...ks.map(k => P[k].cx + (PIECES[k].of.length ? 30 : 18) + (uses[k] > 1 ? 70 : 0) + 20));
+    const bottom = Math.max(...ys) + 34 + (last.lines.length - 1) * 8;
+    L.regions[id] = { left, right, top, bottom };
+    const g = delay(el('g', { class: 'region' + (id === selGroup ? ' on' : '') + (fresh.has(ks[0]) ? ' fade' : ''), 'data-group': id }, svg), wave(ks[0]) - 150);
+    // The cloud: a faint wash over the group, and a smaller puff behind each star, in one color, frayed and softened by the filter.
+    const hue = HUES[Math.floor(hashOf(id) * HUES.length)];
+    const cloud = el('g', { filter: `url(#${nebula(d.defs, id)})`, class: 'cloud', ...(selP ? { mask: 'url(#clearing)' } : {}) }, g);
+    el('ellipse', { cx: (left + right) / 2, cy: (top + bottom) / 2 + 12, rx: (right - left) / 2, ry: (bottom - top) / 2 - 6, fill: hue, opacity: .09 }, cloud);
+    ks.forEach(k => {
+      const q = P[k];
+      el('ellipse', { cx: q.x + 40 + (hashOf(k + 'n') - .5) * 50, cy: q.y + (hashOf(k + 'm') - .5) * 16, rx: 54 + hashOf(k + 'r') * 46, ry: 20 + hashOf(k + 's') * 14, fill: hue, opacity: .16 }, cloud);
+    });
+    const t = el('text', { x: left + 30, y: top + 10, class: 'gtitle' }, g);
+    el('tspan', {}, t).textContent = 'WHAT ';
+    el('tspan', { class: 'gname' }, t).textContent = name;
+    el('tspan', {}, t).textContent = ' IS MADE OF';
+    el('text', { x: left + 16, y: top + 10.5, class: 'gstar' }, g).textContent = '✦';
+  }
+
+  // The rings that turn slowly behind the selected idea.
+  const sel = P[SELECTED];
+  if (sel) {
+    const turn = el('g', {}, svg);
+    el('animateTransform', { attributeName: 'transform', type: 'rotate', from: `0 ${sel.x} ${sel.y}`, to: `360 ${sel.x} ${sel.y}`, dur: '120s', repeatCount: 'indefinite' }, turn);
+    // It fits inside the selected idea's row, and inside the space before its name.
+    const rr = SELECTED === ROOT ? 34 : 31;
+    el('circle', { cx: sel.x, cy: sel.y, r: rr, fill: 'none', stroke: 'rgba(230,196,119,.26)' }, turn);
+    for (let i = 0; i < 48; i++) {
+      const a = i / 48 * Math.PI * 2, r2 = rr + (i % 4 ? 4 : 8);
+      el('line', { x1: sel.x + Math.cos(a) * rr, y1: sel.y + Math.sin(a) * rr, x2: sel.x + Math.cos(a) * r2, y2: sel.y + Math.sin(a) * r2, stroke: 'rgba(230,196,119,.4)', 'stroke-width': .7 }, turn);
+    }
+  }
+
+  compass(P[ROOT].x - 74, P[ROOT].y, d);
+
+  // One curve from each idea to each idea it is made of, from the end of its name to the left of the next star.
+  // The curves are the ones the first Expand to Parts drew: each bends at a different point, and next to each other they bow
+  // opposite ways, so one rises before it falls and the next dips before it climbs.
+  const nth = {};
+  E.forEach(([a, b]) => {
+    const i = nth[a] = (nth[a] ?? -1) + 1;
+    const p = P[a], q = P[b], x1 = p.end, x2 = q.x - R(q.col) * 2, dx = x2 - x1;
+    const bend = 0.42 + 0.12 * Math.sin(i * 1.7 + p.y);
+    // Two stars at the same height would be joined by a straight line, so the line bows a little: every line is curved.
+    const bow = Math.max(0, 22 - Math.abs(q.y - p.y) * 0.25) * (i % 2 ? 1 : -1);
+    const dd = `M${x1} ${p.y}C${x1 + dx * bend} ${p.y + bow} ${x2 - dx * (0.9 - bend)} ${q.y + bow} ${x2} ${q.y}`;
+    const g = d.line(p.x, p.y, q.x, q.y, color(a), color(b));
+    const anim = fresh.has(b), t = wave(b) - 250;
+    el('circle', { cx: x1, cy: p.y, r: 1.6, fill: color(a), opacity: .9, class: 'ln', 'data-a': a, 'data-b': b }, svg);
+    delay(el('path', { d: dd, pathLength: 1, fill: 'none', stroke: g, 'stroke-width': 5, opacity: .28, filter: 'url(#glow)', class: 'ln' + (anim ? ' draw' : ''), 'data-a': a, 'data-b': b }, svg), t);
+    delay(el('path', { d: dd, pathLength: 1, fill: 'none', stroke: g, 'stroke-width': 1.3, class: 'ln' + (anim ? ' draw' : ''), 'data-a': a, 'data-b': b }, svg), t);
+    const tg = delay(el('g', { class: 'ln' + (anim ? ' fade' : ''), 'data-a': a, 'data-b': b }, svg), t + 900);
+    el('path', { d: dd, fill: 'none', stroke: '#fff', 'stroke-width': 1.8, opacity: .7, class: 'travel', style: `animation-delay:${(-Math.random() * 3).toFixed(2)}s`, 'stroke-linecap': 'round' }, tg);
+  });
+  // A dashed line back to an idea that already has a star, instead of a second copy of it.
+  B.forEach(([a, b]) => {
+    const p = P[a], q = P[b], dy = Math.abs(q.y - p.y);
+    let dd;
+    if (q.col > p.col) {
+      // In a column to the right: the line bows up, then comes into the left of the star.
+      const x1 = p.end, x2 = q.x - R(q.col) * 2, dx = x2 - x1, bow = Math.max(0, 26 - dy * 0.25);
+      dd = `M${x1} ${p.y}C${x1 + dx * 0.5} ${p.y - bow} ${x2 - dx * 0.5} ${q.y - bow} ${x2} ${q.y}`;
+    } else if (q.col === p.col) {
+      // In the same column: the line leaves to the left and curves round into the other star.
+      const x1 = p.x - R(p.col) * 2, x2 = q.x - R(q.col) * 2, out = 46 + dy * 0.18;
+      dd = `M${x1} ${p.y}C${x1 - out} ${p.y} ${x2 - out} ${q.y} ${x2} ${q.y}`;
+    } else {
+      // In a column to the left: the line leaves to the left and comes into the end of the other star's name.
+      const x1 = p.x - R(p.col) * 2, x2 = q.end, dx = x1 - x2, bow = Math.max(0, 30 - dy * 0.25);
+      dd = `M${x1} ${p.y}C${x1 - dx * 0.5} ${p.y + bow} ${x2 + dx * 0.5} ${q.y + bow} ${x2} ${q.y}`;
+    }
+    delay(el('path', { d: dd, fill: 'none', stroke: color(b), 'stroke-width': 1.1, 'stroke-dasharray': '3 5', opacity: .75, class: 'ln' + (fresh.has(a) || fresh.has(b) ? ' fade' : ''), 'data-a': a, 'data-b': b }, svg), wave(a) + 400);
+  });
+
+  // The stars, the names, and how many parts each has.
+  for (const id in P) {
+    const p = P[id], r = R(p.col) * (id === SELECTED && id !== ROOT ? 1.45 : 1), c = color(id), known = K.has(id), isSel = id === SELECTED;
+    const g = el('g', { transform: `translate(${p.x},${p.y})`, class: 'hit', 'data-id': id }, svg);
+    const o = Sky.star(g, d, { r, known, color: c, strength: id === ROOT ? 1.3 : .9, flare: id === ROOT ? 6 : isSel ? 5 : 3.2,
+      flareOpacity: isSel || id === ROOT ? .8 : .4, ring: isSel ? '#e6c477' : c, ringWidth: isSel ? 1.3 : .8 });
+    if (fresh.has(id)) { o.classList.add('ignite'); delay(o, wave(id)); }
+    el('circle', { r: Math.max(14, r * 2), fill: 'transparent' }, g);
+    el('rect', { x: -16, y: -18 - (p.lines.length - 1) * 9, width: p.cx - 6 - p.x + 16, height: 36 + (p.lines.length - 1) * 18, fill: 'transparent' }, g);
+    const t = el('text', { x: p.lx, y: p.y + 4.5 - (p.lines.length - 1) * (id === ROOT ? 11 : 8), class: 'nm' + (id === ROOT ? ' root' : '') + (known ? ' known' : '') + (isSel ? ' sel' : '') + (fresh.has(id) ? ' fade' : ''), 'data-id': id }, svg);
+    if (fresh.has(id)) delay(t, wave(id) + 150);
+    p.lines.forEach((l, i) => { el('tspan', { x: p.lx, dy: i ? (id === ROOT ? 22 : 16) : 0 }, t).textContent = l; });
+    // How many parts it has: ‹ when they are showing, › when they are not. Clicking it opens or closes them. An atom has a small diamond.
+    const n = PIECES[id].of.length, cy = p.y + 4.5 - (n ? (p.lines.length - 1) * 8 : 0);
+    const tg = n && id !== ROOT ? el('g', { class: 'toggle', 'data-id': id }, svg) : svg;
+    if (tg !== svg) el('rect', { x: p.cx - 8, y: cy - 15, width: 38, height: 22, rx: 11, class: 'tbg' }, tg);
+    const ct = el('text', { x: p.cx, y: cy, class: 'cnt', style: n ? '' : 'fill:#8ff0dc;opacity:.8' }, tg);
+    ct.textContent = n ? n + (OPEN.has(id) ? ' ‹' : ' ›') : '◆';
+    // An idea that more than one open idea is made of says how many.
+    if (uses[id] > 1) {
+      const b = el('g', { transform: `translate(${p.cx + (n ? 50 : 34)},${p.y})` }, svg);
+      el('rect', { x: -19, y: -8, width: 38, height: 15, rx: 7.5, fill: 'rgba(8,10,24,.92)', stroke: color(id), 'stroke-width': .8 }, b);
+      el('text', { y: 3.5, 'text-anchor': 'middle', style: 'font-family:Jost;font-size:9px;letter-spacing:.16em;fill:#ece6d6' }, b).textContent = 'IN ' + uses[id];
+    }
+  }
+
+  // The way forward: on the selected idea, when it has parts and is not already the whole idea, an arrowhead pointing east with
+  // a trail of tiny stars ahead of it, just below the name. Clicking it makes that idea the whole idea.
+  if (sel && SELECTED !== ROOT && PIECES[SELECTED].of.length) {
+    const fy = sel.y + 4.5 + (sel.lines.length - 1) * 8 + 19;
+    const on = el('g', { class: 'onward', 'data-to': SELECTED, transform: `translate(${sel.lx + 8},${fy})` }, svg);
+    const head = el('g', { class: 'head' }, on);
+    el('polygon', { points: '12,0 -2,-5 -6,0', fill: '#fbe7b0' }, head);
+    el('polygon', { points: '12,0 -2,5 -6,0', fill: '#a9813a' }, head);
+    [[20, .8, 1.3], [27, .55, 1.1], [33, .35, .9], [38, .2, .7]].forEach(([x, o, r], k) =>
+      el('circle', { cx: x, cy: 0, r, fill: '#fbe7b0', opacity: o, class: 'trail', style: `--k:${k}` }, on));
+    el('text', { x: 48, y: 3.2, class: 'back-label' }, on).textContent = 'INTO ' + PIECES[SELECTED].name.toUpperCase();
+    el('rect', { x: -10, y: -11, width: 54, height: 22, fill: 'transparent' }, on);
+  }
+  if (still) return L;
+  shown = new Set(Object.keys(P));
+  lastPos = Object.fromEntries(Object.entries(L.place).map(([k, v]) => [k, { x: v.x, y: v.y }]));
+  layoutCache = L;
+  panel(L, K);
+  roots();
+  remember();
+  return L;
+}
+
+// ---------- The way back: to the ideas the whole idea is a part of ----------
+// To the left of the whole idea: a small two-tone arrowhead, like a point of a compass rose, pointing west, with a trail of
+// tiny stars ahead of it. There is one for each idea that is made of the whole idea, such as Closure for Capture.
+// Pointing at it lights the trail one star after another toward the west and shows "Back to Closure" at once. Clicking it
+// travels there. A whole idea that is a part of nothing leads back to the library.
+function waysBack() {
+  const ids = Object.keys(PIECES).filter(k => PIECES[k].of.includes(ROOT));
+  ids.sort((a, b) => (b === cameFrom) - (a === cameFrom) || (LIB.hasStudy(b) ? 1 : 0) - (LIB.hasStudy(a) ? 1 : 0));
+  return ids.length ? ids.map(id => ({ id, name: PIECES[id].name })) : [{ id: '#home', name: 'the library' }];
+}
+function compass(cx, cy, d) {
+  const ways = waysBack().slice(0, 3);
+  const g = el('g', { class: 'compass', transform: `translate(${cx},${cy})` }, svg);
+  ways.forEach((w, i) => {
+    const dy = (i - (ways.length - 1) / 2) * 30;
+    const way = el('g', { class: 'way', 'data-to': w.id, transform: `translate(0,${dy})` }, g);
+    const head = el('g', { class: 'head' }, way);
+    el('polygon', { points: '-12,0 2,-6 7,0', fill: '#fbe7b0' }, head);
+    el('polygon', { points: '-12,0 2,6 7,0', fill: '#a9813a' }, head);
+    [[-21, .8, 1.5], [-29, .55, 1.2], [-36, .35, 1], [-42, .2, .8]].forEach(([x, o, r], k) =>
+      el('circle', { cx: x, cy: 0, r, fill: '#fbe7b0', opacity: o, class: 'trail', style: `--k:${k}` }, way));
+    const label = el('text', { x: -2, y: 22, 'text-anchor': 'middle', class: 'back-label' }, way);
+    label.textContent = 'BACK TO ' + w.name.toUpperCase();
+    el('rect', { x: -50, y: -14, width: 64, height: 28, fill: 'transparent' }, way);
+  });
+}
+
+// Travelling east, into an idea: the map slides away to the west and the stars drift with it, then that idea is the whole idea,
+// and its way back leads first to the idea we came from.
+let cameFrom = null;
+function goEast(to) {
+  Sky.hint.cancel(); armed = null;
+  cameFrom = ROOT;
+  Sky.pan(-320);
+  svg.classList.add('leave-west');
+  setTimeout(() => {
+    ROOT = to; OPEN.clear(); OPEN.add(ROOT); SELECTED = ROOT; shown = new Set(); lastPos = null;
+    history.replaceState(null, '', `?root=${ROOT}`);
+    svg.classList.remove('leave-west'); svg.classList.add('arrive-east');
+    render({ jump: true }); center();
+    setTimeout(() => svg.classList.remove('arrive-east'), 900);
+  }, 420);
+}
+
+// Travelling west: the map slides away to the east and the stars drift with it, then the bigger idea opens,
+// with the idea we came from open and selected inside it.
+function goWest(to) {
+  Sky.hint.cancel(); armed = null;
+  if (to === '#home') { const b = svg.querySelector('.compass').getBoundingClientRect(); Sky.go('home.html', b.x + b.width / 2, b.y + b.height / 2); return; }
+  const from = ROOT;
+  cameFrom = null;
+  Sky.pan(320);
+  svg.classList.add('leave-east');
+  setTimeout(() => {
+    ROOT = to; OPEN.clear(); OPEN.add(ROOT); OPEN.add(from); SELECTED = from; shown = new Set(); lastPos = null;
+    history.replaceState(null, '', `?root=${ROOT}`);
+    svg.classList.remove('leave-east'); svg.classList.add('arrive-west');
+    render({ jump: true }); center();
+    setTimeout(() => svg.classList.remove('arrive-west'), 900);
+  }, 420);
+}
+
+// ---------- The panel on the right: the selected idea ----------
+function panel(L, K) {
+  const id = SELECTED, piece = PIECES[id], p = L.place[id], n = piece.of.length, known = K.has(id);
+  const col = p ? p.col : 0, u = under(id);
+  const where = col === 0 ? 'The whole idea · a chunk' : !n ? 'An atom' : col === 1 ? '1 step from the chunk' : col + ' steps from the chunk';
+  const users = [...new Set(L.edges.concat(L.back).filter(([, b]) => b === id).map(([a]) => a))];
+  document.getElementById('panel').innerHTML = `
+    <div class="caps top">Selected</div>
+    <div class="selhead"><h2>${piece.name}</h2><a class="hex gold" id="toPage" style="margin-top:2px"><span>Graph and Page →</span></a></div>
+    <div class="mag">${[7, 6, 5, 4, 3].map((s, i) => `<i style="width:${s}px;height:${s}px" class="${i === (n ? Math.min(col, 3) : 4) ? 'on' : ''}"></i>`).join('')}<span class="caps" style="margin-left:8px">${where}</span></div>
+    <p class="first">${piece.first.replace(/</g, '&lt;')}</p>
+    <p class="facts">${n ? `Made of <b>${n}</b> ideas. Under it are <b>${u.all}</b> ideas in all, and <b>${u.atoms}</b> of them are atoms.` : 'It cannot be split any further.'}</p>
+    ${known ? '<div class="knownTag"><i></i>Known</div>' : '<a class="hex" id="iknow" style="margin-top:14px"><span>I know this</span></a>'}
+    ${n ? `<div class="rule">✦</div><div class="caps">What it is made of</div><ul class="parts">${piece.of.map(c => {
+      const kn = K.has(c), m = PIECES[c].of.length;
+      return `<li data-id="${c}" class="${kn ? 'known' : ''}"><span class="dot ${kn ? 'known' : m ? '' : 'atom'}"></span>${PIECES[c].name}<small>${kn ? 'Known' : m ? m + ' parts' : 'Atom'}</small></li>`; }).join('')}</ul>` : ''}
+    ${users.length ? `<div class="rule">✦</div><div class="caps">Open ideas that use it</div><div class="used">${users.map(a => `<span data-id="${a}">${PIECES[a].name}</span>`).join('')}</div>` : ''}`;
+  document.getElementById('toPage').onclick = toPage;
+  // "I know this": the star flares, then turns into a known star, and so does everything it is made of.
+  const ik = document.getElementById('iknow');
+  if (ik) ik.onclick = () => {
+    const q = L.place[id];
+    if (q) Sky.burst(svg, q.x, q.y, '#fbe7b0', 14);
+    // saveKnown writes the change to known.json when library/server.js serves the page, the same as the other pages.
+    setTimeout(() => { KNOWN.add(id); saveKnown({ add: id }); render({ after: L2 => { const q2 = L2.place[id]; if (q2) Sky.burst(svg, q2.x, q2.y, '#8d92a8', 9); } }); }, 420);
+  };
+  document.querySelectorAll('#panel [data-id]').forEach(e => e.onclick = () => select(e.dataset.id));
+}
+
+function toPage() {
+  const g = svg.querySelector(`g.hit[data-id="${SELECTED}"]`);
+  const b = g ? g.getBoundingClientRect() : { x: innerWidth / 2, y: innerHeight / 2, width: 0, height: 0 };
+  Sky.go(`page.html?id=${SELECTED}&root=${ROOT}`, b.x + b.width / 2, b.y + b.height / 2);
+}
+
+// Selecting an idea. With open, its parts open too when they are closed. With toggle, they open or close.
+function select(id, how) {
+  SELECTED = id;
+  const has = PIECES[id].of.length && id !== ROOT, wasOpen = OPEN.has(id);
+  if (has && how === 'open') OPEN.add(id);
+  if (has && how === 'toggle') { if (OPEN.has(id)) OPEN.delete(id); else OPEN.add(id); }
+  // The view moves only when this click opened a group, and only when that group is out of sight.
+  const opened = !wasOpen && OPEN.has(id);
+  render({ after: L => {
+    const p = L.place[id]; if (p) Sky.burst(svg, p.x, p.y, '#e6c477', 10);
+    if (opened) reveal(L.regions[id]);
+  } });
+}
+// Moves the view smoothly until a group is in sight: its right edge, and its middle, when it is taller than the window.
+function reveal(r) {
+  if (!r) return;
+  const left = r.right + 60 > main.scrollLeft + main.clientWidth ? r.right + 60 - main.clientWidth : r.left - 60 < main.scrollLeft ? r.left - 60 : main.scrollLeft;
+  const mid = (r.top + r.bottom) / 2 - main.clientHeight / 2;
+  const top = r.top - 30 < main.scrollTop || r.bottom + 30 > main.scrollTop + main.clientHeight ? mid : main.scrollTop;
+  main.scrollTo({ left: Math.max(0, left), top: Math.max(0, top), behavior: 'smooth' });
+}
+// The first click on a star selects it and opens its parts. A second click on the selected star examines it: Graph and Page.
+// Clicking the count of parts opens or closes them.
+svg.addEventListener('click', e => {
+  const w = e.target.closest('.way'); if (w) { goWest(w.dataset.to); return; }
+  const f = e.target.closest('.onward'); if (f) { goEast(f.dataset.to); return; }
+  const t = e.target.closest('.toggle'); if (t) { Sky.hint.cancel(); select(t.dataset.id, 'toggle'); return; }
+  const g = e.target.closest('g.hit'); if (!g) return;
+  Sky.hint.cancel(); armed = null;
+  if (g.dataset.id === SELECTED) toPage(); else select(g.dataset.id, 'open');
+});
+// Resting the pointer on the selected star brings out the Examine tag, which follows the pointer while it stays on that star.
+let armed = null;
+svg.addEventListener('mousemove', e => {
+  const g = e.target.closest('g.hit'), on = g && g.dataset.id === SELECTED;
+  if (on && armed !== SELECTED) { armed = SELECTED; Sky.hint.arm(e.clientX, e.clientY); }
+  else if (on) Sky.hint.move(e.clientX, e.clientY);
+  else if (armed) { armed = null; Sky.hint.cancel(); }
+});
+svg.addEventListener('mouseleave', () => { armed = null; Sky.hint.cancel(); });
+
+// Pointing at a star lights its lines and the names of the ideas joined to it.
+svg.addEventListener('mouseover', e => {
+  const g = e.target.closest('g.hit'); if (!g) return;
+  const id = g.dataset.id, near = new Set([id]);
+  svg.classList.add('focus');
+  svg.querySelectorAll('.ln').forEach(l => { const on = l.dataset.a === id || l.dataset.b === id; l.classList.toggle('lit', on); if (on) { near.add(l.dataset.a); near.add(l.dataset.b); } });
+  svg.querySelectorAll('.nm').forEach(t => t.classList.toggle('lit', near.has(t.dataset.id)));
+  const group = (layoutCache.edges.find(([, b]) => b === id) || [])[0];
+  svg.querySelectorAll('.region').forEach(r => r.classList.toggle('lit', r.dataset.group === group || r.dataset.group === id));
+});
+svg.addEventListener('mouseout', e => {
+  const from = e.target.closest('g.hit');
+  if (!from || (e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('g.hit') === from)) return;
+  svg.classList.remove('focus');
+  svg.querySelectorAll('.region.lit').forEach(r => r.classList.remove('lit'));
+});
+
+document.getElementById('openAll').onclick = () => { Object.keys(PIECES).forEach(id => { if (PIECES[id].of.length) OPEN.add(id); }); render(); };
+document.getElementById('closeAll').onclick = () => { OPEN.clear(); OPEN.add(ROOT); SELECTED = ROOT; render({ jump: true }); center(); };
+document.getElementById('home').onclick = () => Sky.go('home.html', 60, 30);
+
+// The whole ideas to start from: each concept that no other idea is made of, and the one that is open.
+function roots() {
+  const list = ROOTS.includes(ROOT) ? ROOTS : [ROOT, ...ROOTS];
+  const box = document.getElementById('roots');
+  box.innerHTML = list.map(id => `<span class="root ${id === ROOT ? 'on' : ''}" data-root="${id}">${PIECES[id].name}</span>`).join('');
+  box.querySelectorAll('[data-root]').forEach(b => b.onclick = () => {
+    ROOT = b.dataset.root; OPEN.clear(); OPEN.add(ROOT); SELECTED = ROOT; shown = new Set();
+    lastPos = null; history.replaceState(null, '', `?root=${ROOT}`); render({ jump: true }); center();
+  });
+}
+
+// Dragging the sky moves the view. A press on a star, or on Examine, is a click, not a drag.
+let drag = null;
+main.addEventListener('pointerdown', e => {
+  if (e.button !== 0 || e.target.closest('g.hit, .toggle, .way, .onward')) return;
+  drag = { x: e.clientX, y: e.clientY, left: main.scrollLeft, top: main.scrollTop };
+  main.classList.add('dragging'); main.setPointerCapture(e.pointerId);
+});
+main.addEventListener('pointermove', e => {
+  if (!drag) return;
+  main.scrollLeft = drag.left - (e.clientX - drag.x); main.scrollTop = drag.top - (e.clientY - drag.y);
+});
+const endDrag = () => { drag = null; main.classList.remove('dragging'); };
+main.addEventListener('pointerup', endDrag); main.addEventListener('pointercancel', endDrag);
+
+// The whole idea starts in the vertical middle of the window.
+function center() { const L = layout(); main.scrollTop = L.place[ROOT].y - main.clientHeight / 2; }
+render(); center();
 </script>
 </body>
 </html>

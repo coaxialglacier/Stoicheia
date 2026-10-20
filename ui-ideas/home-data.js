@@ -12,7 +12,7 @@ const AREAS = [
 // Each idea: its name, its area, its first fact, and the ideas it depends on.
 // codeDeps, when an idea has it, lists the ideas that its first two views use. The rest of deps are used only by its In memory view.
 const IDEAS = {
-  fn: { name: 'Function', area: 'swift', first: 'A named block of code that takes inputs and can return a value.', deps: [] },
+  fn: { name: 'Function', area: 'swift', first: 'A named block of code that can take inputs and can return a value.', deps: [] },
   opt: { name: 'Optional', area: 'swift', first: 'A value that is either a value of its type, or nil.', deps: [] },
   value: { name: 'Value type', area: 'swift', first: 'A type whose value is copied when it is assigned or passed to a function.', deps: [] },
   struct: { name: 'Structure', area: 'swift', first: 'A value type that groups stored properties under one name.', deps: ['value'] },
@@ -20,8 +20,8 @@ const IDEAS = {
   generics: { name: 'Generics', area: 'swift', first: 'Code written once for any type that meets the given requirements.', deps: ['protocol'] },
   reference: { name: 'Reference type', area: 'swift', first: 'A type whose instance is shared: assigning it copies its address, not the instance.', deps: ['ho'] },
   class: { name: 'Class', area: 'swift', first: 'A reference type with stored properties, methods, and inheritance.', deps: ['reference'] },
-  cap: { name: 'Capture', area: 'swift', first: 'A closure keeps each outside constant and variable that its body uses.', deps: [] },
-  cl: { name: 'Closure', area: 'swift', first: 'A function with no name, written between braces.', deps: ['cap'] },
+  cap: { name: 'Capture', area: 'swift', first: 'A closure keeps each constant and variable from the function around it that its body uses.', deps: [] },
+  cl: { name: 'Closure', area: 'swift', first: 'A function with no name, written between braces, which Swift\'s documentation calls a closure expression.', deps: ['cap'] },
   clv: { name: 'Closure value', area: 'swift', first: 'Two addresses: one for the closure\'s code, and one for its context.', deps: ['cl'] },
   esc: { name: 'Escaping closure', area: 'swift', first: 'A closure that can be called after the function it was passed to has returned.', deps: ['cl', 'sf'] },
 
@@ -30,12 +30,12 @@ const IDEAS = {
   sf: { name: 'Stack frame', area: 'memory', first: 'The memory made for one function call.', deps: [] },
   ho: { name: 'Heap object', area: 'memory', first: 'Memory on the heap, found by its address.', deps: [] },
   // What it is and Parts and Steps of Captured variables use only a closure. Its In memory view also uses the three memory concepts.
-  cv: { name: 'Captured variables', area: 'memory', first: 'A variable, declared outside a closure, that the closure\'s body uses.', deps: ['cl', 'sf', 'ho', 'clv'], codeDeps: ['cl'] },
-  arc: { name: 'Reference counting', area: 'memory', first: 'Swift frees a heap object when nothing holds a strong reference to it.', deps: ['ho', 'reference'] },
-  cycle: { name: 'Reference cycle', area: 'memory', first: 'Two objects that hold strong references to each other, so neither is freed.', deps: ['arc', 'cap'] },
+  cv: { name: 'Captured variables', area: 'memory', first: 'A variable, declared in the function around a closure, that the closure\'s body uses.', deps: ['cl', 'sf', 'ho', 'clv'], codeDeps: ['cl'] },
+  arc: { name: 'Automatic Reference Counting', area: 'memory', first: 'Swift frees a heap object when nothing holds a strong reference to it.', deps: ['ho', 'reference'] },
+  cycle: { name: 'Strong reference cycle', area: 'memory', first: 'Two objects that hold strong references to each other, so neither is freed.', deps: ['arc', 'cap'] },
   weak: { name: 'Weak reference', area: 'memory', first: 'A reference that does not keep its object, and becomes nil when the object is freed.', deps: ['arc', 'opt'] },
 
-  async: { name: 'Async function', area: 'conc', first: 'A function that can pause while it waits, so other work can run.', deps: [] },
+  async: { name: 'Async function', area: 'conc', first: 'A function that can stop partway through while it waits, free its thread for other code, and go on later from the same place.', deps: [] },
   task: { name: 'Task', area: 'conc', first: 'A unit of asynchronous work that runs on its own.', deps: ['cl', 'async'] },
   actor: { name: 'Actor', area: 'conc', first: 'A reference type that runs one piece of its code at a time, to protect its state.', deps: ['reference', 'task'] },
   sendable: { name: 'Sendable', area: 'conc', first: 'A type whose values can be passed safely between concurrent code.', deps: ['value', 'actor'] },

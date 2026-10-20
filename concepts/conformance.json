@@ -1,0 +1,6 @@
+{
+  "id": "conformance",
+  "name": "Conformance",
+  "first": "A type's statement, written as a protocol's name after a colon, that it has everything the protocol requires.",
+  "parts": []
+}

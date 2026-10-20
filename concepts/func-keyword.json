@@ -1,6 +1,6 @@
 {
   "id": "func-keyword",
   "name": "func",
-  "first": "The word that starts the declaration of a function.",
+  "first": "The keyword that declares a function. The function's name comes right after it.",
   "parts": []
 }

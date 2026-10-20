@@ -1,0 +1,6 @@
+{
+  "id": "type-parameter",
+  "name": "Type parameter",
+  "first": "A parameter of generic code that gets a type, not a value: each call or use of that code gives it one type.",
+  "parts": []
+}

@@ -39,7 +39,7 @@
         "panes": [{ "title": "After line 5", "step": 2 }, { "title": "After makeScore() returns", "step": 3 }],
         "caption": { "title": "A `Score` object on the heap,", "text": "while `makeScore()` runs, and after it returns." }
       },
-      "afterExample": "`Score()` on line 5 makes a heap object. `score` does not hold the object itself: it holds the object's address.",
+      "afterExample": "`Score()` on line 5 makes an instance of the class `Score`, and the instance is a heap object. `score` does not hold the object itself: it holds the object's address, which Swift calls a reference to the object.",
       "problem": "Some values must stay after the call that made them returns, and be used from more than one place. A stack frame cannot keep them, because it is removed when its call returns.",
       "how": "A heap object stays while something holds its address. When `makeScore()` returns, `score` is removed with its frame, but `mine` holds the same address, so the object stays."
     },

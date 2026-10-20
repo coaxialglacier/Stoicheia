@@ -1,0 +1,6 @@
+{
+  "id": "protocol-keyword",
+  "name": "protocol",
+  "first": "The keyword that declares a protocol. The protocol's name comes right after it.",
+  "parts": []
+}

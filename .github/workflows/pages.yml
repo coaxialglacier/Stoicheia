@@ -1,0 +1,38 @@
+# Publishes the star theme to GitHub Pages, at stoicheia.jacklewissimmons.com, on each push to main.
+# library/build.js checks every entry of concepts/ and writes library-data.js. When an entry has a problem, it stops,
+# and the site keeps its last version. library/site.js then copies the pages and scripts into _site/.
+name: Publish the site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node library/build.js
+      - run: node library/site.js
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -58,26 +58,26 @@
   },
   "views": {
     "what": {
-      "is": "An async function is a function that can suspend: stop partway through its body, free its thread, and go on later from the same place. You write `async` in its declaration, and `await` where it is called.",
+      "is": "An async function is a function that can suspend: stop partway through its body, free its thread, and go on later from the same place. Swift's documentation calls it an asynchronous function. You write `async` in its declaration, and `await` where it is called.",
       "marks": [
         { "line": 1, "text": "async", "part": "async-keyword", "label": "async" },
         { "line": 8, "text": "await", "part": "await", "label": "await" }
       ],
       "afterExample": "`makeTea(cups:)` is an async function. It suspends at the `await` on line 4 while it waits one second. Then it goes on, and returns.",
-      "problem": "Some work has to wait: for data from the network, for a file, or for a timer. A plain function that waits keeps its thread the whole time, so the thread can run nothing else. When that thread is the main thread, the app's screen stops responding until the wait ends.",
+      "problem": "Some work has to wait: for data from the network, for a file, or for a timer. A synchronous function, one without `async`, keeps its thread the whole time it waits, so the thread can run nothing else. When that thread is the main thread, the app's screen stops responding until the wait ends.",
       "how": "An async function can suspend only at an `await`. While it is suspended, it does not use its thread, so the thread is free to run other code. When the call after `await` returns, the function goes on from there, and its constants and variables still hold their values.",
       "when": [
-        { "text": "Use one when a function has to wait for something, such as data from the network, a file, or a timer. Many of Apple's functions for these are async functions, such as `Task.sleep`, and code can call them with `await` only where it can suspend, such as in an async function." },
+        { "text": "Use one when a function has to wait for something, such as data from the network, a file, or a timer. Many functions that wait for these, in Swift's standard library and in Apple's frameworks, are async functions, such as `Task.sleep`. Code can call them with `await` only where it can suspend, such as in an async function." },
         { "text": "Don't use one to run two pieces of work at the same time. The code that calls an async function with `await` waits until it returns, as line 8 waits for `makeTea(cups:)`. Work that runs at the same time as other work is a task." },
-        { "text": "Don't make a function async when it never waits. Each call of an async function needs `await`, and can be made only from code that can suspend. `double(_:)` never waits, so it is a plain function, and any code can call it:", "snippet": "double" }
+        { "text": "Don't make a function async when it never waits. Code calls an async function with `await`, and only where it can suspend. `double(_:)` never waits, so it is a synchronous function, and any code can call it:", "snippet": "double" }
       ]
     },
     "parts": {
       "parts": [
         { "part": "function", "name": "The function, `makeTea(cups:)`", "text": "`makeTea(cups:)` is declared with `func`, as any function is. It has a name, the parameter `cups`, the return type `String`, and a body, on lines 2 to 5." },
-        { "part": "async-keyword", "name": "`async`", "text": "The word `async`, on line 1, makes `makeTea(cups:)` an async function: a function that can suspend. It is written after the parameter list, before `->`." },
-        { "part": "await", "name": "`await`", "text": "`await` is written before each call of an async function. Line 4 calls `Task.sleep(for: .seconds(1))`, an async function from Swift's standard library that waits for the time it is given. Line 8 calls `makeTea(cups: 2)`. A call of an async function without `await` does not build. `await` can be written only in code that can suspend: in the body of an async function, as on line 4, or at the top level of a program's main file, as on line 8. On line 4, `try?` comes before `await`, because `Task.sleep(for: .seconds(1))` can also throw an error, and `try?` ignores that error." },
-        { "part": "suspension-point", "name": "Suspension points, on lines 4 and 8", "text": "Each `await` marks a suspension point: a place where the code can suspend. To suspend is to stop running, and free the thread, until the call after `await` returns. At line 4, `makeTea(cups:)` can suspend while `Task.sleep(for: .seconds(1))` waits. At line 8, the top-level code can suspend until `makeTea(cups:)` returns. In this program, these are the only two places where code can suspend, and both are marked with `await`." }
+        { "part": "async-keyword", "name": "`async`", "text": "The keyword `async`, on line 1, makes `makeTea(cups:)` an async function: a function that can suspend. It is written after the parameter list, before the return arrow, `->`." },
+        { "part": "await", "name": "`await`", "text": "`await` is a keyword, written before a call of an async function. Line 4 calls `Task.sleep(for: .seconds(1))`, an async method of the `Task` type in Swift's standard library, which waits for the time it is given. Line 8 calls `makeTea(cups: 2)`. Without `await`, neither call builds. `await` can be written only in code that can suspend, which Swift's documentation calls an asynchronous context, such as the body of an async function, as on line 4, or the top level of a program's main file, as on line 8. Line 4 also has `try?`, because `Task.sleep(for: .seconds(1))` can throw an error: if it throws, `try?` makes the result nil, and line 4 goes on. Swift's rules put `try?` before `await`, and swiftc warns when it comes after." },
+        { "part": "suspension-point", "name": "Suspension points, on lines 4 and 8", "text": "Each `await` marks a suspension point: a place where the code can suspend. Swift's documentation calls it a possible suspension point, because the code can suspend there, but does not have to. To suspend is to stop running, and free the thread, until the call after `await` returns. At line 4, `makeTea(cups:)` can suspend while `Task.sleep(for: .seconds(1))` waits. At line 8, the top-level code can suspend until `makeTea(cups:)` returns. In this program, these are the only two places where code can suspend, and both are marked with `await`." }
       ],
       "marks": [
         { "line": 1, "text": "func", "part": "function", "label": "a function" },

@@ -1,6 +1,6 @@
 {
   "id": "variable-outside-closure",
   "name": "Variable outside the closure",
-  "first": "A variable declared in the code around a closure, which the closure's body can change.",
+  "first": "A variable declared in the function around a closure, which the closure's body can change.",
   "parts": []
 }

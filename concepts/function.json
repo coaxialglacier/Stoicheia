@@ -2,7 +2,7 @@
   "id": "function",
   "name": "Function",
   "area": "swift",
-  "first": "A named block of code that takes inputs and can return a value.",
+  "first": "A named block of code that can take inputs and can return a value.",
   "parts": ["func-keyword", "function-name", "parameter-list", "return-type", "body", "return-statement", "call"],
   "dependsOn": [],
   "example": {
@@ -51,13 +51,13 @@
     },
     "parts": {
       "parts": [
-        { "part": "func-keyword", "name": "`func`", "text": "The word `func` starts the declaration of a function, on line 1." },
+        { "part": "func-keyword", "name": "`func`", "text": "`func` is a keyword: a word that Swift reserves for its own use, as it does `let` and `return`. On line 1, `func` declares a function, and the function's name comes right after it." },
         { "part": "function-name", "name": "The name, `greet`", "text": "`greet` is the function's name. A call uses this name to run the function, as line 4 does." },
         { "part": "parameter-list", "name": "The parameter list, `(name: String)`", "text": "The inputs that the function takes, in parentheses. `name` is a parameter, and `String` is its type. Inside the body, `name` holds the value that the call gave it." },
-        { "part": "return-type", "name": "The return type, `-> String`", "text": "The type of the value that the function gives back. `greet` gives back a `String`." },
+        { "part": "return-type", "name": "The return type, `String`", "text": "`->` is the return arrow. The type after it is the type of the value that the function gives back, so `greet` gives back a `String`." },
         { "part": "body", "name": "The body", "text": "The code between `{` on line 1 and `}` on line 3. It runs each time the function is called." },
-        { "part": "return-statement", "name": "`return`", "text": "`return` on line 2 ends the call, and gives back the value after it. That value must have the return type, `String`." },
-        { "part": "call", "name": "The call, on line 4", "text": "Line 4 calls `greet`. In the parentheses, `name:` is the argument label: it says which parameter the value is for. `\"Ana\"` is the argument: the value that the parameter `name` gets. Its type must be the parameter's type, `String`." }
+        { "part": "return-statement", "name": "`return`", "text": "Line 2 is a return statement: the keyword `return`, then the value to give back. It ends the call, and gives back that value, which must have the return type, `String`." },
+        { "part": "call", "name": "The call, on line 4", "text": "Line 4 calls `greet`. In the parentheses, `name:` is the argument label: it says which parameter the value is for. A parameter's name is also its argument label, unless the declaration gives it a different label or none, so the label here is `name`. `\"Ana\"` is the argument: the value that the parameter `name` gets. Its type must be the parameter's type, `String`." }
       ],
       "marks": [
         { "line": 1, "text": "func", "part": "func-keyword" },

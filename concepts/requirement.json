@@ -1,0 +1,6 @@
+{
+  "id": "requirement",
+  "name": "Requirement",
+  "first": "One method or property that a protocol lists, which every type that conforms to it must have.",
+  "parts": []
+}

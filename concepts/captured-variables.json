@@ -2,7 +2,7 @@
   "id": "captured-variables",
   "name": "Captured variables",
   "area": "memory",
-  "first": "A variable, declared outside a closure, that the closure's body uses.",
+  "first": "A variable, declared in the function around a closure, that the closure's body uses.",
   "parts": ["closure", "variable-outside-closure", "variable-used-in-body", "captured-constant"],
   "dependsOn": [
     { "id": "closure", "views": ["what", "parts"],
@@ -69,7 +69,7 @@
   },
   "views": {
     "what": {
-      "is": "A captured variable is a variable, declared outside a closure, that the closure's body uses. The closure uses that same variable, not a copy of it.",
+      "is": "A captured variable is a variable, declared in the function around a closure, that the closure's body uses. The closure uses that same variable, not a copy of it.",
       "marks": [
         { "line": 2, "text": "count", "part": "variable-outside-closure", "label": "declared outside the closure" },
         { "line": 4, "text": "count", "part": "variable-used-in-body", "label": "used in the body" },

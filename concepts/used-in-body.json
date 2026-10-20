@@ -1,6 +1,6 @@
 {
   "id": "used-in-body",
   "name": "Used in the body",
-  "first": "A place where a closure's body uses a constant or variable that is declared outside its braces.",
+  "first": "A place where a closure's body uses a constant or variable from the function around the closure.",
   "parts": []
 }

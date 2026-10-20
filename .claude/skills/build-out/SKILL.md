@@ -41,8 +41,10 @@ Do this before writing any entry. Every claim needs a source that can show it is
 Answer each question in the report, with the reason.
 
 - **Made of.** For each part on the old list: is it a piece of the concept, or something that the concept's sentences use? A piece goes in `parts`. Something its sentences use is a dependency, in `dependsOn`. Old mockups mixed these up: they said a suspension point was made of a thread, but a suspension point only uses the word thread.
-- **Missing parts.** Look at the example code. Every piece of syntax that the concept adds is a part. The old list for an async function had no `async`, which is the word that makes a function async.
+- **Missing parts.** Look at the example code. Every piece of syntax that the concept adds is a part. The old list for an async function had no `async`, which is the keyword that makes a function async.
 - **Split far enough.** Keep splitting each part until it cannot be split any further. A part explained by one fact is a term, with an empty list of parts.
+- **A part inside a part.** When one part's code holds another part's code, the inner part is a part of the outer one, not a part beside it. `<T: Comparable>` holds `T` and `: Comparable`, so a type parameter and a type constraint are parts of a generic parameter clause, as a parameter is a part of a parameter list. Listed side by side, the outer part's sentences have to use the inner parts' names before they are taught.
+- **A part that works as a known part does.** When a part works the same way as a part the reader already knows, its first fact says so, in literal words. A type parameter is a parameter that gets a type, not a value, and a type argument is the type that it gets, as an argument is the value that a parameter gets.
 - **Facts and steps apart.** A part is a fact: true at every moment, with nothing happening. Something that happens while the program runs is a step, and goes in the steps, not the parts. A suspension point is a part, a place in the code. Suspending is a step.
 - **Teaching order.** Each part can use only the parts before it. When two parts seem to need each other, write the first one so that it does not use the second.
 - **Views.** Which views does the concept need: What it is, Parts and Steps, In memory? For each view, which concepts do its own sentences use? Those are its dependencies, view by view.
@@ -55,6 +57,9 @@ Answer each question in the report, with the reason.
 - Every sentence names code only if that code is on the same page: the example, or the snippet beside an answer of when to use it. A first fact names no code.
 - Every value and every printed line that a step states is checked by the checker. Each value that a drawing of memory shows needs a probe. Each fact about memory needs a `sil` or an `ir` check, whose `shows` says the fact in plain words.
 - Plain, literal words, and no analogies or metaphors.
+- Each piece of code is named by the term that Swift's documentation uses for it. `func`, `in`, `return`, `async`, and `await` are keywords, not words. `->` is the return arrow. `name:` in a call is an argument label. A closure written between braces is a closure expression. A function without `async` is a synchronous function. Check a term in The Swift Programming Language, whose source is at github.com/swiftlang/swift-book, before using it.
+- A sentence that says what is true in general, such as a first fact, is true in every case, not only in the example. A closure captures a constant or variable from the function around it, not one at the top level of a file, so a first fact says "from the function around it", not "from outside its braces".
+- No sentence says that a call or a use "chooses" something that no code writes. Say who works it out, when, and from what: swiftc works out the type argument of `largest(3, 8)` when it builds the program, from the types around the call. A part that the code never writes, such as the type argument of a function, says so, and is marked on the code it is worked out from.
 
 ## 5. Check it
 

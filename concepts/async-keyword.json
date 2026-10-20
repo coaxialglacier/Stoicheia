@@ -1,6 +1,6 @@
 {
   "id": "async-keyword",
   "name": "async",
-  "first": "The word, written after a function's parameter list, that makes it an async function.",
+  "first": "The keyword, written after a function's parameter list, that makes it an async function.",
   "parts": []
 }

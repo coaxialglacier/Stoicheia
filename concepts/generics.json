@@ -1,0 +1,193 @@
+{
+  "id": "generics",
+  "name": "Generics",
+  "area": "swift",
+  "first": "Code written once, as a function or a type, that works with every type that meets the requirements it states.",
+  "parts": ["generic-parameter-clause", "type-argument"],
+  "dependsOn": [
+    { "id": "function", "views": ["what", "parts"],
+      "why": "A generic function is a function with a generic parameter clause after its name, and each call gives its type parameters types, as it gives its parameters values.",
+      "whyInExample": "`largest(_:_:)` is declared with `func`, as `greet` is. It has a name, two parameters, a return type, and a body. Its `T` is a parameter too: each call gives `T` a type, as `greet(name: \"Ana\")` gives `name` a value." },
+    { "id": "protocol", "views": ["what", "parts", "memory"],
+      "why": "A type constraint requires every type that a type parameter gets to conform to a protocol.",
+      "whyInExample": "`: Comparable` on line 1 requires every type that `T` gets to conform to `Comparable`, a protocol in Swift's standard library." },
+    { "id": "stack-frame", "views": ["memory"],
+      "why": "Each call of a generic function gets a stack frame, which holds the addresses of its values, and of what Swift keeps about their type.",
+      "whyInExample": "Each call of `largest(_:_:)` gets a stack frame. It holds the addresses of `a` and `b`, and two hidden arguments about `T`." }
+  ],
+  "example": {
+    "code": [
+      "func largest<T: Comparable>(_ a: T, _ b: T) -> T {",
+      "    if a > b {",
+      "        return a",
+      "    }",
+      "    return b",
+      "}",
+      "let cups: Int = largest(3, 8)",
+      "let name: String = largest(\"Bo\", \"Ana\")",
+      "print(cups)  // 8",
+      "print(name)  // Bo"
+    ],
+    "probes": [
+      { "after": 1, "print": "T.self", "values": ["Int", "String"] },
+      { "after": 1, "print": "MemoryLayout<T>.size", "values": ["8", "16"] },
+      { "after": 1, "print": "a", "values": ["3", "Bo"] },
+      { "after": 1, "print": "b", "values": ["8", "Ana"] },
+      { "after": 7, "print": "cups", "values": ["8"] },
+      { "after": 8, "print": "name", "values": ["Bo"] }
+    ],
+    "sil": [
+      { "in": "largest<A>(_:_:)", "has": "<T where T : Comparable> (@in_guaranteed T, @in_guaranteed T) -> @out T", "shows": "largest(_:_:) gets a and b by their addresses, and puts its result at an address that the call gives it." },
+      { "in": "largest<A>(_:_:)", "has": "witness_method $T, #Comparable.\">\"", "shows": "Line 2 finds > in the witness table of T for Comparable." }
+    ],
+    "ir": [
+      { "in": "largest<A>(_:_:)", "has": "(ptr noalias sret(%swift.opaque) %0, ptr noalias %1, ptr noalias %2, ptr %T, ptr %T.Comparable)", "shows": "largest(_:_:) takes the address for its result, the addresses of a and b, and two hidden arguments: the address of T's type metadata, and the address of T's witness table for Comparable." },
+      { "in": "largest<A>(_:_:)", "has": "%InitializeWithCopy", "shows": "Lines 3 and 5 copy a value of type T with the copy function that T's type metadata leads to." },
+      { "in": "main", "has": "alloca %TSi", "shows": "The top-level code keeps the Int arguments of line 7 in its own stack frame." },
+      { "in": "main", "has": "call swiftcc void @\"$s7Example7largestyxx_xtSLRzlF\"(ptr noalias sret(%swift.opaque) @\"$s7Example4cupsSivp\"", "shows": "Line 7 calls largest(_:_:) with the address of cups, where its result goes." },
+      { "in": "main", "has": "ptr @\"$sSiN\", ptr @\"$sSiSLsWP\")", "shows": "Line 7 passes the address of Int's type metadata, and of Int's witness table for Comparable." },
+      { "in": "main", "has": "alloca %TSS", "shows": "The top-level code keeps the String arguments of line 8 in its own stack frame." },
+      { "in": "main", "has": "call swiftcc void @\"$s7Example7largestyxx_xtSLRzlF\"(ptr noalias sret(%swift.opaque) @\"$s7Example4nameSSvp\"", "shows": "Line 8 calls the same largest(_:_:), with the address of name, where its result goes." },
+      { "in": "main", "has": "ptr @\"$sSSN\", ptr @\"$sSSSLsWP\")", "shows": "Line 8 passes the address of String's type metadata, and of String's witness table for Comparable." }
+    ]
+  },
+  "snippets": {
+    "library": {
+      "code": [
+        "print(max(3, 8))  // 8",
+        "let scores: Array<Int> = [3, 8]",
+        "print(scores)  // [3, 8]"
+      ],
+      "output": ["8", "[3, 8]"]
+    },
+    "double": {
+      "code": [
+        "func double(_ n: Int) -> Int {",
+        "    return n * 2",
+        "}",
+        "print(double(4))  // 8"
+      ],
+      "output": ["8"]
+    }
+  },
+  "views": {
+    "what": {
+      "is": "Generic code is a function or a type that is written once, for many types. In place of a type, it uses a type parameter, such as `T`: a parameter that gets a type, not a value, from each use of the code. A type constraint, such as `Comparable`, says what that type must be able to do.",
+      "marks": [
+        { "line": 1, "text": "T", "part": "type-parameter", "label": "type parameter" },
+        { "line": 1, "text": ": Comparable", "part": "type-constraint", "label": "type constraint" }
+      ],
+      "afterExample": "`largest(_:_:)` is a generic function. Line 7 calls it with two `Int` values, and line 8 with two `String` values, so `T` is `Int` in one call, and `String` in the other.",
+      "problem": "The same work is often needed for values of different types. Without generic code, finding the larger of two values takes one function for `Int` values, another for `String` values, and so on, each with the same body. Generic code is written once, and swiftc still checks every use of it, as it checks any other code.",
+      "how": "When swiftc builds the program, it works out which type each call of `largest(_:_:)` gives `T`, and checks that the type conforms to `Comparable`. The same body runs for every call, and line 2 compares the values the way their type compares them: as numbers for `Int`, and as text for `String`.",
+      "when": [
+        { "text": "Use it when the same code works for many types, and needs only what a protocol requires, as `largest(_:_:)` needs only `Comparable`. Swift's standard library is full of generic code: its `max(_:_:)` does what `largest(_:_:)` does, and `Array` is a generic type, so `Array<Int>` is an array of `Int` values:", "snippet": "library" },
+        { "text": "Don't use it for code that only ever works with one type. Then write that type itself, as `double(_:)` does with `Int`:", "snippet": "double" }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "generic-parameter-clause", "name": "The generic parameter clause, `<T: Comparable>`", "text": "`<T: Comparable>`, in angle brackets right after the name `largest`, is a generic parameter clause. A function that has one is a generic function. The parameter list, `(_ a: T, _ b: T)`, declares the values that each call gives the function. The generic parameter clause declares the types that each call gives it. `T` is a type parameter: a parameter that gets a type, not a value. `_ a: T`, `_ b: T`, and `-> T` use it as a type, so in one call, `a`, `b`, and the return value all have the same type. The name `T` exists only inside `largest(_:_:)`. `: Comparable`, after `T`, is a type constraint: every type that `T` gets must conform to `Comparable`, a protocol in Swift's standard library for values that can be put in order. Its requirements include the comparison that `a > b` uses on line 2. Without the constraint, swiftc does not build line 2, because it cannot know that every type `T` might get can be compared that way." },
+        { "part": "type-argument", "name": "The type arguments, on lines 7 and 8", "text": "The type that `T` gets in one call is that call's type argument, as 3 is the value that `a` gets on line 7. You do not write a type argument, and for a function Swift does not let you. swiftc works it out when it builds the program, from the types around the call. On line 7, `cups` is an `Int`, so `T` is `Int`, and 3 and 8 are `Int` values. On line 8, `name` is a `String`, so `T` is `String`. Each type argument must conform to `Comparable`, as `Int` and `String` do. A call with an `Int` and a `String` does not build, because `T` cannot be both." }
+      ],
+      "marks": [
+        { "line": 1, "text": "<T: Comparable>", "part": "generic-parameter-clause" },
+        { "line": 1, "text": "T", "part": "generic-parameter-clause", "label": "type parameter" },
+        { "line": 1, "text": ": Comparable", "part": "generic-parameter-clause", "label": "type constraint" },
+        { "line": 7, "text": "largest(3, 8)", "part": "type-argument", "label": "T is Int" },
+        { "line": 8, "text": "largest(\"Bo\", \"Ana\")", "part": "type-argument", "label": "T is String" }
+      ],
+      "steps": [
+        { "text": "Line 7 calls `largest(3, 8)`. Its type argument is `Int`, so in this call, `T` is `Int`.", "line": 7 },
+        { "text": "The body runs, with `a` set to 3 and `b` set to 8. Line 2 checks `a > b`: 3 is not greater than 8, so line 3 does not run.", "line": 2, "also": [1], "dim": [3], "value": { "line": 1, "name": "a", "is": "3" } },
+        { "text": "Line 5 returns `b`, so the call gives back 8, and line 7 stores it in `cups`.", "line": 5, "also": [7], "value": { "line": 7, "name": "cups", "is": "8" } },
+        { "text": "Line 8 calls `largest(\"Bo\", \"Ana\")`. Its type argument is `String`, so in this call, `T` is `String`, and the same body runs, with `a` set to \"Bo\" and `b` set to \"Ana\".", "line": 8, "also": [1], "value": { "line": 1, "name": "a", "is": "\"Bo\"" } },
+        { "text": "Line 2 checks `a > b`. Two strings are compared from their first character, and \"B\" comes after \"A\", so \"Bo\" is greater than \"Ana\". Line 3 returns `a`, and line 8 stores \"Bo\" in `name`.", "line": 3, "also": [2, 8], "value": { "line": 8, "name": "name", "is": "\"Bo\"" } },
+        { "text": "Line 9 prints {{8}}.", "line": 9, "prints": ["8"] },
+        { "text": "Line 10 prints {{Bo}}.", "line": 10, "prints": ["Bo"] }
+      ],
+      "end": { "kind": "question", "text": "Line 2 compared two numbers in the first call, and two strings in the second, with the same `a > b`. How does the code of `largest(_:_:)` know which comparison to run?" }
+    },
+    "memory": {
+      "question": "Line 2 compared two numbers in the first call, and two strings in the second. In a debug build, swiftc makes one `largest(_:_:)` for both calls. How does that one piece of code know which comparison to run, and how to copy a value of type `T`?",
+      "steps": [
+        { "text": "Line 7 calls `largest(3, 8)`, and a stack frame is made for the call. In a debug build, swiftc makes one `largest(_:_:)` for every type, so its code does not know how big a `T` is. So it gets each value of type `T` by its address. The top-level code keeps 3 and 8 in its own stack frame, and passes their addresses as `a` and `b`. The result goes straight into `cups`, so the call also passes the address of `cups`.",
+          "line": 7,
+          "blocks": [
+            { "id": "cups", "kind": "global", "title": "cups", "tag": "constant", "fields": [["cups", null]] },
+            { "id": "top", "kind": "frame", "title": "top-level code", "fields": [["for a", "3"], ["for b", "8"]] },
+            { "id": "lg", "kind": "frame", "title": "largest(_:_:)", "fields": [["a", { "to": "top", "field": "for a" }], ["b", { "to": "top", "field": "for b" }], ["result", { "to": "cups" }]] }
+          ],
+          "highlight": ["lg"] },
+        { "text": "The call also passes two hidden arguments, which the code does not show. `T` is the address of `Int`'s type metadata: data that Swift keeps about each type. It gives the size of an `Int`, 8 bytes, and how to copy one. `T: Comparable` is the address of `Int`'s witness table for `Comparable`: a table that Swift makes for each type that conforms to a protocol. It holds where the type's own function for each requirement is.",
+          "line": 7,
+          "blocks": [
+            { "id": "cups", "kind": "global", "title": "cups", "tag": "constant", "fields": [["cups", null]] },
+            { "id": "top", "kind": "frame", "title": "top-level code", "fields": [["for a", "3"], ["for b", "8"]] },
+            { "id": "lg", "kind": "frame", "title": "largest(_:_:)", "fields": [["a", { "to": "top", "field": "for a" }], ["b", { "to": "top", "field": "for b" }], ["result", { "to": "cups" }], ["T", { "to": "intT" }], ["T: Comparable", { "to": "intC" }]] },
+            { "id": "intT", "kind": "data", "title": "Int", "tag": "type metadata", "fields": [["size", "8 bytes"], ["copy", "copies an Int"]] },
+            { "id": "intC", "kind": "data", "title": "Int: Comparable", "tag": "witness table", "fields": [["<", "Int's <"], ["<=", "Int's <="], [">=", "Int's >="], [">", "Int's >"]] }
+          ],
+          "highlight": ["intT", "intC"] },
+        { "text": "Line 2 runs `a > b`. The code of `largest(_:_:)` does not know that `T` is `Int`, so it looks up > in the witness table, and calls the > that `Int` uses, with the addresses `a` and `b`. 3 is not greater than 8, so the answer is false.",
+          "line": 2,
+          "blocks": [
+            { "id": "cups", "kind": "global", "title": "cups", "tag": "constant", "fields": [["cups", null]] },
+            { "id": "top", "kind": "frame", "title": "top-level code", "fields": [["for a", "3"], ["for b", "8"]] },
+            { "id": "lg", "kind": "frame", "title": "largest(_:_:)", "fields": [["a", { "to": "top", "field": "for a" }], ["b", { "to": "top", "field": "for b" }], ["result", { "to": "cups" }], ["T", { "to": "intT" }], ["T: Comparable", { "to": "intC" }]] },
+            { "id": "intT", "kind": "data", "title": "Int", "tag": "type metadata", "fields": [["size", "8 bytes"], ["copy", "copies an Int"]] },
+            { "id": "intC", "kind": "data", "title": "Int: Comparable", "tag": "witness table", "fields": [["<", "Int's <"], ["<=", "Int's <="], [">=", "Int's >="], [">", "Int's >"]] }
+          ],
+          "highlight": ["intC"] },
+        { "text": "Line 5 returns `b`. `largest(_:_:)` copies the 8 at `b` into `cups`, with the size and the copy function that `Int`'s type metadata gives. The call ends, and its frame is removed.",
+          "line": 5,
+          "blocks": [
+            { "id": "cups", "kind": "global", "title": "cups", "tag": "constant", "fields": [["cups", "8"]] },
+            { "id": "top", "kind": "frame", "title": "top-level code", "fields": [["for a", "3"], ["for b", "8"]] },
+            { "id": "lg", "kind": "removed", "title": "largest(_:_:)", "text": "its frame is gone" },
+            { "id": "intT", "kind": "data", "title": "Int", "tag": "type metadata", "fields": [["size", "8 bytes"], ["copy", "copies an Int"]] },
+            { "id": "intC", "kind": "data", "title": "Int: Comparable", "tag": "witness table", "fields": [["<", "Int's <"], ["<=", "Int's <="], [">=", "Int's >="], [">", "Int's >"]] }
+          ],
+          "highlight": ["cups", "intT"] },
+        { "text": "Line 8 calls `largest(\"Bo\", \"Ana\")`, and the same code runs again, in a new stack frame. This time `a` and `b` are the addresses of two `String` values, and the result goes into `name`. `T` is the address of `String`'s type metadata, which gives the size of a `String`, 16 bytes, and `T: Comparable` is the address of `String`'s witness table for `Comparable`.",
+          "line": 8,
+          "blocks": [
+            { "id": "cups", "kind": "global", "title": "cups", "tag": "constant", "fields": [["cups", "8"]] },
+            { "id": "name", "kind": "global", "title": "name", "tag": "constant", "fields": [["name", null]] },
+            { "id": "top", "kind": "frame", "title": "top-level code", "fields": [["for a", "\"Bo\""], ["for b", "\"Ana\""]] },
+            { "id": "lg2", "kind": "frame", "title": "largest(_:_:)", "fields": [["a", { "to": "top", "field": "for a" }], ["b", { "to": "top", "field": "for b" }], ["result", { "to": "name" }], ["T", { "to": "strT" }], ["T: Comparable", { "to": "strC" }]] },
+            { "id": "intT", "kind": "data", "title": "Int", "tag": "type metadata", "fields": [["size", "8 bytes"], ["copy", "copies an Int"]] },
+            { "id": "intC", "kind": "data", "title": "Int: Comparable", "tag": "witness table", "fields": [["<", "Int's <"], ["<=", "Int's <="], [">=", "Int's >="], [">", "Int's >"]] },
+            { "id": "strT", "kind": "data", "title": "String", "tag": "type metadata", "fields": [["size", "16 bytes"], ["copy", "copies a String"]] },
+            { "id": "strC", "kind": "data", "title": "String: Comparable", "tag": "witness table", "fields": [["<", "String's <"], ["<=", "String's <="], [">=", "String's >="], [">", "String's >"]] }
+          ],
+          "highlight": ["lg2", "strT", "strC"] },
+        { "text": "Line 2 looks up > in `String`'s witness table, so `a > b` compares text: \"Bo\" comes after \"Ana\", so line 3 returns `a`. `largest(_:_:)` copies \"Bo\" into `name`, with the copy function that `String`'s type metadata gives. The call ends, and its frame is removed.",
+          "line": 3, "also": [2],
+          "blocks": [
+            { "id": "cups", "kind": "global", "title": "cups", "tag": "constant", "fields": [["cups", "8"]] },
+            { "id": "name", "kind": "global", "title": "name", "tag": "constant", "fields": [["name", "\"Bo\""]] },
+            { "id": "top", "kind": "frame", "title": "top-level code", "fields": [["for a", "\"Bo\""], ["for b", "\"Ana\""]] },
+            { "id": "lg2", "kind": "removed", "title": "largest(_:_:)", "text": "its frame is gone" },
+            { "id": "intT", "kind": "data", "title": "Int", "tag": "type metadata", "fields": [["size", "8 bytes"], ["copy", "copies an Int"]] },
+            { "id": "intC", "kind": "data", "title": "Int: Comparable", "tag": "witness table", "fields": [["<", "Int's <"], ["<=", "Int's <="], [">=", "Int's >="], [">", "Int's >"]] },
+            { "id": "strT", "kind": "data", "title": "String", "tag": "type metadata", "fields": [["size", "16 bytes"], ["copy", "copies a String"]] },
+            { "id": "strC", "kind": "data", "title": "String: Comparable", "tag": "witness table", "fields": [["<", "String's <"], ["<=", "String's <="], [">=", "String's >="], [">", "String's >"]] }
+          ],
+          "highlight": ["strC", "name"] },
+        { "text": "Line 9 prints {{8}}, and line 10 prints {{Bo}}.",
+          "line": 9, "also": [10], "prints": ["8", "Bo"],
+          "blocks": [
+            { "id": "cups", "kind": "global", "title": "cups", "tag": "constant", "fields": [["cups", "8"]] },
+            { "id": "name", "kind": "global", "title": "name", "tag": "constant", "fields": [["name", "\"Bo\""]] },
+            { "id": "intT", "kind": "data", "title": "Int", "tag": "type metadata", "fields": [["size", "8 bytes"], ["copy", "copies an Int"]] },
+            { "id": "intC", "kind": "data", "title": "Int: Comparable", "tag": "witness table", "fields": [["<", "Int's <"], ["<=", "Int's <="], [">=", "Int's >="], [">", "Int's >"]] },
+            { "id": "strT", "kind": "data", "title": "String", "tag": "type metadata", "fields": [["size", "16 bytes"], ["copy", "copies a String"]] },
+            { "id": "strC", "kind": "data", "title": "String: Comparable", "tag": "witness table", "fields": [["<", "String's <"], ["<=", "String's <="], [">=", "String's >="], [">", "String's >"]] }
+          ],
+          "highlight": ["cups", "name"] }
+      ],
+      "answer": "Each call passes `largest(_:_:)` two hidden arguments: the address of `T`'s type metadata, which gives the size of a `T` and how to copy one, and the address of `T`'s witness table for `Comparable`, where line 2 finds the comparison. So one piece of code works for `Int` and for `String`. A build with optimization can do less work: swiftc can put the body of `largest(_:_:)` right into each call, or make a copy of it for `Int` alone, which needs no hidden arguments."
+    }
+  }
+}

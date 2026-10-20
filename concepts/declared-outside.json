@@ -1,6 +1,6 @@
 {
   "id": "declared-outside",
   "name": "Declared outside the braces",
-  "first": "A constant or variable declared in the code around a closure, before its opening brace.",
+  "first": "A constant or variable declared in the function around a closure, before the closure's opening brace.",
   "parts": []
 }

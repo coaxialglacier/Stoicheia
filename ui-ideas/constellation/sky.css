@@ -4,6 +4,9 @@
 :root{--sky0:#05070f;--ink:#ece6d6;--ink2:#b9b3a4;--ink3:#7e7c90;--gold:#e6c477;--gold2:#fbe7b0;--goldDim:rgba(230,196,119,.38);
   --violet:#c3b0ff;--ice:#9ad9ff;--teal:#7fe8d2;--known:#8d92a8;--panel:rgba(9,13,30,.8);--hair:rgba(230,196,119,.16)}
 *{box-sizing:border-box;margin:0;padding:0}
+/* No scrollbar is ever drawn, anywhere. Areas that scroll still scroll, with the wheel, the trackpad, or dragging. */
+*{scrollbar-width:none!important}
+*::-webkit-scrollbar{display:none!important;width:0!important;height:0!important}
 html,body{height:100%}
 body{background:var(--sky0);color:var(--ink);font-family:'EB Garamond',Georgia,serif;overflow:hidden}
 
@@ -18,13 +21,12 @@ body{background:var(--sky0);color:var(--ink);font-family:'EB Garamond',Georgia,s
 #flash{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity .6s;background:radial-gradient(circle at var(--fx,50%) var(--fy,50%),rgba(255,246,220,.85),rgba(230,196,119,.25) 18%,transparent 45%)}
 #flash.on{opacity:1;transition:opacity .55s ease-in}
 
-/* A panel with gold corners. */
-.frame{background:
-  linear-gradient(var(--gold),var(--gold)) 0 0/16px 1px no-repeat,linear-gradient(var(--gold),var(--gold)) 0 0/1px 16px no-repeat,
-  linear-gradient(var(--gold),var(--gold)) 100% 0/16px 1px no-repeat,linear-gradient(var(--gold),var(--gold)) 100% 0/1px 16px no-repeat,
-  linear-gradient(var(--gold),var(--gold)) 0 100%/16px 1px no-repeat,linear-gradient(var(--gold),var(--gold)) 0 100%/1px 16px no-repeat,
-  linear-gradient(var(--gold),var(--gold)) 100% 100%/16px 1px no-repeat,linear-gradient(var(--gold),var(--gold)) 100% 100%/1px 16px no-repeat,
-  var(--panel);border:1px solid var(--hair);backdrop-filter:blur(10px)}
+/* Veil: a floating panel with no edge. A pool of darker sky sits behind its text and fades out on every side.
+   The pool is the panel's own shadow, so a panel that scrolls inside does not cut it off. */
+.frame{background:rgba(5,7,18,.8);border-radius:44px;box-shadow:0 0 46px 30px rgba(5,7,18,.8)}
+/* Plate: for code and drawings of memory. One fine line all the way round, rounded corners, and a small star resting on the top edge. */
+.plate{position:relative;border:1px solid rgba(230,196,119,.2);border-radius:16px;background:rgba(8,11,26,.74);backdrop-filter:blur(8px)}
+.plate::before{content:"✦";position:absolute;top:-9px;left:50%;transform:translateX(-50%);width:20px;height:18px;line-height:18px;text-align:center;font-size:10px;color:var(--gold);background:#0b1024;border-radius:50%;text-shadow:0 0 8px var(--gold);pointer-events:none}
 .caps{font-family:Jost,sans-serif;text-transform:uppercase;letter-spacing:.2em;font-size:10.5px;color:var(--ink3);font-weight:400}
 .rule{display:flex;align-items:center;gap:10px;color:var(--gold);font-size:9px;margin:20px 0}
 .rule::before,.rule::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--goldDim))}
@@ -70,5 +72,12 @@ header{position:fixed;top:0;left:0;right:0;height:58px;display:flex;align-items:
 #card .s{font-family:Jost;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-top:8px}
 #card .s.known{color:var(--known)}
 #card .s.ready{color:var(--ice)}
+
+/* The Examine tag: it comes out of the pointer, joined to it by a thin gold line. */
+#ctag{position:fixed;z-index:20;pointer-events:none;width:0;height:0}
+#ctag .t{position:absolute;left:20px;top:22px;opacity:0;transform:scale(.3);transform-origin:-20px -22px;transition:opacity .18s,transform .32s cubic-bezier(.2,.9,.3,1.25)}
+#ctag.on .t{opacity:1;transform:none}
+#ctag .t::before{content:"";position:absolute;left:-17px;top:-19px;width:24px;height:1px;background:linear-gradient(90deg,rgba(230,196,119,0),var(--gold));transform-origin:0 0;transform:rotate(48deg)}
+#ctag .hex{filter:drop-shadow(0 0 10px rgba(230,196,119,.45))}
 
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.draw{stroke-dashoffset:0}.ignite,.fade{opacity:1}}

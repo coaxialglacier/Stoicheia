@@ -1,0 +1,6 @@
+{
+  "id": "type-argument",
+  "name": "Type argument",
+  "first": "The type that a type parameter gets in one call or use of generic code, as an argument is the value that a parameter gets in one call.",
+  "parts": []
+}

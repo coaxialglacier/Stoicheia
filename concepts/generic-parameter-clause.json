@@ -1,0 +1,6 @@
+{
+  "id": "generic-parameter-clause",
+  "name": "Generic parameter clause",
+  "first": "The angle brackets right after the name of a function or a type, which make it generic: they declare its type parameters, and any type constraint on each one.",
+  "parts": ["type-parameter", "type-constraint"]
+}

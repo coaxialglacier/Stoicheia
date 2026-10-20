@@ -4,278 +4,906 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Star Page</title>
-<!-- A mockup of Graph and Page in the constellation theme. It is a picture of the idea, not a working page: the data is written in, and nothing links here. -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Jost:wght@300;400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<!-- Graph and Page in the constellation theme. It reads the concept library, as graph-page.html does: library-data.js, library.js, and pages.js. -->
+<link rel="stylesheet" href="sky.css">
 <style>
-:root{--sky0:#05070f;--ink:#ece6d6;--ink2:#b9b3a4;--ink3:#7e7c90;--gold:#e6c477;--gold2:#fbe7b0;--goldDim:rgba(230,196,119,.38);--known:#8d92a8;--teal:#7fe8d2;--violet:#c7adff;--ice:#9ad9ff;--panel:rgba(9,13,30,.8);--hair:rgba(230,196,119,.16)}
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
-body{background:var(--sky0);color:var(--ink);font-family:'EB Garamond',Georgia,serif;overflow:hidden}
-.nebula{position:fixed;inset:0;pointer-events:none;background:
+.nebula{background:
   radial-gradient(ellipse 25% 60% at 12% 55%,rgba(130,80,220,.26),transparent 70%),
   radial-gradient(ellipse 40% 40% at 70% 20%,rgba(50,80,190,.16),transparent 70%),
   radial-gradient(ellipse 35% 35% at 85% 80%,rgba(30,140,150,.12),transparent 70%),
   radial-gradient(ellipse 120% 90% at 45% 45%,#0d1330,#05070f 80%)}
-#sky{position:fixed;inset:0}
-.frame{background:
-  linear-gradient(var(--gold),var(--gold)) 0 0/16px 1px no-repeat,linear-gradient(var(--gold),var(--gold)) 0 0/1px 16px no-repeat,
-  linear-gradient(var(--gold),var(--gold)) 100% 0/16px 1px no-repeat,linear-gradient(var(--gold),var(--gold)) 100% 0/1px 16px no-repeat,
-  linear-gradient(var(--gold),var(--gold)) 0 100%/16px 1px no-repeat,linear-gradient(var(--gold),var(--gold)) 0 100%/1px 16px no-repeat,
-  linear-gradient(var(--gold),var(--gold)) 100% 100%/16px 1px no-repeat,linear-gradient(var(--gold),var(--gold)) 100% 100%/1px 16px no-repeat,
-  var(--panel);border:1px solid var(--hair);backdrop-filter:blur(10px)}
-.caps{font-family:Jost,sans-serif;text-transform:uppercase;letter-spacing:.2em;font-size:10.5px;color:var(--ink3)}
-.hex{--c:var(--goldDim);display:inline-block;padding:1px;background:var(--c);clip-path:polygon(9px 0,calc(100% - 9px) 0,100% 50%,calc(100% - 9px) 100%,9px 100%,0 50%);cursor:pointer;transition:filter .2s;white-space:nowrap}
-.hex>span{display:block;padding:8px 20px;background:#0c1129;clip-path:inherit;font-family:Jost;text-transform:uppercase;letter-spacing:.18em;font-size:10.5px;color:var(--gold2)}
-.hex.gold{--c:var(--gold)}
-.hex.gold>span{background:linear-gradient(180deg,#2a2412,#15120a);color:#fff3cf}
-.hex:hover{--c:var(--gold);filter:drop-shadow(0 0 10px rgba(230,196,119,.45))}
-
-header{position:fixed;top:0;left:0;right:0;height:58px;display:flex;align-items:center;gap:22px;padding:0 26px;z-index:3;border-bottom:1px solid var(--hair);background:linear-gradient(180deg,rgba(5,7,15,.88),rgba(5,7,15,.4))}
-.back{font-family:Jost;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink2)}
-.grow{flex:1}
-
-aside{position:fixed;top:76px;left:18px;bottom:18px;width:350px;z-index:2;padding:22px 20px;display:flex;flex-direction:column}
+aside{position:fixed;top:112px;left:18px;max-height:calc(100vh - 130px);width:350px;z-index:2;padding:22px 20px;overflow-y:auto}
+.chart-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.chart-head .cmark{font-size:13px;color:var(--gold);text-shadow:0 0 10px var(--gold)}
+.chart-title{font-family:Cinzel;font-size:19px;letter-spacing:.1em;color:var(--gold2)}
+.chart-sub{color:var(--gold);opacity:.75;margin-top:2px}
 aside p.intro{font-size:15.5px;line-height:1.45;color:var(--ink2)}
 aside p.intro b{color:var(--gold2);font-weight:500}
-aside svg{flex:1;width:100%;margin-top:10px}
-.halo{animation:tw 4.5s ease-in-out infinite}
-@keyframes tw{0%,100%{opacity:1}50%{opacity:.6}}
-.travel{stroke-dasharray:2 18;animation:flow 2.4s linear infinite}
-@keyframes flow{to{stroke-dashoffset:-40}}
+aside svg{display:block;width:100%;height:auto;margin-top:10px}
 
-.page{position:fixed;top:58px;left:388px;right:0;bottom:0;z-index:1;overflow-y:auto;padding:36px 56px 60px 60px;scrollbar-width:thin;scrollbar-color:rgba(230,196,119,.25) transparent}
+.page{position:fixed;top:58px;left:388px;right:0;bottom:0;z-index:1;overflow-y:auto;padding:30px 44px 60px 56px}
 .kicker{color:var(--gold)}
 .kicker em{font-style:normal;color:var(--ink3)}
 h1{font-family:Cinzel;font-weight:500;font-size:44px;letter-spacing:.05em;margin:8px 0 4px;background:linear-gradient(180deg,#fff6dc 10%,#e6c477 90%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 22px rgba(230,196,119,.28))}
-.orn{display:flex;align-items:center;gap:12px;color:var(--gold);font-size:10px;width:420px;margin:2px 0 22px}
+.orn{display:flex;align-items:center;gap:12px;color:var(--gold);font-size:10px;width:420px;margin:2px 0 20px}
 .orn::before,.orn::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--goldDim),transparent)}
 .orn::before{flex:0 0 40px;background:var(--goldDim)}
-.tabs{display:flex;gap:6px;margin-bottom:30px;align-items:center}
-.tab{position:relative;font-family:Jost;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink3);padding:9px 18px}
+.tabs{position:relative;display:flex;gap:6px;margin-bottom:28px;align-items:center}
+.tab{font-family:Jost;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink3);padding:9px 18px;cursor:pointer;transition:color .3s}
+.tab:hover{color:var(--ink2)}
 .tab.on{color:var(--gold2)}
-.tab.on::after{content:"";position:absolute;left:14px;right:14px;bottom:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);box-shadow:0 0 8px var(--gold)}
-.tab.on::before{content:"✦";position:absolute;left:50%;bottom:-7px;transform:translateX(-50%);font-size:9px;color:var(--gold2);text-shadow:0 0 8px var(--gold)}
 .tab b{font-family:Cinzel;font-weight:500;font-size:10px;letter-spacing:.04em;color:var(--gold);border:1px solid var(--goldDim);padding:1px 6px;margin-left:8px}
 .sep{width:5px;height:5px;transform:rotate(45deg);border:1px solid var(--goldDim)}
+.tabline{position:absolute;bottom:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);box-shadow:0 0 8px var(--gold);transition:left .5s cubic-bezier(.3,.9,.3,1),width .5s cubic-bezier(.3,.9,.3,1)}
+.tabline::after{content:"✦";position:absolute;left:50%;top:-7px;transform:translateX(-50%);font-size:9px;color:var(--gold2);text-shadow:0 0 8px var(--gold)}
+.view{animation:enter .6s cubic-bezier(.2,.8,.2,1)}
+@keyframes enter{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 
-.cols{display:grid;grid-template-columns:minmax(0,1fr) 470px;gap:46px;align-items:start}
-.q{margin-bottom:30px}
-.q h4{font-family:Jost;font-weight:400;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.q h4 i{font-style:normal;font-family:Cinzel;font-size:12px;width:24px;height:24px;display:grid;place-items:center;border:1px solid var(--goldDim);transform:rotate(45deg)}
-.q h4 i span{transform:rotate(-45deg)}
-.q p{font-size:20px;line-height:1.55;color:var(--ink)}
 code{font-family:'JetBrains Mono',monospace;font-variant-ligatures:none;font-size:.78em;color:var(--gold2);background:rgba(230,196,119,.08);border:1px solid rgba(230,196,119,.18);padding:1px 6px;border-radius:3px}
-code.mk{color:var(--teal);background:rgba(127,232,210,.08);border-color:rgba(127,232,210,.3);cursor:pointer}
-.snip{margin-top:10px;font-family:'JetBrains Mono',monospace;font-variant-ligatures:none;font-size:13px;line-height:1.75;padding:12px 16px;background:rgba(3,5,14,.6);border:1px solid rgba(230,196,119,.12);color:var(--ink2);white-space:pre}
+.out{font-family:'JetBrains Mono',monospace;font-size:.8em;color:#fff3cf;background:rgba(3,5,14,.75);border:1px solid rgba(230,196,119,.3);padding:1px 7px}
+.q{margin-bottom:28px}
+/* A question is a heading, so it is larger than the 20px answer under it. */
+.q h4{font-family:Jost;font-weight:400;font-size:17px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+.q p{font-size:20px;line-height:1.55;color:var(--ink)}
+.snip{margin:10px 0 14px;font-family:'JetBrains Mono',monospace;font-variant-ligatures:none;font-size:13px;line-height:1.75;padding:12px 16px;background:rgba(3,5,14,.6);border:1px solid rgba(230,196,119,.2);border-radius:12px;color:var(--ink2);white-space:pre}
 
-.code{position:sticky;top:0;padding:22px 22px 18px}
-.code .caps{color:var(--gold);display:flex;justify-content:space-between}
-.lines{margin-top:14px;font-family:'JetBrains Mono',monospace;font-variant-ligatures:none;font-size:14px;line-height:1.9}
-.ln{display:flex;white-space:pre;position:relative}
-.ln.tall{padding-top:16px}
+.codebox{padding:20px 20px 16px}
+.codebox>.caps{color:var(--gold);display:flex;justify-content:space-between}
+.lines{margin-top:12px;font-family:'JetBrains Mono',monospace;font-variant-ligatures:none;font-size:14px;line-height:1.9}
+.ln{display:flex;white-space:pre;position:relative;transition:background .3s,opacity .3s;padding-right:6px}
+.ln.tall{padding-top:15px}
 .ln s{text-decoration:none;width:30px;flex:none;color:#4c4f66;user-select:none}
-.k{color:var(--violet)} .t{color:var(--ice)} .n{color:#f0c674} .c{color:#5f6380;font-style:italic} .f{color:#ece6d6}
-.mark{position:relative;color:#fff;background:rgba(127,232,210,.12);border-bottom:1px solid var(--teal);box-shadow:0 6px 12px -8px var(--teal)}
-.mark em{position:absolute;left:0;bottom:calc(100% + 1px);font-family:Jost;font-style:normal;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);white-space:nowrap;line-height:1}
-.after{font-size:16.5px;line-height:1.5;color:var(--ink2);margin-top:16px;padding-top:14px;border-top:1px solid rgba(230,196,119,.1)}
-.partrow{display:flex;align-items:center;gap:10px;margin-top:10px;font-family:Jost;font-size:12.5px;letter-spacing:.06em;color:var(--ink)}
+.ln.cur{background:linear-gradient(90deg,rgba(230,196,119,.2),rgba(230,196,119,.03));box-shadow:inset 2px 0 0 var(--gold)}
+.ln.cur s{color:var(--gold2);text-shadow:0 0 8px var(--gold)}
+.ln.also{background:rgba(230,196,119,.07)}
+.ln.dim{opacity:.3}
+.k{color:var(--violet)} .t{color:var(--ice)} .n{color:#f0c674} .c{color:#5f6380;font-style:italic} .s{color:#a5e3b4}
+@keyframes vanish{30%{background:rgba(255,246,220,.6);box-shadow:0 0 22px #fff3cf}100%{background:transparent;border-color:transparent;box-shadow:none}}
+.val{margin-left:14px;font-family:Jost;font-size:11px;letter-spacing:.1em;color:var(--teal);border:1px solid rgba(127,232,210,.4);padding:0 8px;border-radius:10px;align-self:center;line-height:18px;box-shadow:0 0 10px rgba(127,232,210,.25);animation:enter .4s}
+.console{margin-top:12px;border-top:1px solid rgba(230,196,119,.12);padding-top:10px}
+.console div{font-family:'JetBrains Mono',monospace;font-size:13px;color:#fff3cf;line-height:1.7;animation:enter .4s}
+.console .caps{color:var(--ink3)}
+.after{font-size:16.5px;line-height:1.5;color:var(--ink2);margin-top:14px;padding-top:12px;border-top:1px solid rgba(230,196,119,.1)}
+.partrow{display:flex;align-items:center;gap:10px;margin-top:10px;font-family:Jost;font-size:12.5px;letter-spacing:.06em;color:var(--ink);transition:opacity .4s}
 .partrow .gem{width:8px;height:8px;transform:rotate(45deg);background:var(--teal);box-shadow:0 0 8px var(--teal)}
-.partrow .ik{margin-left:auto;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);border:1px solid rgba(141,146,168,.3);padding:3px 10px;border-radius:20px}
-.next{margin-top:10px;display:flex;justify-content:flex-start;gap:16px;align-items:center}
+.ik{margin-left:auto;font-family:Jost;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);border:1px solid rgba(141,146,168,.3);padding:3px 10px;border-radius:20px;cursor:pointer;transition:all .2s;white-space:nowrap}
+.ik:hover{color:var(--gold2);border-color:var(--gold);box-shadow:0 0 12px rgba(230,196,119,.3)}
+
+.cols2{display:grid;grid-template-columns:minmax(0,1fr) 450px;gap:42px;align-items:start}
+/* The example is as wide as its longest line, and on a wide window never narrower than 520 pixels; on a narrower window the
+   parts and the steps keep at least 240 pixels each. A longer line makes the example wider. The parts and the steps share the rest. */
+.ps{display:grid;grid-template-columns:minmax(240px,1fr) minmax(clamp(0px,calc(100vw - 1076px),520px),max-content) minmax(240px,1fr);gap:34px;align-items:start}
+.partcard{padding:12px 0 14px;border-bottom:1px solid rgba(230,196,119,.1);transition:opacity .4s,max-height .5s .3s,padding .5s .3s;max-height:320px;overflow:hidden;cursor:default}
+.partcard h5{font-weight:500;font-size:17px;color:var(--gold2);line-height:1.3}
+.partcard p{font-size:15.5px;line-height:1.45;color:var(--ink2);margin:4px 0 8px}
+.partcard.gone{opacity:0;max-height:0;padding:0;border-color:transparent}
+.colhead{font-family:Jost;font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.colhead::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--goldDim),transparent)}
+.stepnav{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.stepnav .caps{margin-left:auto}
+.arrow{font-family:Jost;font-size:13px;color:var(--gold2);border:1px solid var(--goldDim);width:30px;height:28px;display:grid;place-items:center;cursor:pointer;transform:rotate(0);transition:all .2s;user-select:none}
+.arrow:hover{border-color:var(--gold);box-shadow:0 0 12px rgba(230,196,119,.35)}
+/* The steps sit on one thin line, each with its number in a ring. The line is brighter up to the step that runs, and that step's ring is lit. */
+.stp{position:relative;display:grid;grid-template-columns:22px minmax(0,1fr);gap:12px;padding:9px 12px 9px 0;font-size:15.5px;line-height:1.45;color:var(--ink3);cursor:pointer;transition:color .3s,background .3s;border-radius:0 12px 12px 0}
+.stp::before{content:"";position:absolute;left:10.5px;top:0;bottom:0;width:1px;background:rgba(230,196,119,.16)}
+.stp:first-child::before{top:20px}
+.stp:last-child::before{bottom:auto;height:20px}
+.stp.done::before{background:rgba(230,196,119,.5)}
+.stp.cur::before{background:linear-gradient(180deg,rgba(230,196,119,.5) 20px,rgba(230,196,119,.16) 20px)}
+.stp.cur:first-child::before{background:rgba(230,196,119,.16)}
+.stp:hover{color:var(--ink2)}
+.stp.done{color:var(--ink2)}
+.stp.cur{color:var(--ink);background:linear-gradient(90deg,rgba(230,196,119,.1),transparent 85%)}
+.stp .sn{position:relative;z-index:1;width:22px;height:22px;margin-top:1px;border-radius:50%;display:grid;place-items:center;font-family:Cinzel;font-size:10.5px;color:var(--gold);border:1px solid var(--goldDim);background:#080b1c;transition:all .3s}
+.stp.done .sn{color:var(--gold2);border-color:rgba(230,196,119,.6)}
+.stp.cur .sn{background:var(--gold);color:#150f03;border-color:var(--gold2);box-shadow:0 0 14px var(--gold),0 0 0 4px rgba(230,196,119,.13)}
+.endq{margin-top:14px;padding:14px 16px;font-size:16.5px;line-height:1.5;animation:enter .5s}
+.endq .caps{color:var(--gold);display:block;margin-bottom:6px}
+
+/* The example is as wide as its longest line, such as line 1 of Generics, and never narrower than 372 pixels. */
+.mem{display:grid;grid-template-columns:minmax(372px,max-content) minmax(0,1fr);gap:22px;align-items:start}
+.ps .lines{font-size:14px}
+.mem .lines{font-size:13px}
+.ps .codebox{padding:22px 22px 16px}
+.mem .codebox{padding:18px 14px 14px}
+.qcard{padding:14px 18px;margin-bottom:22px;font-size:19px;line-height:1.5}
+.qcard .caps{color:var(--gold);display:block;margin-bottom:4px}
+/* The answer to how it works is a few sentences, so its lines are kept short enough to read. */
+.qcard.how{max-width:980px;margin-bottom:30px}
+.drawing{position:relative;padding:18px 18px 8px}
+.mcols{display:grid;grid-template-columns:1fr 1fr .9fr;gap:30px;position:relative;z-index:1}
+.colh{font-family:Jost;font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--ink3);padding-bottom:6px;margin-bottom:24px;border-bottom:1px dashed rgba(185,179,164,.2)}
+/* Code letters are shown as typed: <= stays two characters, not one joined sign. */
+.blk{font-variant-ligatures:none;border:1px solid;padding:8px 11px 6px;margin-bottom:16px;background:rgba(6,9,22,.88);transition:box-shadow .5s,border-color .5s,opacity .5s}
+.blk.new{animation:enter .6s}
+.blk .bk{font-family:Jost;font-size:8.5px;letter-spacing:.2em;text-transform:uppercase}
+.blk .bn{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--ink);margin:3px 0 4px}
+.blk .f{display:flex;justify-content:space-between;align-items:center;font-family:'JetBrains Mono',monospace;font-size:12.5px;padding:5px 0;border-top:1px solid rgba(255,255,255,.06);color:var(--ink2)}
+.blk .f b{font-weight:400;color:#fff3cf}
+.blk .txt{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink3);padding:4px 0 2px}
+.blk.frame{border-color:rgba(230,196,119,.45)} .blk.frame .bk{color:var(--gold)}
+.blk.heap{border-color:rgba(127,232,210,.45)} .blk.heap .bk{color:var(--teal)}
+.blk.global{border-color:rgba(195,176,255,.45)} .blk.global .bk{color:var(--violet)}
+.blk.code{border-color:rgba(154,217,255,.35);border-style:dashed} .blk.code .bk{color:var(--ice)}
+.blk.removed{border:1px dashed rgba(141,146,168,.4);opacity:.5} .blk.removed .bk{color:var(--known)}
+.blk.data{border-color:rgba(154,217,255,.5)} .blk.data .bk{color:var(--ice)}
+.blk.hl{border-color:var(--gold2);box-shadow:0 0 0 1px rgba(251,231,176,.5),0 0 26px rgba(230,196,119,.35)}
+.ptr{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 8px var(--teal)}
+.ptr.code{background:var(--ice);box-shadow:0 0 8px var(--ice)}
+svg.arrows{position:absolute;left:0;top:0;pointer-events:none;z-index:2;overflow:visible}
+.memstep{margin-top:14px;padding:14px 18px}
+/* The text cards sit next to code and drawings, so their pool of darker sky is smaller and does not cover them. */
+.qcard.frame,.memstep.frame,.endq.frame{border-radius:26px;box-shadow:0 0 22px 8px rgba(5,7,18,.75)}
+.memstep p{font-size:17.5px;line-height:1.5;animation:enter .45s}
+.mk{position:relative;color:#fff;background:rgba(127,232,210,.12);border-bottom:1px solid var(--teal);transition:background .3s,box-shadow .3s}
+.mk .lab{position:absolute;left:0;bottom:calc(100% + 1px);font-family:Jost;font-style:normal;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);white-space:nowrap;line-height:1}
+.mk .lab.up{bottom:calc(100% + 13px)}
+.ln.taller{padding-top:28px}
+.mk .mk{border-bottom-style:dotted}
+/* A lit mark: a teal edge all the way round, and a glow. It flares once when the line from its part reaches it. */
+.mk{transition:background .3s,box-shadow .3s,opacity .35s}
+.mk.hl{background:rgba(127,232,210,.26);box-shadow:0 0 0 1px rgba(127,232,210,.85),0 0 18px rgba(127,232,210,.5);border-radius:3px;animation:markon .8s .4s}
+.mk.hl>.lab{color:#eafffa;text-shadow:0 0 10px rgba(127,232,210,.9)}
+@keyframes markon{30%{background:rgba(214,255,245,.5);box-shadow:0 0 0 1.5px #eafffa,0 0 30px rgba(127,232,210,.95)}}
+.quiet .mk.hl{animation:none}
+.mk.vanish{animation:vanish .5s forwards}
+@keyframes vanish{30%{background:rgba(255,246,220,.6);box-shadow:0 0 22px #fff3cf}100%{background:transparent;border-color:transparent;box-shadow:none}}
+.kw{color:var(--violet)} .str{color:#a5e3b4} .cm{color:#5f6380;font-style:italic}
+samp{font-family:'JetBrains Mono',monospace;font-size:.8em;color:#fff3cf;background:rgba(3,5,14,.75);border:1px solid rgba(230,196,119,.3);padding:1px 7px}
+.snip .ln s{display:none}
+.figure{display:grid;grid-template-columns:1fr;gap:16px;margin:6px 0 28px}
+.figure .drawing{padding:12px 10px 4px}
+.figure .mcols{gap:14px}
+.figure .cap{grid-column:1/-1;font-size:16px;line-height:1.5;color:var(--ink2)}
+.figure .cap b{color:var(--gold2);font-weight:500}
+.muted{color:var(--ink3);font-size:16px;margin:8px 0}
+.blk .f b.none{color:var(--ink3);font-style:italic}
+.partcard .hex{margin-top:4px}
+/* The page of an idea with no study of its own: the idea on each example that has it, with its explanation beside the code. */
+.seen{margin:8px 0 38px}
+.seen .colhead{margin-bottom:14px}
+.seen-go{order:2;font-family:Jost;font-size:10px;letter-spacing:.2em;color:var(--ink3);text-decoration:none;white-space:nowrap}
+.seen-go:hover{color:var(--gold2)}
+.seen .colhead::after{order:1}
+.seen-grid{position:relative;display:grid;grid-template-columns:minmax(240px,400px) minmax(0,max-content);gap:48px;align-items:start}
+.seen-grid.drawn{grid-template-columns:minmax(240px,340px) minmax(0,1fr)}
+.seen-grid .lines{font-size:14px}
+.seen-grid .codebox{padding:22px 22px 16px}
+.seen-grid .partcard{border-bottom:0;padding-top:4px}
+.colh.target{color:var(--gold2);border-bottom-color:rgba(230,196,119,.6);text-shadow:0 0 10px rgba(230,196,119,.6)}
+
+/* ---------- Pointing: what you point at lights its code, and a line goes there ---------- */
+/* A part that is pointed at: a thin teal line lights at its left, and its name glows. The line to its code leaves from the end of its name. */
+.partcard{position:relative;padding-left:16px}
+.partcard::before{content:"";position:absolute;left:0;top:13px;bottom:15px;width:1px;background:linear-gradient(180deg,var(--teal),rgba(127,232,210,.15));box-shadow:0 0 8px var(--teal);opacity:0;transition:opacity .3s}
+.partcard.lit::before{opacity:1}
+/* A part's name and its "I know this" share one line, as on graph-page.html, so the line to the code leaves from the end of that line
+   and never crosses the part's sentences. In a narrow column, "I know this" goes under the name, at the right. */
+.phead{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px}
+.phead .ik{flex:none}
+.partcard p{margin:4px 0 0}
+.partcard h5{transition:color .3s,text-shadow .3s}
+.partcard.lit h5{color:#fff6dc;text-shadow:0 0 14px rgba(230,196,119,.55)}
+/* The rest of the code fades, so what is lit is the one thing to look at. On a line with something lit, the other marks fade. */
+.focus>.ln{opacity:.4}
+.focus>.ln.dim{opacity:.18}
+.focus>.ln.has-on{opacity:1}
+.focus>.ln.has-on .mk:not(.hl):not(.hold){opacity:.32}
+/* A name of code in a sentence. Pointing at it lights the same code, in gold. */
+code.mention{cursor:pointer;transition:background .2s,border-color .2s,color .2s}
+code.mention:hover,code.mention.on{background:rgba(230,196,119,.22);border-color:rgba(251,231,176,.85);color:#fff6dc}
+code.unmatched{border-color:rgba(255,130,120,.6)}
+.ref{border-radius:3px;transition:background .2s,box-shadow .2s,color .2s}
+.ref.on{background:rgba(251,231,176,.16);box-shadow:0 0 0 1px rgba(251,231,176,.8),0 0 16px rgba(230,196,119,.45);color:#fff}
+.ref.flash{animation:refflash 1s}
+@keyframes refflash{0%,50%{background:rgba(255,246,220,.5);box-shadow:0 0 0 1.5px #fff6dc,0 0 26px rgba(230,196,119,.8)}}
+/* Each line that a step runs has that step's number in a ring at its right. The ring of the step that runs is lit. */
+.badge{margin-left:auto;align-self:center;flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font:500 10px/1 Cinzel;color:var(--gold);border:1px solid var(--goldDim);background:#080b1c;transition:all .3s}
+.badge.on{background:var(--gold);color:#150f03;border-color:var(--gold2);box-shadow:0 0 14px var(--gold),0 0 0 4px rgba(230,196,119,.13);animation:badgeon .9s .4s}
+@keyframes badgeon{30%{box-shadow:0 0 24px #fff3cf,0 0 0 6px rgba(230,196,119,.3)}}
+.same-step .badge.on{animation:none}
+.nry{margin-left:auto;align-self:center;font-style:normal;font-family:Jost;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold2)}
+.nry+.badge{margin-left:12px}
+/* The lines: a soft glow under a fine line, drawn in from where it starts. A small shooting star then runs along it, again and again. */
+.ps{position:relative}
+svg.links{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:3}
+svg.links path{fill:none;stroke-linecap:round}
+/* While a part or a name of code is pointed at, the step's line fades with the code it goes to. */
+.slink{transition:opacity .35s}
+.pointing .slink{opacity:.3}
+/* The glow is a wide, faint stroke, not a blur: the shooting stars redraw the lines every frame, and a blur would be redone each time. */
+.lglow{stroke-width:7;opacity:.12}
+.lcore{stroke-width:1.3}
+.lcomet{stroke:#fffbea}
+.lhalo{opacity:.18}
+.trace{stroke-dasharray:1;stroke-dashoffset:1;animation:trace .5s cubic-bezier(.5,0,.25,1) forwards}
+@keyframes trace{to{stroke-dashoffset:0}}
+.lburst{fill:none;stroke-width:1.4;opacity:0;transform-box:fill-box;transform-origin:center;animation:lburst .75s .42s ease-out forwards}
+@keyframes lburst{0%{opacity:.95;transform:scale(.4)}100%{opacity:0;transform:scale(3.6)}}
 </style>
 </head>
 <body>
 <div class="nebula"></div>
 <canvas id="sky"></canvas>
-
+<div id="stage">
 <header>
-  <span class="back">← Home</span><span class="back">← Expand to Parts</span>
+  <a class="back" id="toHome">← The library</a><a class="back" id="toExpand">← Expand to Parts</a>
   <span class="caps" style="color:var(--gold2);letter-spacing:.26em">Dependency graph · Graph and Page</span>
   <span class="grow"></span>
   <span class="caps">← → steps, then views</span>
-  <a class="hex"><span>What I know</span></a>
 </header>
 
 <aside class="frame">
-  <p class="intro"><b>Captured variables</b> is taught one level at a time: first the code, then memory. It needs 3 concepts you do not know yet, each taught right before the view that uses it.</p>
+  <div class="chart-head"><span class="cmark">✦</span><div><div class="chart-title">Star chart</div><div class="caps chart-sub" id="chartSub"></div></div></div>
+  <p class="intro" id="intro"></p>
   <svg id="graph" viewBox="0 0 310 640" preserveAspectRatio="xMidYMin meet"></svg>
 </aside>
 
-<div class="page">
-  <div class="caps kicker">The concept you named <em>· the code</em></div>
-  <h1>Captured variables</h1>
+<div class="page" id="page">
+  <div class="caps kicker" id="kicker"></div>
+  <h1 id="title"></h1>
   <div class="orn">✦</div>
-  <div class="tabs">
-    <span class="tab on">What it is</span><span class="sep"></span>
-    <span class="tab">Parts and Steps</span><span class="sep"></span>
-    <span class="tab">In memory <b>V</b></span>
-  </div>
-
-  <div class="cols">
-    <div>
-      <div class="q">
-        <h4><i><span>I</span></i>What is it?</h4>
-        <p>A captured variable is a variable, declared outside a closure, that the closure's body uses. The closure uses that same variable, not a copy of it.</p>
-      </div>
-      <div class="q">
-        <h4><i><span>II</span></i>What problem does it solve?</h4>
-        <p>A closure sometimes needs to keep a value between its calls. <code>counter()</code> has to keep how far it has counted. A captured variable does this without a global variable or a class.</p>
-      </div>
-      <div class="q">
-        <h4><i><span>III</span></i>How does it work?</h4>
-        <p>The closure keeps <code class="mk">count</code> itself, so every call of <code>counter()</code> changes the same <code class="mk">count</code>. The first call makes it 2, and the second makes it 4. This still works after <code>makeCounter(step:)</code> has returned, because the closure still has <code class="mk">count</code>.</p>
-      </div>
-      <div class="q">
-        <h4><i><span>IV</span></i>When do you use it, and when don't you?</h4>
-        <p>Use one when a closure has to keep or change a value between calls, or change a value that the code around it reads afterward:</p>
-        <div class="snip"><span class="k">func</span> <span class="f">total</span>(of prices: [<span class="t">Int</span>]) -> <span class="t">Int</span> {
-    <span class="k">var</span> sum = <span class="n">0</span>
-    prices.forEach { sum += $0 }
-    <span class="k">return</span> sum
-}
-print(total(of: [<span class="n">3</span>, <span class="n">4</span>]))  <span class="c">// 7</span></div>
-      </div>
-    </div>
-
-    <div class="code frame">
-      <div class="caps"><span>The example</span><span style="color:var(--ink3)">swift</span></div>
-      <div class="lines">
-        <div class="ln"><s>1</s><span><span class="k">func</span> <span class="f">makeCounter</span>(step: <span class="t">Int</span>) -> () -> <span class="t">Int</span> {</span></div>
-        <div class="ln tall"><s>2</s><span>    <span class="k">var</span> <span class="mark"><em>declared outside the closure</em>count</span> = <span class="n">0</span></span></div>
-        <div class="ln"><s>3</s><span>    <span class="k">return</span> {</span></div>
-        <div class="ln tall"><s>4</s><span>        <span class="mark"><em>used in the body</em>count</span> += step</span></div>
-        <div class="ln"><s>5</s><span>        <span class="k">return</span> <span class="mark">count</span></span></div>
-        <div class="ln"><s>6</s><span>    }</span></div>
-        <div class="ln"><s>7</s><span>}</span></div>
-        <div class="ln"><s>8</s><span><span class="k">let</span> counter = makeCounter(step: <span class="n">2</span>)</span></div>
-        <div class="ln"><s>9</s><span>print(counter())  <span class="c">// 2</span></span></div>
-        <div class="ln"><s>10</s><span>print(counter())  <span class="c">// 4</span></span></div>
-      </div>
-      <p class="after"><code class="mk">count</code> is declared inside <code>makeCounter(step:)</code>, outside the closure's braces, and the closure's body uses it. So <code class="mk">count</code> is a captured variable.</p>
-      <div class="partrow"><span class="gem"></span>Declared outside the closure<span class="ik">I know this</span></div>
-      <div class="partrow"><span class="gem"></span>Used in the body<span class="ik">I know this</span></div>
-      <div class="next" style="margin-top:22px"><a class="hex gold"><span>Next ✦ Parts and Steps →</span></a></div>
-    </div>
-  </div>
+  <div class="tabs" id="tabs"></div>
+  <div id="view"></div>
 </div>
+</div>
+<div id="flash"></div>
+<div id="card" class="frame"></div>
 
+<script src="sky.js"></script>
+<script src="../library-data.js"></script>
+<script src="../library.js"></script>
+<script src="../pages.js"></script>
 <script>
-// The star field behind every page: fixed stars that twinkle slowly. A seeded random number keeps the same sky on each load.
-(function () {
-  const c = document.getElementById('sky'), x = c.getContext('2d'); let W, H, S = [];
-  function rnd(s) { return () => (s = (s * 16807) % 2147483647) / 2147483647; }
-  function init() {
-    const d = devicePixelRatio; W = c.width = innerWidth * d; H = c.height = innerHeight * d;
-    c.style.width = innerWidth + 'px'; c.style.height = innerHeight + 'px';
-    const r = rnd(5); S = [];
-    for (let i = 0; i < 420; i++) {
-      const big = r() > .95, h = r();
-      S.push({ x: r() * W, y: r() * H, s: (big ? 1 + r() * 1.1 : .35 + r() * .6) * d, a: .2 + r() * .5, p: r() * 6.3, v: .4 + r() * 1.5,
-        h: h < .14 ? '170,205,255' : h < .22 ? '255,226,180' : '236,236,255' });
-    }
-  }
-  function draw(t) {
-    x.clearRect(0, 0, W, H);
-    for (const s of S) {
-      const a = s.a * (.6 + .4 * Math.sin(s.p + t * .001 * s.v));
-      x.fillStyle = `rgba(${s.h},${a})`; x.beginPath(); x.arc(s.x, s.y, s.s, 0, 7); x.fill();
-    }
-    requestAnimationFrame(draw);
-  }
-  addEventListener('resize', init); init(); requestAnimationFrame(draw);
-})();
+// Graph and Page in the constellation theme. Everything on it comes from the concept library, the same as graph-page.html:
+// LIB.study(id) gives the study of a concept, with each concept's views as HTML, and Library.layoutGraph gives its graph.
+// The address names the concept: page.html?id=closure. When Expand to Parts sends a concept that is inside the study of the
+// idea it has open, as page.html?id=heap-object&root=captured-variables, the page opens that study, on that concept.
+const { el } = Sky;
+const params = new URLSearchParams(location.search);
+const askedId = params.get('id'), askedRoot = params.get('root');
+const inside = askedId && askedRoot && askedRoot !== askedId && LIB.hasStudy(askedRoot) && LIB.hasStudy(askedId) && studyIncludes(askedRoot, askedId);
+const ROOT = inside ? askedRoot : LIB.hasStudy(askedId) ? askedId : askedId && PIECES[askedId] ? null : STUDYING.id;
+const MODEL = ROOT ? LIB.study(ROOT) : null;
+const { BOXES, CONCEPTS } = MODEL || { BOXES: {}, CONCEPTS: {} };
+let G = MODEL ? Library.layoutGraph(MODEL, c => KNOWN.has(c)) : null;
+let cur = null, step = 0;
+let seenBlocks = new Set(), seenArrows = new Set();
+const ROMAN = n => ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'][n] || String(n);
 
-// ---------- The dependency graph, as a column of stars in two sections: the code, and memory ----------
-const NS = 'http://www.w3.org/2000/svg';
-function el(tag, a, parent) { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); if (parent) parent.appendChild(e); return e; }
-const svg = document.getElementById('graph');
-const defs = el('defs', {}, svg);
-const soft = el('filter', { id: 'soft', x: '-50%', y: '-50%', width: '200%', height: '200%' }, defs); el('feGaussianBlur', { stdDeviation: 1.1 }, soft);
-const glow = el('filter', { id: 'glow', x: '-30%', y: '-30%', width: '160%', height: '160%' }, defs); el('feGaussianBlur', { stdDeviation: 3 }, glow);
-function radial(id, color, a0) {
-  const g = el('radialGradient', { id }, defs);
-  el('stop', { offset: 0, 'stop-color': color, 'stop-opacity': a0 }, g);
-  el('stop', { offset: .3, 'stop-color': color, 'stop-opacity': a0 * .3 }, g);
-  el('stop', { offset: 1, 'stop-color': color, 'stop-opacity': 0 }, g);
+// ---------- What vanishes: a known part is not shown at all ----------
+// On the page of a concept the reader knows, only the parts that known.json lists vanish, so the page still explains the concept.
+function gone(part, concept) { return KNOWN.has(concept) ? KNOWN.lists(part) : KNOWN.has(part); }
+
+// ---------- Code ----------
+// lines: the HTML of each line, from the library. st: { cur, also, dim, value: [line, text], steps, step }.
+// steps, in Parts and Steps, lists the steps of the program: each line that a step runs gets a ring with that step's number.
+// A line that more than one step runs shows the step that runs now, or else the first of them.
+function codeHTML(lines, st = {}) {
+  const at = {};
+  (st.steps || []).forEach((s, i) => (at[s.line] = at[s.line] || []).push(i));
+  return lines.map((h, i) => {
+    const n = i + 1, dim = (st.dim || []).includes(n), runs = at[n];
+    const cls = ['ln', h.includes('data-label') ? 'tall' : '', st.cur === n ? 'cur' : '', (st.also || []).includes(n) ? 'also' : '', dim ? 'dim' : ''].join(' ');
+    const val = st.value && st.value[0] === n ? `<span class="val">${st.value[1]}</span>` : '';
+    const nry = dim ? '<i class="nry">does not run yet</i>' : '';
+    const badge = runs ? `<b class="badge${runs.includes(st.step) ? ' on' : ''}">${(runs.includes(st.step) ? st.step : runs[0]) + 1}</b>` : '';
+    return `<div class="${cls}"><s>${st.cur === n ? '✦' : n}</s><span class="src">${h || ' '}</span>${val}${nry}${badge}</div>`;
+  }).join('');
 }
-radial('hGold', '#e6c477', .9); radial('hVio', '#c3b0ff', .7); radial('hGrey', '#8d92a8', .3);
-
-// Each concept, with its number in the teaching order. A known concept has no number.
-const N = {
-  cvCode: { x: 92, y: 92, name: 'Captured variables', sub: 'What it is · Parts and Steps', num: 'I', state: 'now' },
-  closure1: { x: 92, y: 182, name: 'Closure', sub: 'Known', state: 'known' },
-  cvMem: { x: 92, y: 318, name: 'Captured variables', sub: 'In memory', num: 'V', state: 'next' },
-  cvalue: { x: 92, y: 400, name: 'Closure value', num: 'IV', state: 'next' },
-  closure2: { x: 236, y: 400, name: 'Closure', sub: 'Known', state: 'known', below: true },
-  heap: { x: 92, y: 482, name: 'Heap object', num: 'III', state: 'next' },
-  stack: { x: 92, y: 564, name: 'Stack frame', num: 'II', state: 'next' },
-  func: { x: 236, y: 610, name: 'Function', sub: 'Known', state: 'known', below: true },
-};
-// "Depends on", from the concept to the concept it needs. A line that would run behind a star curves out around it.
-const E = [['cvCode', 'closure1'], ['cvMem', 'cvalue'], ['cvalue', 'heap'], ['heap', 'stack'], ['stack', 'func'], ['cvalue', 'closure2'],
-  ['cvMem', 'heap', 'around'], ['cvMem', 'stack', 'around2'], ['cvalue', 'stack', 'around3']];
-
-// The two sections, and the line between them.
-function band(y, title, sub) {
-  const t = el('text', { x: 6, y, style: 'font-family:Jost;font-size:10px;letter-spacing:.26em;fill:#e6c477' }, svg); t.textContent = title;
-  const s = el('text', { x: 6, y: y + 15, style: 'font-family:Jost;font-size:9.5px;letter-spacing:.14em;fill:#7e7c90' }, svg); s.textContent = sub;
+// Takes the marks of known parts off the code: the code stays, and the mark and its label go.
+function unmark(box, concept) {
+  box.querySelectorAll('.mk[data-part]').forEach(m => { if (gone(m.dataset.part, concept)) m.replaceWith(...m.childNodes); });
+  labelMarks(box);
 }
-band(30, 'THE CODE', 'WHAT IT IS, AND WHAT IT DOES');
-el('line', { x1: 0, y1: 238, x2: 310, y2: 238, stroke: '#e6c477', 'stroke-width': 4, opacity: .25, filter: 'url(#glow)' }, svg);
-el('line', { x1: 0, y1: 238, x2: 310, y2: 238, stroke: 'rgba(230,196,119,.55)', 'stroke-width': .8 }, svg);
-const hz = el('text', { x: 155, y: 242, 'text-anchor': 'middle', style: 'font-size:11px;fill:#fbe7b0' }, svg); hz.textContent = '✦';
-band(268, 'IN MEMORY', 'HOW IT WORKS IN MEMORY');
+function labelMarks(box) {
+  box.querySelectorAll('.ln.tall').forEach(l => { if (!l.querySelector('.mk[data-label]')) l.classList.remove('tall'); });
+  // Each label is written above its mark. A label that would run into the one before it on its line goes up one row.
+  box.querySelectorAll('.mk[data-label]').forEach(m => { const e = document.createElement('em'); e.className = 'lab'; e.textContent = m.dataset.label; m.prepend(e); });
+  requestAnimationFrame(() => box.querySelectorAll('.ln.tall').forEach(l => {
+    let end = -Infinity;
+    [...l.querySelectorAll('.lab')].sort((a, b) => a.getBoundingClientRect().x - b.getBoundingClientRect().x).forEach(e => {
+      const r = e.getBoundingClientRect();
+      if (r.x < end + 8) { e.classList.add('up'); l.classList.add('taller'); } else end = r.right;
+    });
+  }));
+}
+// cls 'main-code' marks the example of a view: a name of code in a sentence is looked for there, after the code beside the sentence.
+const codebox = (title, inner, extra = '', cls = '') => `<div class="codebox plate ${cls}"><div class="caps"><span>${title}</span><span style="color:var(--ink3)">swift</span></div><div class="lines">${inner}</div>${extra}</div>`;
+const outputHTML = out => `<div class="console"><span class="caps">Output</span>${(out || []).map(x => `<div>${Library.escapeHTML(x)}</div>`).join('')}</div>`;
 
-// Lines first, so the stars sit on top of them.
-E.forEach(([a, b, kind]) => {
-  const p = N[a], q = N[b];
-  let d;
-  if (kind === 'around') d = `M${p.x - 12} ${p.y + 6}C${p.x - 40} ${p.y + 40} ${q.x - 40} ${q.y - 40} ${q.x - 12} ${q.y - 6}`;
-  else if (kind === 'around2') d = `M${p.x - 14} ${p.y + 2}C${p.x - 58} ${p.y + 60} ${q.x - 58} ${q.y - 60} ${q.x - 12} ${q.y - 4}`;
-  else if (kind === 'around3') d = `M${p.x - 12} ${p.y + 8}C${p.x - 30} ${p.y + 50} ${q.x - 30} ${q.y - 50} ${q.x - 12} ${q.y - 8}`;
-  else if (p.x === q.x) d = `M${p.x} ${p.y + 14}C${p.x + 10} ${(p.y + q.y) / 2 - 10} ${q.x - 10} ${(p.y + q.y) / 2 + 10} ${q.x} ${q.y - 14}`;
-  else d = `M${p.x + 14} ${p.y}C${(p.x + q.x) / 2} ${p.y} ${q.x} ${(p.y + q.y) / 2 - 20} ${q.x} ${q.y - 12}`;
-  const toKnown = q.state === 'known';
-  const col = toKnown ? 'rgba(141,146,168,.6)' : p.state === 'now' ? '#e6c477' : '#c3b0ff';
-  if (!toKnown) el('path', { d, fill: 'none', stroke: col, 'stroke-width': 4, opacity: .22, filter: 'url(#glow)' }, svg);
-  el('path', { d, fill: 'none', stroke: col, 'stroke-width': 1, opacity: toKnown ? 1 : .8, 'stroke-dasharray': toKnown ? '3 4' : 'none' }, svg);
-  if (!toKnown) el('path', { d, fill: 'none', stroke: '#fff', 'stroke-width': 1.6, opacity: .55, class: 'travel', 'stroke-linecap': 'round' }, svg);
-});
+// ---------- Memory drawings ----------
+function drawingHTML(blocks, changed, key) {
+  const hl = new Set(changed || []);
+  const kindOf = b => b.kind === 'ghost' ? 'removed' : b.kind === 'frame' ? 'frame' : b.kind === 'heap' ? 'heap' : b.kind === 'data' ? 'data' : b.area === 'code' ? 'code' : 'global';
+  // Each field says its name in data-f, so that an address can name one field of a block, as { to, field }.
+  // An address of code, or of data about a type, is drawn in ice blue.
+  const blk = b => {
+    const k = kindOf(b), fresh = !seenBlocks.has(key + b.id + b.kind);
+    return `<div class="blk ${k} ${hl.has(b.id) ? 'hl' : ''} ${fresh ? 'new' : ''}" data-b="${b.id}"><div class="bk">${Library.escapeHTML(b.tag || '')}</div><div class="bn">${Library.escapeHTML(b.title)}</div>` +
+      (b.fields || []).map(([n, v]) => `<div class="f" data-f="${Library.escapeHTML(n)}"><span>${Library.escapeHTML(n)}</span>${v && v.to ? `<span class="ptr ${['code', 'data'].includes((blocks.find(x => x.id === v.to) || {}).area) ? 'code' : ''}" data-to="${v.to}"${v.field !== undefined ? ` data-field="${Library.escapeHTML(v.field)}"` : ''}></span>` : v && v.none ? `<b class="none">${v.none}</b>` : `<b>${Library.escapeHTML(v)}</b>`}</div>`).join('') +
+      (b.note ? `<div class="txt">${b.note}</div>` : '') + `</div>`;
+  };
+  const of = areas => blocks.filter(b => areas.includes(b.area)).map(blk).join('');
+  const top = of(['top']), code = of(['code']), data = of(['data']);
+  return `<div class="drawing plate" data-key="${key}"><div class="mcols">
+    <div>${top ? `<div class="colh">Top level</div>${top}` : ''}<div class="colh">Stack</div>${of(['stack'])}</div>
+    <div><div class="colh">Heap</div>${of(['heap'])}</div>
+    <div>${code || !data ? `<div class="colh">Code</div>${code}` : ''}${data ? `<div class="colh">Data about types</div>${data}` : ''}</div></div><svg class="arrows"></svg></div>`;
+}
+// The arrows of a drawing: from each address to the block it points at.
+function arrows(box) {
+  const svg = box.querySelector('.arrows'), B = box.getBoundingClientRect(), key = box.dataset.key;
+  svg.setAttribute('width', B.width); svg.setAttribute('height', B.height);
+  svg.innerHTML = `<defs>${['teal', 'ice'].map(c => `<marker id="ah-${key}-${c}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="${c === 'teal' ? '#7fe8d2' : '#9ad9ff'}" stroke-width="1.6" stroke-linecap="round"/></marker>`).join('')}
+    <filter id="ag-${key}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.5"/></filter></defs>`;
+  const cols = [...box.querySelectorAll('.mcols > div')], tops = [...box.querySelectorAll('.blk')].map(b => b.getBoundingClientRect().y);
+  box.querySelectorAll('.ptr').forEach(p => {
+    const block = box.querySelector(`.blk[data-b="${p.dataset.to}"]`);
+    const t = block && p.dataset.field !== undefined ? block.querySelector(`.f[data-f="${CSS.escape(p.dataset.field)}"]`) : block;
+    if (!t) return;
+    const a = p.getBoundingClientRect(), r = t.getBoundingClientRect();
+    const x1 = a.x + a.width / 2 - B.x, y1 = a.y + a.height / 2 - B.y;
+    const from = cols.indexOf(p.closest('.mcols > div')), to = cols.indexOf(t.closest('.mcols > div'));
+    // An arrow goes into the edge of the target block: beside the field it names, or near the top of the block.
+    // It never ends on a field's value, and it goes around the blocks that lie between it and its target.
+    const R = block.getBoundingClientRect(), S = p.closest('.blk').getBoundingClientRect();
+    const y2 = (t === block ? r.y + Math.min(22, r.height / 2) : r.y + r.height / 2) - B.y;
+    const others = c => [...cols[c].querySelectorAll('.blk')].filter(x => x !== block && !x.contains(p)).map(x => x.getBoundingClientRect());
+    const between = from === to && others(from).some(x => x.y >= Math.min(S.bottom, R.bottom) - 1 && x.bottom <= Math.max(S.y, R.y) + 1);
+    const lo = Math.min(y1, y2) + B.y - 8, hi = Math.max(y1, y2) + B.y + 8;
+    const crossed = cols.slice(from + 1, to).some((c, i) => others(from + 1 + i).some(x => x.bottom > lo && x.y < hi));
+    let d;
+    if (from === to && t === block && !between) {
+      // In one column, with nothing between: out to the right, then into the edge of the block that faces the address.
+      const up = r.y < a.y, x2 = r.right - 30 - B.x, y = (up ? r.bottom : r.y) - B.y;
+      d = `M${x1} ${y1}C${x1 + 36} ${y1} ${x2} ${y + (up ? 44 : -44)} ${x2} ${y + (up ? 3 : -3)}`;
+    } else if (to <= from) {
+      // In one column, past other blocks or to one field, or back to a column on the left: out to the right,
+      // and back into the right edge of the block.
+      const x2 = R.right - B.x;
+      d = `M${x1} ${y1}C${x1 + 44} ${y1} ${x2 + 44} ${y2} ${x2 + 2} ${y2}`;
+    } else if (to - from === 1 || !crossed) {
+      // To a column on the right, with no block in the way: into the left edge of the block.
+      const x2 = R.x - B.x;
+      d = `M${x1} ${y1}C${(x1 + x2) / 2} ${y1} ${(x1 + x2) / 2} ${y2} ${x2 - 2} ${y2}`;
+    } else {
+      // Past a column with blocks in the way: up into the space above the blocks, across, down beside the target's column,
+      // and into the left edge of the block.
+      const lane = Math.min(...tops) - B.y - 11, x2 = R.x - B.x;
+      d = `M${x1} ${y1}C${x1 + 44} ${y1} ${x1 + 24} ${lane} ${x1 + 62} ${lane}L${x2 - 40} ${lane}C${x2 - 12} ${lane} ${x2 - 26} ${y2} ${x2 - 2} ${y2}`;
+    }
+    const c = p.classList.contains('code') ? 'ice' : 'teal', col = c === 'teal' ? '#7fe8d2' : '#9ad9ff';
+    const k = key + p.closest('.blk').dataset.b + p.closest('.f').textContent + '>' + p.dataset.to + (p.dataset.field || '');
+    el('path', { d, fill: 'none', stroke: col, 'stroke-width': 4, opacity: .3, filter: `url(#ag-${key})` }, svg);
+    el('path', { d, fill: 'none', stroke: col, 'stroke-width': 1.3, 'marker-end': `url(#ah-${key}-${c})`, pathLength: 1, class: seenArrows.has(k) ? '' : 'draw', style: 'animation-delay:.25s' }, svg);
+    seenArrows.add(k);
+  });
+}
+// After the labels on the code have moved apart: the arrows of the drawings, and the lines of Parts and Steps.
+// The step's line is drawn in only when the step is new.
+function afterDraw(newStep) {
+  requestAnimationFrame(() => setTimeout(() => {
+    document.querySelectorAll('#view .drawing').forEach(arrows);
+    seenBlocks = new Set([...document.querySelectorAll('#view .drawing')].flatMap(d => [...d.querySelectorAll('.blk')].map(b => d.dataset.key + b.dataset.b + (b.classList.contains('removed') ? 'ghost' : ''))));
+    partLines(false); stepLine(newStep);
+  }, 30));
+}
 
-for (const k in N) {
-  const n = N[k], g = el('g', { transform: `translate(${n.x},${n.y})`, style: 'cursor:pointer' }, svg);
-  if (n.state === 'known') {
-    el('circle', { r: 14, fill: 'url(#hGrey)' }, g);
-    el('circle', { r: 6.5, fill: 'none', stroke: '#8d92a8', 'stroke-dasharray': '2 2.4' }, g);
-    el('circle', { r: 2, fill: '#a3a8bd' }, g);
-  } else {
-    const now = n.state === 'now', r = now ? 9 : 6.5;
-    if (now) {
+// ---------- The three views ----------
+function whatView(c) {
+  const W = CONCEPTS[c].what, R = CONCEPTS[ROOT];
+  // The tab already says What it is, so the first answer has no heading of its own. The other three questions keep theirs.
+  const q = (title, body) => body ? `<div class="q">${title ? `<h4>${title}</h4>` : ''}${body}</div>` : '';
+  const figure = W.figure ? `<div class="figure">${W.figure.panes.map(([t, s], i) => `<div><div class="caps" style="color:var(--gold);margin-bottom:6px">${Library.escapeHTML(t)}</div>${drawingHTML(s.blocks, s.changed, 'fig' + i)}</div>`).join('')}<p class="cap">${W.figure.caption}</p></div>` : '';
+  // A concept that the named concept needs says why, beside the named concept's own code.
+  // A sentence with code beside it, such as this one or an answer with a snippet, is in an .own box: its names of code are looked for there first.
+  const here = W.here ? `<div class="q own" data-own="here"><h4>Why ${R.name.toLowerCase()} needs it</h4><p>${W.here}</p>${codebox('The example of ' + R.name.toLowerCase(), codeHTML(R.code))}</div>` : '';
+  return `<div class="cols2"><div>
+      ${q('', `<p>${W.is}</p>`)}
+      ${q('What problem does it solve?', W.problem && `<p>${W.problem}</p>`)}
+      ${q('How does it work?', W.how && `<p>${W.how}</p>`)}
+      ${q("When do you use it, and when don't you?", W.when && W.when.map((w, i) => `<div class="own" data-own="${i}"><p>${w.html}</p>${w.code ? `<div class="snip">${codeHTML(w.code)}</div>` : ''}</div>`).join(''))}
+      ${figure}${here}
+    </div>
+    <div style="position:sticky;top:0">${codebox('The example', codeHTML(W.code), W.isAfter ? `<p class="after">${W.isAfter}</p>` : '', 'main-code')}
+      <div style="margin-top:18px">${nextButton()}</div></div></div>`;
+}
+function partsView(c) {
+  const P = CONCEPTS[c].parts, st = P.steps[step], last = step === P.steps.length - 1;
+  // The short answer to how it works, from What it is, comes first, as on graph-page.html. The parts and the steps then show it on the code.
+  return `<div class="qcard frame how"><span class="caps">How does it work?</span>${CONCEPTS[c].what.how}</div>
+    <div class="ps">
+    <div><div class="colhead">The parts</div>
+      ${P.list.filter(p => !gone(p.id, c)).map(p => `<div class="partcard" data-part="${p.id}"><div class="phead"><h5>${p.name}</h5><span class="ik" data-part="${p.id}">I know this</span></div><p>${p.html}</p></div>`).join('') || '<p class="muted">You know every part.</p>'}
+    </div>
+    ${codebox('The example', codeHTML(P.code, { cur: st.line, also: st.also, dim: st.dim, value: st.value, steps: P.steps, step }), outputHTML(st.out), 'main-code')}
+    <div><div class="colhead">The steps</div>
+      <div class="stepnav"><span class="arrow" data-step="-1">←</span><span class="arrow" data-step="1">→</span><span class="caps">Step ${step + 1} of ${P.steps.length}</span></div>
+      <div class="stlist">${P.steps.map((s, i) => `<div class="stp ${i === step ? 'cur' : i < step ? 'done' : ''}" data-i="${i}"><span class="sn">${i + 1}</span><div>${s.html}</div></div>`).join('')}</div>
+      ${last ? `<div class="endq frame"><span class="caps">${P.end.title}</span>${P.end.html}<div style="margin-top:12px">${nextButton()}</div></div>` : ''}
+    </div>
+    <svg class="links"><g class="plinks"></g><g class="slink"></g></svg></div>`;
+}
+function memoryView(c) {
+  const M = CONCEPTS[c].memory, st = M.steps[step], last = step === M.steps.length - 1;
+  return `<div class="qcard frame"><span class="caps">The question</span>${M.question}</div>
+    <div class="mem">
+      ${codebox('The example', codeHTML(CONCEPTS[c].code.length ? CONCEPTS[c].code : [], { cur: st.lines[0], also: st.also }), outputHTML(st.out), 'main-code')}
+      <div>${drawingHTML(st.blocks, st.changed, 'm')}
+        <div class="memstep frame">
+          <div class="stepnav"><span class="arrow" data-step="-1">←</span><span class="arrow" data-step="1">→</span><span class="caps">Step ${step + 1} of ${M.steps.length}</span></div>
+          <p>${st.html}</p>
+        </div>
+        ${last ? `<div class="endq frame"><span class="caps">The answer</span>${M.answer}<div style="margin-top:12px">${nextButton()}</div></div>` : ''}
+      </div>
+    </div>`;
+}
+// The button to whatever comes next: the next view of this concept, or the next concept in the teaching order.
+function nextButton() {
+  const n = nextPlace(); if (!n) return '';
+  const c = BOXES[n.box].concept;
+  // A button to another number of the star chart says that number.
+  const label = (n.box === cur.box ? '' : ROMAN(G.order.indexOf(n.box) + 1) + ' · ') + (c === BOXES[cur.box].concept ? Library.VIEW_NAMES[n.view] : CONCEPTS[c].name + ' · ' + Library.VIEW_NAMES[n.view]);
+  return `<a class="hex gold" data-next><span>Next ✦ ${label} →</span></a>`;
+}
+
+// ---------- Where the reader is: a box of the graph, and one of its views ----------
+// Every place in teaching order: each box that is taught, and each of its views. A known concept is not taught, but its page can be opened.
+function places() { return G.order.flatMap(b => BOXES[b].views.map(v => ({ box: b, view: v }))); }
+function nextPlace(dir = 1) {
+  const all = places(), i = all.findIndex(p => p.box === cur.box && p.view === cur.view);
+  return i < 0 ? null : all[i + dir] || null;
+}
+function stepsOf() { const C = CONCEPTS[BOXES[cur.box].concept]; return cur.view === 'parts' ? C.parts.steps : cur.view === 'memory' ? C.memory.steps : null; }
+function show(box, view, atEnd) {
+  if (!cur || cur.box !== box || cur.view !== view) { seenBlocks = new Set(); seenArrows = new Set(); }
+  cur = { box, view };
+  restPoint = null;
+  const s = stepsOf(); step = atEnd && s ? s.length - 1 : 0;
+  const c = BOXES[box].concept, C = CONCEPTS[c];
+  document.getElementById('kicker').innerHTML = (c === ROOT ? 'The concept you named' : 'Needed for ' + Library.escapeHTML(CONCEPTS[ROOT].name.toLowerCase())) +
+    ` <em>· ${BOXES[box].section === 'memory' ? 'memory' : 'the code'}${KNOWN.has(c) ? ' · known' : ''}</em>` +
+    (G.order.includes(box) ? ` <em>·</em> ${ROMAN(G.order.indexOf(box) + 1)} <em>of ${ROMAN(G.order.length)}</em>` : '');
+  document.getElementById('title').textContent = C.name;
+  // A tab for each view the concept has, with its number in the teaching order when it is not the box that is open.
+  const boxOfView = v => Object.keys(BOXES).find(b => BOXES[b].concept === c && BOXES[b].views.includes(v) && !BOXES[b].copyOf);
+  const tabs = Library.VIEW_ORDER.filter(v => C[v]);
+  document.getElementById('tabs').innerHTML = tabs.map((v, i) => {
+    const b = boxOfView(v), n = G.order.indexOf(b);
+    return (i ? '<span class="sep"></span>' : '') + `<span class="tab ${v === view ? 'on' : ''}" data-v="${v}">${Library.VIEW_NAMES[v]}${b !== box && n >= 0 ? ` <b>${ROMAN(n + 1)}</b>` : ''}</span>`;
+  }).join('') + '<div class="tabline" id="tabline"></div>';
+  document.querySelectorAll('.tab').forEach(t => t.onclick = () => show(boxOfView(t.dataset.v) || box, t.dataset.v));
+  const on = document.querySelector('.tab.on'), line = document.getElementById('tabline');
+  requestAnimationFrame(() => { line.style.left = on.offsetLeft + 'px'; line.style.width = on.offsetWidth + 'px'; });
+  draw(true);
+  document.getElementById('page').scrollTop = 0;
+  graph();
+}
+function draw(enter) {
+  const c = BOXES[cur.box].concept;
+  const html = cur.view === 'what' ? whatView(c) : cur.view === 'parts' ? partsView(c) : memoryView(c);
+  const box = document.getElementById('view');
+  box.innerHTML = `<div class="view" style="${enter ? '' : 'animation:none'}">${html}</div>`;
+  unmark(box, c);
+  mentions(box);
+  wire(c);
+  // A part that was pointed at stays lit through a new step, without flaring again. A name of code gets a new key, so it is lit again when it is pointed at.
+  if (pointed && (pointed.startsWith('ref:') || !box.querySelector(`.partcard[data-part="${pointed}"]`))) pointed = null;
+  box.classList.add('quiet');
+  light();
+  const at = cur.box + '|' + cur.view + '|' + step, newStep = at !== stepDrawn;
+  stepDrawn = at;
+  box.classList.toggle('same-step', !newStep);
+  afterDraw(newStep);
+}
+function go(dir) {
+  const s = stepsOf();
+  if (s && step + dir >= 0 && step + dir < s.length) { step += dir; draw(false); return; }
+  const n = nextPlace(dir); if (n) show(n.box, n.view, dir < 0);
+}
+function wire(c) {
+  document.querySelectorAll('[data-next]').forEach(b => b.onclick = () => go(1));
+  document.querySelectorAll('[data-step]').forEach(b => b.onclick = () => go(+b.dataset.step));
+  document.querySelectorAll('.stp').forEach(b => b.onclick = () => { step = +b.dataset.i; draw(false); });
+  // "I know this": the part's marks flash and vanish from the code, and the part leaves the page.
+  // When it was the last part of a concept the reader did not know, the concept is known too. saveKnown writes known.json when it can.
+  document.querySelectorAll('.ik[data-part]').forEach(b => b.onclick = () => {
+    const part = b.dataset.part;
+    point(null);
+    document.querySelectorAll(`#view .mk[data-part="${part}"]`).forEach(m => m.classList.add('vanish'));
+    b.closest('.partcard').classList.add('gone');
+    setTimeout(() => {
+      const wasKnown = KNOWN.has(c);
+      KNOWN.add(part); saveKnown({ add: part });
+      if (!wasKnown && c !== ROOT && CONCEPTS[c].parts.list.every(p => KNOWN.has(p.id))) { KNOWN.add(c); saveKnown({ add: c }); G = Library.layoutGraph(MODEL, x => KNOWN.has(x)); }
+      draw(false); graph();
+    }, 650);
+  });
+}
+
+// ---------- Pointing: a part, or a name of code in a sentence, lights its code ----------
+// Pointing at a part lights its marks on the code, and a line goes from the part's name to each mark. Pointing at a mark on the code lights
+// its part the same way. Pointing at a name of code in a sentence lights that code. The rest of the code fades, so the lit code is the one
+// thing to look at. pointed is a part's id, or 'ref:' and the key of a name of code, or null.
+// restPoint is what stays lit when nothing is pointed at: on the page of a part with no study of its own, that part.
+let pointed = null, stepDrawn = null, lineId = 0, restPoint = null;
+function point(what) {
+  what = what || restPoint;
+  if (what === pointed) return;
+  pointed = what;
+  document.getElementById('view').classList.remove('quiet');
+  light();
+  partLines(true);
+}
+// The classes for what is pointed at: the lit marks or the lit code, the lines they are on, and the code that fades.
+function light() {
+  const v = document.getElementById('view');
+  v.classList.toggle('pointing', !!pointed);
+  v.querySelectorAll('.focus').forEach(e => e.classList.remove('focus'));
+  v.querySelectorAll('.has-on').forEach(e => e.classList.remove('has-on'));
+  v.querySelectorAll('.mk.hl, .mk.hold').forEach(e => e.classList.remove('hl', 'hold'));
+  v.querySelectorAll('.ref.on, code.mention.on').forEach(e => e.classList.remove('on'));
+  v.querySelectorAll('.partcard.lit').forEach(e => e.classList.remove('lit'));
+  let lit = [];
+  if (pointed && pointed.startsWith('ref:')) {
+    const key = pointed.slice(4);
+    lit = [...v.querySelectorAll(`.ref[data-ref="${key}"]`)];
+    lit.forEach(r => r.classList.add('on'));
+    v.querySelectorAll(`code.mention[data-ref="${key}"]`).forEach(c => c.classList.add('on'));
+  } else if (pointed) {
+    lit = [...v.querySelectorAll(`.main-code .mk[data-part="${pointed}"]`)];
+    lit.forEach(m => m.classList.add('hl'));
+    v.querySelectorAll(`.partcard[data-part="${pointed}"]`).forEach(c => c.classList.add('lit'));
+  }
+  lit.forEach(t => {
+    const ln = t.closest('.ln');
+    ln.classList.add('has-on'); ln.parentElement.classList.add('focus');
+    // A mark around the lit code, or inside it, does not fade.
+    for (let m = t.parentElement.closest('.mk'); m; m = m.parentElement.closest('.mk')) m.classList.add('hold');
+    t.querySelectorAll('.mk').forEach(m => m.classList.add('hold'));
+  });
+}
+// The lines from the pointed part to each of its marks, in Parts and Steps. They leave the end of the part's first line, where a small star
+// marks the start. A line goes up or down in the space left of the line numbers, to the gap under its mark's line. It runs along that gap
+// and rises into the mark's lower left corner, so it never crosses the code. Next to each other, lines turn at different points.
+// The page of an idea with no study of its own has one of these for each place it shows the idea, so each one is drawn.
+// A part that is memory, not code, such as a context, has a line to its place in the drawing beside it instead.
+function partLines(animate) {
+  document.querySelectorAll('#view svg.links').forEach(svg => {
+    const g = svg.querySelector('.plinks'); g.innerHTML = '';
+    const host = svg.parentElement;
+    const card = pointed && !pointed.startsWith('ref:') && host.querySelector(`.partcard[data-part="${pointed}"]`);
+    if (!card) return;
+    const base = svg.getBoundingClientRect(), h = card.querySelector('.phead').getBoundingClientRect();
+    const a = { x: card.getBoundingClientRect().right - base.x + 8, y: h.y + h.height / 2 - base.y };
+    const num = host.querySelector('.main-code .ln > s');
+    const mx = num ? num.getBoundingClientRect().x - base.x - 8 : 0, w = mx - a.x;
+    host.querySelectorAll('.main-code .mk.hl').forEach((m, i) => {
+      const r = m.getBoundingClientRect(), b = { x: r.x - base.x - 2, y: r.bottom - base.y - 3 }, gy = r.bottom - base.y + 5;
+      const bend = 0.42 + 0.12 * Math.sin(i * 1.7 + a.y);
+      const d = `M${a.x} ${a.y}C${a.x + w * bend} ${a.y} ${mx - w * (0.9 - bend)} ${gy} ${mx} ${gy}C${mx + (b.x - mx) * 0.55} ${gy} ${b.x - 14} ${gy} ${b.x} ${b.y}`;
+      trace(g, a, b, { d, ca: '#fbe7b0', cb: '#7fe8d2', animate });
+    });
+    host.querySelectorAll('.drawing .target').forEach((t, i) => {
+      const r = t.getBoundingClientRect(), b = { x: r.x - base.x - 6, y: r.y + Math.min(14, r.height / 2) - base.y };
+      const dr = t.closest('.drawing'), col = [...dr.querySelectorAll('.mcols > div')].indexOf(t.closest('.mcols > div'));
+      if (col <= 0 || !t.classList.contains('blk')) return trace(g, a, b, { i, ca: '#fbe7b0', cb: '#7fe8d2', animate });
+      // A block past the first column: along the space above the blocks, then down beside its column, into its left edge,
+      // so the line crosses no other block.
+      const lane = Math.min(...[...dr.querySelectorAll('.blk')].map(x => x.getBoundingClientRect().y)) - base.y - 12;
+      const d = `M${a.x} ${a.y}C${a.x + 40} ${a.y} ${a.x + 30} ${lane} ${a.x + 80} ${lane}L${b.x - 40} ${lane}C${b.x - 12} ${lane} ${b.x - 26} ${b.y} ${b.x} ${b.y}`;
+      trace(g, a, b, { d, i, ca: '#fbe7b0', cb: '#7fe8d2', animate });
+    });
+    el('circle', { cx: a.x, cy: a.y, r: 6, fill: '#fbe7b0', class: 'lhalo' }, g);
+    el('circle', { cx: a.x, cy: a.y, r: 2.1, fill: '#fff6dc' }, g);
+  });
+}
+// The line from the ring of the step that runs to the ring of its line on the code.
+function stepLine(animate) {
+  const svg = document.querySelector('#view svg.links'); if (!svg) return;
+  const g = svg.querySelector('.slink'); if (!g) return; g.innerHTML = '';
+  const sn = svg.parentElement.querySelector('.stp.cur .sn'), bd = svg.parentElement.querySelector('.main-code .badge.on');
+  if (!sn || !bd) return;
+  const base = svg.getBoundingClientRect(), s = sn.getBoundingClientRect(), b = bd.getBoundingClientRect();
+  trace(g, { x: s.x - base.x - 5, y: s.y + s.height / 2 - base.y }, { x: b.right - base.x + 5, y: b.y + b.height / 2 - base.y }, { ca: '#e6c477', cb: '#fbe7b0', animate });
+}
+// One line from a to b: a soft glow under a fine line, in a gradient from color ca to color cb. Lines that leave one place bend at
+// different points and bow opposite ways, as the lines of Expand to Parts do. d, when given, is the line's own path. When animate is
+// true, the line is drawn in from a, and a ring flares where it ends. Then a small shooting star runs along it from a to b, again and again.
+function trace(g, a, b, { d, i = 0, ca, cb, animate }) {
+  const dx = b.x - a.x, bend = 0.42 + 0.12 * Math.sin(i * 1.7 + a.y);
+  const bow = Math.max(0, 22 - Math.abs(b.y - a.y) * 0.25) * (i % 2 ? 1 : -1);
+  d = d || `M${a.x} ${a.y}C${a.x + dx * bend} ${a.y + bow} ${b.x - dx * (0.9 - bend)} ${b.y + bow} ${b.x} ${b.y}`;
+  const id = 'lk' + lineId++;
+  const grad = el('linearGradient', { id, gradientUnits: 'userSpaceOnUse', x1: a.x, y1: a.y, x2: b.x, y2: b.y }, g);
+  el('stop', { offset: 0, 'stop-color': ca }, grad); el('stop', { offset: 1, 'stop-color': cb }, grad);
+  el('path', { d, pathLength: 1, stroke: `url(#${id})`, class: 'lglow' + (animate ? ' trace' : '') }, g);
+  el('path', { d, pathLength: 1, stroke: `url(#${id})`, class: 'lcore' + (animate ? ' trace' : '') }, g);
+  if (animate) el('circle', { cx: b.x, cy: b.y, r: 3, stroke: cb, class: 'lburst' }, g);
+  // The shooting star is three short pieces of the line with their fronts together. The shortest is the brightest,
+  // so the star has a bright head and a tail that fades. A reader who turned off motion in their system settings sees no shooting star.
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  [[.13, 1.1, .3], [.06, 1.7, .55], [.022, 2.4, 1]].forEach(([len, w, op]) => {
+    const p = el('path', { d, pathLength: 1, class: 'lcomet', 'stroke-width': w, opacity: op, 'stroke-dasharray': `${len} 2`, 'stroke-dashoffset': len + .01 }, g);
+    p.animate([{ strokeDashoffset: len + .01, easing: 'cubic-bezier(.45,0,.3,1)' }, { strokeDashoffset: len - 1.16, offset: .7 }, { strokeDashoffset: len - 1.16 }],
+      { duration: 1800, delay: animate ? 480 : 0, iterations: Infinity });
+  });
+}
+
+// ---------- Every name of code in a sentence points at that code on the page ----------
+// Library.findCode, the same search the checker makes, finds each name in the plain text of the code. A sentence looks for the code it
+// names first in the code beside it (an .own box), then in the view's example, then in any code on the page. Each place it is found is
+// wrapped in a .ref span, with one key for the name. A name with no code on the page is the checker's error: it is marked in red, and
+// listed in the console.
+const CODE_BOXES = '.lines, .snip';
+// The text of one line of code, as text nodes. The labels of marks are not part of it.
+function lineNodes(src) {
+  const walker = document.createTreeWalker(src, NodeFilter.SHOW_TEXT, { acceptNode: n => n.parentElement.closest('.lab') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT });
+  const nodes = []; let n;
+  while ((n = walker.nextNode())) nodes.push(n);
+  return nodes;
+}
+// Wraps the characters from..to of one line in a span. When they cross the edge of a mark, one span cannot hold them,
+// so each text node in them gets its own span, with the same key.
+function wrapRange(src, from, to, key) {
+  const span = () => { const s = document.createElement('span'); s.className = 'ref'; s.dataset.ref = key; return s; };
+  const parts = [];
+  let at = 0;
+  lineNodes(src).forEach(n => { const a = at, b = at += n.nodeValue.length; if (a < b && a < to && b > from) parts.push({ n, a, b }); });
+  const first = parts[0], last = parts[parts.length - 1];
+  const range = document.createRange();
+  range.setStart(first.n, from - first.a);
+  range.setEnd(last.n, to - last.a);
+  try { range.surroundContents(span()); return; } catch (err) { /* The characters cross the edge of a mark. */ }
+  parts.forEach(({ n, a, b }) => {
+    const r = document.createRange();
+    r.setStart(n, Math.max(from, a) - a);
+    r.setEnd(n, Math.min(to, b) - a);
+    r.surroundContents(span());
+  });
+}
+function wrapRefs(boxes, text, key) {
+  let found = 0;
+  boxes.forEach(box => {
+    const srcs = [...box.querySelectorAll('.ln > .src')];
+    Library.findCode(srcs.map(s => lineNodes(s).map(n => n.nodeValue).join('')), text).forEach(p => { wrapRange(srcs[p.line - 1], p.from, p.to, key); found++; });
+  });
+  return found;
+}
+function placesFor(view, c) {
+  const own = c.closest('.own');
+  return [
+    ['own' + (own ? own.dataset.own : ''), own ? [...own.querySelectorAll(CODE_BOXES)] : []],
+    ['main', [...view.querySelectorAll('.main-code')].flatMap(b => [...b.querySelectorAll(CODE_BOXES)])],
+    ['all', [...view.querySelectorAll(CODE_BOXES)]],
+  ];
+}
+// Longer names are wrapped first, so a shorter name inside a longer one, such as makeCounter inside makeCounter(step: 2),
+// is wrapped inside the longer one's span. A part's name above its sentences is not linked: pointing at the part lights its marks.
+function mentions(view) {
+  const keys = new Map();
+  [...view.querySelectorAll('code')].filter(c => !c.closest('h5'))
+    .map(c => ({ c, text: c.textContent.trim(), tries: placesFor(view, c) }))
+    .sort((a, b) => b.text.length - a.text.length)
+    .forEach(({ c, text, tries }) => {
+      for (const [where, boxes] of tries) {
+        if (!boxes.length) continue;
+        const k = where + ':' + text;
+        if (!keys.has(k)) { const key = 'r' + keys.size; keys.set(k, wrapRefs(boxes, text, key) ? key : null); }
+        if (keys.get(k)) { c.classList.add('mention'); c.dataset.ref = keys.get(k); return; }
+      }
+      c.classList.add('unmatched');
+      c.title = 'No code on this page shows this';
+      console.warn(`Checker: "${text}" names code that the page does not show.`);
+    });
+}
+
+// ---------- The graph: a column of stars in two sections, the code on top and memory below ----------
+function graph() {
+  const svg = document.getElementById('graph'); svg.innerHTML = '';
+  const d = Sky.defsFor(svg), pos = {}, ROWH = 84, known = b => KNOWN.has(BOXES[b].concept);
+  let y = 0;
+  G.sections.forEach((s, si) => {
+    if (si) {
+      el('line', { x1: 0, y1: y + 8, x2: 310, y2: y + 8, stroke: '#e6c477', 'stroke-width': 4, opacity: .25, filter: 'url(#glow)' }, svg);
+      el('line', { x1: 0, y1: y + 8, x2: 310, y2: y + 8, stroke: 'rgba(230,196,119,.55)', 'stroke-width': .8 }, svg);
+      el('text', { x: 155, y: y + 12, 'text-anchor': 'middle', style: 'font-size:11px;fill:#fbe7b0' }, svg).textContent = '✦';
+      y += 30;
+    }
+    el('text', { x: 6, y: y + 18, style: 'font-family:Jost;font-size:10px;letter-spacing:.26em;fill:#e6c477' }, svg).textContent = s.name.toUpperCase();
+    el('text', { x: 6, y: y + 33, style: 'font-family:Jost;font-size:9.5px;letter-spacing:.14em;fill:#7e7c90' }, svg).textContent = s.note.toUpperCase();
+    y += 62;
+    // The concepts to teach go down the main column in teaching order, one to a row, so their numbers run I, II, III from the top.
+    // A known concept sits above the first concept here that needs it: in a row of its own at the top of the section when that
+    // concept is the first one taught here, or else at the side of the concept taught just before that one, with its name below it.
+    const teach = G.order.filter(b => s.boxes.includes(b)), side = s.boxes.filter(known);
+    const firstUser = k => teach.findIndex(b => G.edges.some(e => e.from === b && e.to === k));
+    const top = side.filter(k => firstUser(k) <= 0);
+    if (top.length) {
+      top.forEach((k, j) => { pos[k] = top.length === 1 ? { x: 96, y: y + 10 } : { x: 96 + j * 120, y: y + 10, below: true }; });
+      y += ROWH;
+    }
+    teach.forEach((b, i) => {
+      pos[b] = { x: 96, y: y + 10 };
+      side.filter(k => firstUser(k) - 1 === i).forEach((k, j) => { pos[k] = { x: 270 - j * 60, y: y + 16, below: true }; });
+      y += ROWH;
+    });
+    y += 6;
+  });
+  svg.setAttribute('viewBox', `0 0 310 ${Math.max(y, 200)}`);
+  // A line from each box to each box it needs. A box comes after what it needs, so each line runs down from the box it needs.
+  // A line that would run behind a star curves out around it.
+  G.edges.forEach((e, i) => {
+    const a = pos[e.from], z = pos[e.to]; if (!a || !z) return;
+    const [p, q] = a.y < z.y ? [a, z] : [z, a];
+    const rows = Math.round((q.y - p.y) / ROWH);
+    let dd;
+    if (Math.abs(p.x - q.x) < 4 && rows > 1) { const out = 30 + rows * 12; dd = `M${p.x - 12} ${p.y + 6}C${p.x - out} ${p.y + 50} ${q.x - out} ${q.y - 50} ${q.x - 12} ${q.y - 6}`; }
+    else if (Math.abs(p.x - q.x) < 4) dd = `M${p.x} ${p.y + 14}C${p.x + 10} ${(p.y + q.y) / 2 - 10} ${q.x - 10} ${(p.y + q.y) / 2 + 10} ${q.x} ${q.y - 14}`;
+    // From a star at the side: down and inward first, between the name beside the row and the name under the star, then into the star below.
+    else { const dir = Math.sign(q.x - p.x); dd = `M${p.x + 10 * dir} ${p.y + 6}C${p.x + 40 * dir} ${p.y + 24} ${q.x} ${q.y - 44} ${q.x} ${q.y - 14}`; }
+    const toKnown = known(e.to), col = toKnown ? 'rgba(141,146,168,.6)' : e.from === cur.box ? '#e6c477' : '#c3b0ff';
+    if (!toKnown) el('path', { d: dd, fill: 'none', stroke: col, 'stroke-width': 4, opacity: .22, filter: 'url(#glow)' }, svg);
+    el('path', { d: dd, fill: 'none', stroke: col, 'stroke-width': 1, opacity: toKnown ? 1 : .8, 'stroke-dasharray': toKnown ? '3 4' : 'none' }, svg);
+    if (!toKnown) el('path', { d: dd, fill: 'none', stroke: '#fff', 'stroke-width': 1.6, opacity: .5, class: 'travel', 'stroke-linecap': 'round' }, svg);
+  });
+  // The numbers are the teaching order: the order the pages of the study are read in. A row of dots joins each number to the next
+  // one in its section. Numbers already read are filled, the open one glows, and the ones still to come are outlined.
+  const nowN = G.order.indexOf(cur.box);
+  G.sections.forEach(s => {
+    const teach = G.order.filter(b => s.boxes.includes(b));
+    teach.slice(1).forEach((b, i) => {
+      const reached = G.order.indexOf(b) <= nowN;
+      for (let y = pos[teach[i]].y + 19; y <= pos[b].y - 17; y += 7) el('circle', { cx: 22, cy: y, r: .9, fill: '#e6c477', opacity: reached ? .75 : .3 }, svg);
+    });
+  });
+  for (const b in pos) {
+    const p = pos[b], B = BOXES[b], kn = known(b), isNow = b === cur.box || B.copyOf === cur.box, n = G.order.indexOf(b);
+    const g = el('g', { transform: `translate(${p.x},${p.y})`, style: 'cursor:pointer', class: 'gstar', 'data-b': b }, svg);
+    if (isNow) {
       const ring = el('g', {}, g);
       el('animateTransform', { attributeName: 'transform', type: 'rotate', from: '0', to: '360', dur: '60s', repeatCount: 'indefinite' }, ring);
-      el('circle', { r: 26, fill: 'none', stroke: 'rgba(230,196,119,.3)', 'stroke-dasharray': '1 3' }, ring);
+      el('circle', { r: 24, fill: 'none', stroke: 'rgba(230,196,119,.35)', 'stroke-dasharray': '1 3' }, ring);
     }
-    el('circle', { r: r * 4.2, fill: now ? 'url(#hGold)' : 'url(#hVio)', class: 'halo', style: `animation-delay:${(-Math.random() * 4).toFixed(2)}s` }, g);
-    const L = r * (now ? 5.5 : 3), w = r * .16;
-    el('path', { d: `M${-L} 0L0 ${-w}L${L} 0L0 ${w}ZM0 ${-L}L${w} 0L0 ${L}L${-w} 0Z`, fill: '#fffbea', opacity: now ? .85 : .4, filter: 'url(#soft)' }, g);
-    el('circle', { r, fill: 'none', stroke: now ? '#e6c477' : '#c3b0ff', 'stroke-width': .9, opacity: .8 }, g);
-    el('circle', { r: r * .5, fill: '#fff' }, g);
+    Sky.star(g, d, { r: isNow ? 8.5 : 6.2, known: kn, color: isNow ? '#e6c477' : '#c3b0ff', strength: isNow ? 1.3 : .8, flare: isNow ? 5.5 : 3, flareOpacity: isNow ? .85 : .4 });
+    el('circle', { r: 16, fill: 'transparent' }, g);
+    if (n >= 0) {
+      const read = n < nowN, nb = el('g', { transform: `translate(22,${p.y})` }, svg);
+      if (isNow) el('rect', { x: -9, y: -9, width: 18, height: 18, transform: 'rotate(45)', fill: 'none', stroke: '#e6c477', 'stroke-width': 3, opacity: .55, filter: 'url(#glow)' }, nb);
+      el('rect', { x: -9, y: -9, width: 18, height: 18, transform: 'rotate(45)', fill: read ? 'rgba(230,196,119,.82)' : 'rgba(8,10,24,.95)', stroke: isNow ? '#fbe7b0' : read ? '#e6c477' : 'rgba(230,196,119,.4)', 'stroke-width': isNow ? 1.2 : .9 }, nb);
+      el('text', { y: 3.4, 'text-anchor': 'middle', style: `font-family:Cinzel;font-size:9.5px;fill:${read ? '#0b1024' : isNow ? '#fff3cf' : 'rgba(251,231,176,.6)'}` }, nb).textContent = ROMAN(n + 1);
+    }
+    const sub = kn ? 'Known' : B.views.map(v => Library.VIEW_NAMES[v]).join(' · ');
+    const lx = p.below ? p.x : p.x + 20, ly = p.below ? p.y + 26 : p.y - 1, anchor = p.below ? 'middle' : 'start';
+    const name = CONCEPTS[B.concept].name;
+    el('text', { x: lx, y: ly, 'text-anchor': anchor, style: `font-family:Jost;font-size:13px;letter-spacing:.05em;fill:${kn ? '#8d92a8' : isNow ? '#fbe7b0' : '#ece6d6'};paint-order:stroke;stroke:#080b1c;stroke-width:3px` }, svg).textContent = name;
+    el('text', { x: lx, y: ly + 14, 'text-anchor': anchor, style: `font-family:Jost;font-size:8.5px;letter-spacing:.18em;fill:${isNow ? '#e6c477' : '#7e7c90'};paint-order:stroke;stroke:#080b1c;stroke-width:3px` }, svg).textContent = sub.toUpperCase();
   }
-  // The number in the teaching order, in a diamond to the left of the star.
-  if (n.num) {
-    const b = el('g', { transform: `translate(${n.x - 74},${n.y})` }, svg);
-    el('rect', { x: -10, y: -10, width: 20, height: 20, transform: 'rotate(45)', fill: 'rgba(8,10,24,.95)', stroke: n.state === 'now' ? '#e6c477' : 'rgba(230,196,119,.5)', 'stroke-width': .9 }, b);
-    const t = el('text', { y: 3.6, 'text-anchor': 'middle', style: 'font-family:Cinzel;font-size:10px;fill:#fbe7b0' }, b); t.textContent = n.num;
+  // Pointing at a star shows its first fact. Clicking it opens that concept, at that level.
+  svg.querySelectorAll('.gstar').forEach(g => {
+    const B = BOXES[g.dataset.b], I = LIB.ideas[B.concept];
+    g.onmouseenter = () => { const r = g.getBoundingClientRect();
+      Sky.show({ name: I.name, first: Library.escapeHTML(I.first), note: KNOWN.has(B.concept) ? 'Known' : 'Read ' + ROMAN(G.order.indexOf(g.dataset.b) + 1) + ' of ' + ROMAN(G.order.length), tone: KNOWN.has(B.concept) ? 'known' : '' }, r.x + r.width / 2, r.y + r.height / 2); };
+    g.onmouseleave = Sky.hide;
+    g.onclick = () => { const b = B.copyOf || g.dataset.b; show(b, BOXES[b].views[0]); };
+  });
+}
+
+// ---------- An idea with no study of its own, such as a part: its first fact, what it is made of, and what uses it ----------
+// The page shows the idea itself, never only words about it: each place where a concept's example has it, with that concept's
+// own explanation of it from Parts and Steps, and a line to each of its marks on the code, as Parts and Steps draws them.
+// placesOf finds those places, in this order, and stops at the first rule that finds any:
+// 1. the concepts whose Parts and Steps explain it, and mark it on their code;
+// 2. for a part inside another part, such as an argument inside a call: the marks of the outer part whose label is this part's name;
+// 3. the concepts whose What it is marks it on their example;
+// 4. for memory, such as a context: a block of that name in a drawing of memory;
+// 5. for a region of memory, such as the stack: the drawing's column of that name, in a concept that the ideas made of it depend on.
+function placesOf(id) {
+  const P = PIECES[id], name = P.name.toLowerCase();
+  // The ideas made of it come first, then the ideas they depend on, then every other idea with a study.
+  const users = Object.keys(PIECES).filter(q => PIECES[q].of.includes(id));
+  const rank = k => users.includes(k) ? 0 : users.some(u => (LIB.ideas[u].deps || []).includes(k)) ? 1 : 2;
+  const studies = Object.keys(LIB.ideas).filter(k => LIB.hasStudy(k)).sort((x, y) => rank(x) - rank(y));
+  const model = k => LIB.study(k).CONCEPTS[k];
+  const marks = (code, part) => code.some(l => l.includes(`data-part="${part}"`));
+  let out = studies.flatMap(k => {
+    const c = model(k), p = c.parts && c.parts.list.find(x => x.id === id);
+    return p && marks(c.parts.code, id) ? [{ concept: k, name: p.name, html: p.html, code: c.parts.code, keep: m => m.dataset.part === id }] : [];
+  });
+  if (!out.length) out = Object.keys(PIECES).filter(q => PIECES[q].of.includes(id)).flatMap(q => studies.flatMap(k => {
+    const c = model(k), p = c.parts && c.parts.list.find(x => x.id === q);
+    const keep = m => m.dataset.part === q && (m.dataset.label || '').toLowerCase() === name;
+    return p && c.parts.code.some(l => l.includes(`data-part="${q}" data-label="${name}"`)) ? [{ concept: k, name: P.name, html: p.html, code: c.parts.code, keep }] : [];
+  }));
+  if (!out.length) out = studies.flatMap(k => { const c = model(k); return c.what && marks(c.what.code, id) ? [{ concept: k, name: P.name, code: c.what.code, keep: m => m.dataset.part === id }] : []; });
+  // The drawings of a concept: the panes of its figure, then each step of In memory.
+  const drawings = k => { const c = model(k); return [...(c.what && c.what.figure ? c.what.figure.panes.map(([, s]) => s.blocks) : []), ...(c.memory ? c.memory.steps.map(s => s.blocks) : [])]; };
+  if (!out.length) out = studies.flatMap(k => {
+    const blocks = drawings(k).find(bs => bs.some(b => b.title.toLowerCase() === name));
+    return blocks ? [{ concept: k, name: P.name, blocks, target: b => b.title.toLowerCase() === name }] : [];
+  }).slice(0, 1);
+  if (!out.length && ['stack', 'heap'].includes(name)) {
+    const k = studies.find(k => drawings(k).length);
+    if (k) out = [{ concept: k, name: P.name, blocks: drawings(k)[0], column: name }];
   }
-  // The name, to the right of the star, or under it for a known concept at the side.
-  const lx = n.below ? n.x : n.x + 22, ly = n.below ? n.y + 26 : n.y + (n.sub ? -1 : 4);
-  const t = el('text', { x: lx, y: ly, 'text-anchor': n.below ? 'middle' : 'start', style: `font-family:Jost;font-size:13px;letter-spacing:.05em;fill:${n.state === 'known' ? '#8d92a8' : n.state === 'now' ? '#fbe7b0' : '#ece6d6'};paint-order:stroke;stroke:#080b1c;stroke-width:3px` }, svg);
-  t.textContent = n.name;
-  if (n.sub) {
-    const s = el('text', { x: lx, y: ly + 14, 'text-anchor': n.below ? 'middle' : 'start', style: `font-family:Jost;font-size:8.5px;letter-spacing:.2em;fill:${n.state === 'now' ? '#e6c477' : '#7e7c90'};paint-order:stroke;stroke:#080b1c;stroke-width:3px` }, svg);
-    s.textContent = n.sub.toUpperCase();
-  }
+  return out;
+}
+function partPage(id) {
+  const P = PIECES[id], users = Object.keys(PIECES).filter(k => PIECES[k].of.includes(id));
+  document.getElementById('kicker').innerHTML = 'An idea in the library <em>· no study of its own yet</em>';
+  document.getElementById('title').textContent = P.name;
+  document.getElementById('tabs').innerHTML = '';
+  const places = placesOf(id), first = Library.escapeHTML(P.first);
+  document.querySelector('aside').innerHTML = `<p class="intro"><b>${P.name}</b> has no example of its own, so it has no graph yet. ${places.length ? 'This page shows it in the example of each idea that has it.' : 'It is explained in the study of each idea that is made of it.'}</p>`;
+  const list = ids => ids.map(k => `<div class="partcard"><h5>${PIECES[k].name}</h5><p>${Library.escapeHTML(PIECES[k].first)}</p>${LIB.hasStudy(k) ? `<a class="hex" href="page.html?id=${k}"><span>Open its study →</span></a>` : ''}</div>`).join('');
+  // When the first place has no explanation of its own, its card answers "What is it?", so the answer is not written twice.
+  const own = places.length && places[0].html;
+  const place = (s, i) => `<section class="seen own" data-own="p${i}">
+      <div class="colhead">In the example of ${LIB.ideas[s.concept].name.toLowerCase()}${LIB.hasStudy(s.concept) ? `<a class="seen-go" href="page.html?id=${s.concept}">Open its study →</a>` : ''}</div>
+      <div class="seen-grid${s.blocks ? ' drawn' : ''}">
+        <div><div class="partcard" data-part="${id}"><div class="phead"><h5>${s.html ? s.name : i ? s.name : 'What is it?'}</h5></div><p>${s.html || first}</p></div></div>
+        ${s.code ? codebox('The example', codeHTML(s.code), '', 'main-code') : drawingHTML(s.blocks, [], 'part' + i)}
+        <svg class="links"><g class="plinks"></g></svg>
+      </div></section>`;
+  document.getElementById('view').innerHTML = `<div class="view">${own || !places.length ? `<div class="q"><h4>What is it?</h4><p>${first}</p></div>` : ''}
+    ${places.map(place).join('')}
+    ${P.of.length ? `<div class="colhead">What it is made of</div>${list(P.of)}` : '<p class="muted">It cannot be split any further.</p>'}
+    ${users.length ? `<div class="colhead" style="margin-top:24px">The ideas made of it</div>${list(users)}` : ''}</div>`;
+  const view = document.getElementById('view');
+  // Only this part's marks stay on each example, and a part inside another part takes over the mark that has its name.
+  view.querySelectorAll('.seen').forEach((sec, i) => {
+    const s = places[i];
+    sec.querySelectorAll('.mk[data-part]').forEach(m => { if (s.keep && s.keep(m)) m.dataset.part = id; else m.replaceWith(...m.childNodes); });
+    if (s.target) sec.querySelectorAll('.blk').forEach(b => { const x = s.blocks.find(x => x.id === b.dataset.b); if (x && s.target(x)) b.classList.add('hl', 'target'); });
+    if (s.column) sec.querySelectorAll('.colh').forEach(h => { if (h.textContent.trim().toLowerCase() === s.column) h.classList.add('target'); });
+  });
+  labelMarks(view);
+  mentions(view);
+  // Once the labels have moved apart, the part is lit, and its lines are drawn in.
+  requestAnimationFrame(() => setTimeout(() => {
+    view.querySelectorAll('.drawing').forEach(arrows);
+    restPoint = id; pointed = null; point(id);
+  }, 40));
+}
+
+// ---------- Starting ----------
+addEventListener('keydown', e => { if (!G) return; if (e.key === 'ArrowRight') go(1); if (e.key === 'ArrowLeft') go(-1); });
+addEventListener('resize', () => { document.querySelectorAll('#view .drawing').forEach(arrows); partLines(false); stepLine(false); });
+document.fonts.ready.then(() => { partLines(false); stepLine(false); });
+// Pointing: at a name of code in a sentence, at a part, or at a part's mark on the code. Between two parts, the part stays lit.
+document.addEventListener('mouseover', e => {
+  const m = e.target.closest('#view code.mention');
+  if (m) return point('ref:' + m.dataset.ref);
+  if (!cur) return point(null);
+  const parts = cur.view === 'parts';
+  const card = parts && e.target.closest('#view .partcard[data-part]:not(.gone)');
+  const mark = parts && e.target.closest('#view .main-code .mk[data-part]');
+  if (card) point(card.dataset.part);
+  else if (mark && document.querySelector(`#view .partcard[data-part="${mark.dataset.part}"]`)) point(mark.dataset.part);
+  else if (!(parts && pointed && !pointed.startsWith('ref:') && e.target.closest('#view .ps > div:first-child'))) point(null);
+});
+// Clicking a name of code brings its code into view, and the code flashes.
+document.addEventListener('click', e => {
+  const m = e.target.closest('#view code.mention'); if (!m) return;
+  const refs = [...document.querySelectorAll(`#view .ref[data-ref="${m.dataset.ref}"]`)], r = refs[0].getBoundingClientRect();
+  if (r.top < 70 || r.bottom > innerHeight) refs[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+  refs.forEach(x => { x.classList.remove('flash'); void x.offsetWidth; x.classList.add('flash'); });
+});
+document.getElementById('toHome').onclick = () => Sky.go('home.html', 60, 30);
+document.getElementById('toExpand').onclick = () => Sky.go('expand.html' + (askedRoot ? `?root=${askedRoot}` : ''), 180, 30);
+if (!MODEL) partPage(askedId);
+else {
+  const taught = [...new Set(G.order.map(b => BOXES[b].concept))].filter(c => c !== ROOT).length;
+  // The star chart: the concepts this study teaches, and the order they come in.
+  document.getElementById('chartSub').textContent = 'of ' + CONCEPTS[ROOT].name;
+  document.getElementById('intro').innerHTML = `<b>${CONCEPTS[ROOT].name}</b> is taught one level at a time: first the code, then memory. ` +
+    (taught ? `It needs ${taught === 1 ? '1 concept' : taught + ' concepts'} you do not know yet, each taught right before the view that uses it.` : 'You know everything it needs.') +
+    (G.order.length > 1 ? ` The number beside each one is the order you read it in: I first, then II${G.order.length > 2 ? ', down to ' + ROMAN(G.order.length) : ''}.` : '');
+  // The page opens on the concept that was asked for, or else on the first place in the teaching order.
+  const want = inside ? Object.keys(BOXES).find(b => BOXES[b].concept === askedId && !BOXES[b].copyOf) : null;
+  const first = places()[0] || { box: G.sections[0].root, view: BOXES[G.sections[0].root].views[0] };
+  if (want) show(want, BOXES[want].views[0]); else show(first.box, first.view);
 }
 </script>
 </body>

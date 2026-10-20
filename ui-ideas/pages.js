@@ -137,8 +137,30 @@ function startStudy(id) { location.href = studyHref(id); }
 
 // library/server.js serves these pages and writes known.json. Each id the reader marks as known, and each id they remove
 // in What I know, is sent to it, so the change is still there after a reload.
-// A server that only serves files, such as python3 -m http.server, cannot write known.json. There the pages send nothing,
-// and every change lasts until the page is reloaded.
+// A server that only serves files, such as python3 -m http.server or GitHub Pages, cannot write known.json. There each change
+// is kept in this browser's localStorage instead, as the ids added to known.json's list and the ids removed from it.
+// They are applied to known.json's ids each time a page opens, so an id added to known.json later still reaches this browser.
+// Each origin has its own localStorage, so a page that library/server.js serves never reads them.
+const BROWSER_KNOWN = 'stoicheiaKnown';
+function browserChanges() {
+  try {
+    const c = JSON.parse(localStorage.getItem(BROWSER_KNOWN));
+    if (c && Array.isArray(c.add) && Array.isArray(c.remove)) return c;
+  } catch (e) {}
+  return { add: [], remove: [] };
+}
+(() => {
+  const c = browserChanges();
+  c.add.forEach(id => { if (LIB.ideas[id]) KNOWN.add(id); });
+  c.remove.forEach(id => KNOWN.delete(id));
+})();
+// An id is in at most one of the two lists: the last change made to it.
+function keepInBrowser(change) {
+  const c = browserChanges(), id = change.add || change.remove;
+  c.add = c.add.filter(x => x !== id); c.remove = c.remove.filter(x => x !== id);
+  (change.add ? c.add : c.remove).push(id);
+  try { localStorage.setItem(BROWSER_KNOWN, JSON.stringify(c)); } catch (e) {}
+}
 let serverWrites = null;
 let saving = Promise.resolve();
 function saveKnown(change) {
@@ -151,7 +173,7 @@ function saveKnown(change) {
     : Promise.resolve(false));
   // The changes are sent one at a time, in the order the reader made them, so known.json ends with the last one.
   saving = saving.then(() => serverWrites).then(writes => {
-    if (!writes) return;
+    if (!writes) return keepInBrowser(change);
     return fetch('/known', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(change) })
       .then(r => r.json().then(out => { if (!r.ok) console.warn(`known.json was not changed: ${out.problems.join(' ')}`); }));
   }).catch(err => console.warn(`known.json was not changed: ${err.message}`));

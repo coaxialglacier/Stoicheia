@@ -2,10 +2,10 @@
   "id": "capture",
   "name": "Capture",
   "area": "swift",
-  "first": "A closure keeps each outside constant and variable that its body uses.",
+  "first": "A closure keeps each constant and variable from the function around it that its body uses.",
   "parts": ["declared-outside", "used-in-body"],
   "dependsOn": [
-    { "id": "closure", "views": ["what", "parts"], "why": "Capture is what a closure does with a constant or variable from outside its braces that its body uses." }
+    { "id": "closure", "views": ["what", "parts"], "why": "Capture is what a closure does with a constant or variable from the function around it that its body uses." }
   ],
   "example": {
     "code": [
@@ -25,7 +25,7 @@
   },
   "views": {
     "what": {
-      "is": "Capture is what a closure does with a constant or variable that is declared outside its braces and used in its body: the closure keeps it, so the body can use it each time the closure runs.",
+      "is": "Capture is what a closure does with a constant or variable that is declared in the function around it, outside its braces, and used in its body: the closure keeps it, so the body can use it each time the closure runs.",
       "marks": [
         { "line": 2, "text": "greeting", "part": "declared-outside", "label": "declared outside the braces" },
         { "line": 4, "text": "greeting", "part": "used-in-body", "label": "used in the body" }
@@ -34,13 +34,13 @@
       "problem": "A closure's body often needs a value that the code around the closure already has, such as `greeting`. Capture lets the body use that value by its name, without passing it in as an argument at each call.",
       "how": "When line 3 makes the closure, the closure captures `greeting`. Each call of `greet` runs the body, and the body uses the captured `greeting`.",
       "when": [
-        { "text": "Capture happens on its own, whenever the body uses a name from outside the braces. So the choice is between a captured value and a parameter. A captured value, such as `greeting`, is the same at every call. A parameter, such as `name`, gets a new value from each call." }
+        { "text": "Capture happens on its own, whenever the body uses a constant or variable from the function around the closure. So the choice is between a captured value and a parameter. A captured value, such as `greeting`, is the same at every call. A parameter, such as `name`, gets a new value from each call." }
       ]
     },
     "parts": {
       "parts": [
         { "part": "declared-outside", "name": "Declared outside the braces", "text": "`greeting` is declared on line 2, inside `sayHello()`, before the closure's `{` on line 3. So it is outside the closure's braces." },
-        { "part": "used-in-body", "name": "Used in the body", "text": "The body uses `greeting` on line 4. Each name that the body uses, and that is declared outside the braces, is a name the closure captures." }
+        { "part": "used-in-body", "name": "Used in the body", "text": "The body uses `greeting` on line 4. Each constant or variable that the body uses, and that is declared in `sayHello()` outside the braces, is one that the closure captures." }
       ],
       "marks": [
         { "line": 2, "text": "greeting", "part": "declared-outside", "label": "declared outside the braces" },

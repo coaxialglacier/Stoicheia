@@ -1,6 +1,6 @@
 {
   "id": "return-statement",
   "name": "return",
-  "first": "The word that ends a call, and gives back the value written after it.",
+  "first": "The keyword that ends a call of a function, and gives back the value written after it.",
   "parts": []
 }

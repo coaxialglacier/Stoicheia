@@ -1,6 +1,6 @@
 {
   "id": "parameter",
   "name": "Parameter",
-  "first": "One input of a function or closure: a name, a colon, and the type of the value it holds.",
+  "first": "One input of a function or closure. It has a name, and the type of the value it holds.",
   "parts": []
 }

@@ -1,0 +1,82 @@
+{
+  "id": "protocol",
+  "name": "Protocol",
+  "area": "swift",
+  "first": "A named list of requirements, such as methods and properties, that a type conforms to by naming the protocol and having everything it requires.",
+  "parts": ["protocol-keyword", "requirement", "conformance", "implementation"],
+  "dependsOn": [
+    { "id": "function", "views": ["what", "parts"],
+      "why": "A protocol's method requirement is written as the first line of a function, with no body.",
+      "whyInExample": "Line 2 of `Greeter` is the first line of a function, `greet(name:)`, as line 1 of `greet` is, but with no body." }
+  ],
+  "example": {
+    "code": [
+      "protocol Greeter {",
+      "    func greet(name: String) -> String",
+      "}",
+      "struct Friendly: Greeter {",
+      "    func greet(name: String) -> String {",
+      "        return \"Hello, \\(name)\"",
+      "    }",
+      "}",
+      "let host = Friendly()",
+      "print(host.greet(name: \"Ana\"))"
+    ]
+  },
+  "snippets": {
+    "two": {
+      "code": [
+        "protocol Greeter {",
+        "    func greet(name: String) -> String",
+        "}",
+        "struct Friendly: Greeter {",
+        "    func greet(name: String) -> String { \"Hello, \\(name)\" }",
+        "}",
+        "struct Formal: Greeter {",
+        "    func greet(name: String) -> String { \"Good day, \\(name)\" }",
+        "}",
+        "print(Friendly().greet(name: \"Ana\"))  // Hello, Ana",
+        "print(Formal().greet(name: \"Ana\"))    // Good day, Ana"
+      ],
+      "output": ["Hello, Ana", "Good day, Ana"]
+    }
+  },
+  "views": {
+    "what": {
+      "is": "A protocol is a named list of requirements: methods and properties that a type must have. A type conforms to a protocol when it writes the protocol's name after its own, with a colon, and has everything the protocol requires.",
+      "marks": [
+        { "line": 2, "text": "func greet(name: String) -> String", "part": "requirement", "label": "requirement" },
+        { "line": 4, "text": ": Greeter", "part": "conformance", "label": "conforms to Greeter" }
+      ],
+      "afterExample": "`Greeter` is a protocol with one requirement, the method `greet(name:)`. `Friendly` conforms to `Greeter`: line 4 says so, and lines 5 to 7 give `Friendly` its own `greet(name:)`.",
+      "problem": "Code often needs to know only what a value can do, not which type it is. A protocol states what a type must be able to do, as a list of requirements, and swiftc checks that every type that conforms to it has them all.",
+      "how": "A requirement has no body: it gives only a name, a parameter list, and a return type. Each type that conforms writes its own method, with a body. If `Friendly` had no `greet(name:)`, line 4 would not build: swiftc says that type `Friendly` does not conform to protocol `Greeter`.",
+      "when": [
+        { "text": "Use one when several types must offer the same methods or properties, so that code can rely on them. Each type writes its own:", "snippet": "two" },
+        { "text": "Don't write one for a single type that no other type has to match. Then the type's own methods are enough, as `Friendly`'s would be without `: Greeter`." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "protocol-keyword", "name": "`protocol`", "text": "`protocol` is a keyword. On line 1 it declares a protocol, and the protocol's name, `Greeter`, comes right after it. The protocol's requirements are between the braces on lines 1 and 3." },
+        { "part": "requirement", "name": "The requirement, on line 2", "text": "Line 2 is a requirement: a method that every type that conforms to `Greeter` must have. A method is a function that belongs to a type. A method requirement is written as the first line of a function, with no body, so it gives only the method's name, its parameter list, and its return type." },
+        { "part": "conformance", "name": "The conformance, `: Greeter`", "text": "On line 4, `: Greeter` after the name `Friendly` says that `Friendly` conforms to `Greeter`. swiftc then checks that `Friendly` has everything that `Greeter` requires. A type that has the method, but does not write `: Greeter`, does not conform to `Greeter`." },
+        { "part": "implementation", "name": "The implementation, lines 5 to 7", "text": "Lines 5 to 7 are `Friendly`'s own `greet(name:)`. It has the name, the parameter list, and the return type of the requirement on line 2, and a body. It meets that requirement, so it is called the requirement's implementation." }
+      ],
+      "marks": [
+        { "line": 1, "text": "protocol", "part": "protocol-keyword" },
+        { "line": 2, "text": "func greet(name: String) -> String", "part": "requirement", "label": "requirement" },
+        { "line": 4, "text": ": Greeter", "part": "conformance", "label": "conformance" },
+        { "line": 5, "text": "func greet(name: String) -> String", "part": "implementation", "label": "implementation" },
+        { "line": 6, "text": "return \"Hello, \\(name)\"", "part": "implementation" }
+      ],
+      "steps": [
+        { "text": "Line 9 makes a `Friendly` value, and stores it in `host`.", "line": 9 },
+        { "text": "Line 10 calls `greet(name:)` on `host`, with the argument `\"Ana\"`.", "line": 10 },
+        { "text": "`host` is a `Friendly`, so `Friendly`'s own `greet(name:)` runs, with `name` set to `\"Ana\"`. Line 6 returns the string \"Hello, Ana\".", "line": 6, "also": [5], "value": { "line": 6, "name": "name", "is": "\"Ana\"" } },
+        { "text": "Line 10 prints {{Hello, Ana}}.", "line": 10, "prints": ["Hello, Ana"] }
+      ],
+      "end": { "kind": "answer", "text": "A protocol lists what a type must have, with no bodies. `Friendly` conforms to `Greeter`, and its own `greet(name:)` is the code that runs." }
+    }
+  }
+}

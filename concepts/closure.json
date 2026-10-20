@@ -2,7 +2,7 @@
   "id": "closure",
   "name": "Closure",
   "area": "swift",
-  "first": "A function with no name, written between braces.",
+  "first": "A function with no name, written between braces, which Swift's documentation calls a closure expression.",
   "parts": ["braces", "parameter-list", "in-keyword", "body", "capture"],
   "dependsOn": [
     { "id": "function", "views": ["what", "parts"], "why": "A closure is a function with no name, so it has a parameter list and a body, and its body runs when it is called." }
@@ -31,7 +31,7 @@
   },
   "views": {
     "what": {
-      "is": "A closure is a function with no name, written between braces. It can be stored in a constant, such as `greet`, and called later.",
+      "is": "A closure is a function with no name, written between braces. Swift's documentation calls this form a closure expression. It can be stored in a constant, such as `greet`, and called later.",
       "marks": [
         { "line": 3, "text": "{", "part": "braces", "label": "braces" },
         { "line": 5, "text": "}", "part": "braces" }
@@ -47,9 +47,9 @@
       "parts": [
         { "part": "braces", "name": "The braces, `{` and `}`", "text": "The closure starts at `{` on line 3 and ends at the matching `}` on line 5. Everything between them belongs to the closure." },
         { "part": "parameter-list", "name": "The parameter list, `(name: String)`", "text": "The inputs that the closure takes. `name` is a parameter, and `String` is its type." },
-        { "part": "in-keyword", "name": "`in`", "text": "It ends the parameter list. The body comes after it." },
+        { "part": "in-keyword", "name": "`in`", "text": "`in` is a keyword: a word that Swift reserves for its own use, as it does `func` and `let`. It ends the parameter list, and the body comes after it." },
         { "part": "body", "name": "The body", "text": "The code that runs each time the closure is called. Here it prints a greeting." },
-        { "part": "capture", "name": "Capture, the last part", "text": "The body uses `greeting`, which is declared on line 2, outside the braces. A closure captures each constant and variable from outside its braces that its body uses: it keeps `greeting`, so the body can use it each time it runs." }
+        { "part": "capture", "name": "Capture, the last part", "text": "The body uses `greeting`, which is declared on line 2, in `sayHello()` but outside the braces. A closure captures each constant and variable from the function around it that its body uses: it keeps `greeting`, so the body can use it each time it runs." }
       ],
       "marks": [
         { "line": 2, "text": "greeting", "part": "capture", "label": "declared outside the braces" },

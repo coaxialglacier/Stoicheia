@@ -1,6 +1,6 @@
 {
   "id": "in-keyword",
   "name": "in",
-  "first": "The word that ends a closure's parameter list. The body comes after it.",
+  "first": "The keyword that comes after a closure's parameter list, and after its return type when it has one. The body starts after it.",
   "parts": []
 }
