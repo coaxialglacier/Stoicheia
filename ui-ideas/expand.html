@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Star Expand</title>
-<!-- Expand to Parts in the constellation theme. It reads the concept library, as map-expand.html does: library-data.js, library.js, and pages.js. -->
+<!-- Expand to Parts in the constellation theme. It reads the concept library, as archive/map-expand.html does: library-data.js, library.js, and pages.js. -->
 <link rel="stylesheet" href="sky.css">
 <style>
 .nebula{background:
@@ -137,9 +137,9 @@ aside .caps.top{color:var(--gold)}
 <div id="card" class="frame"></div>
 
 <script src="sky.js"></script>
-<script src="../library-data.js"></script>
-<script src="../library.js"></script>
-<script src="../pages.js"></script>
+<script src="library-data.js"></script>
+<script src="library.js"></script>
+<script src="pages.js"></script>
 <script>
 const { el } = Sky;
 const svg = document.getElementById('map'), main = document.getElementById('main');
@@ -456,7 +456,7 @@ function goEast(to) {
 // with the idea we came from open and selected inside it.
 function goWest(to) {
   Sky.hint.cancel(); armed = null;
-  if (to === '#home') { const b = svg.querySelector('.compass').getBoundingClientRect(); Sky.go('home.html', b.x + b.width / 2, b.y + b.height / 2); return; }
+  if (to === '#home') { const b = svg.querySelector('.compass').getBoundingClientRect(); Sky.go('index.html', b.x + b.width / 2, b.y + b.height / 2); return; }
   const from = ROOT;
   cameFrom = null;
   Sky.pan(320);
@@ -565,7 +565,7 @@ svg.addEventListener('mouseout', e => {
 
 document.getElementById('openAll').onclick = () => { Object.keys(PIECES).forEach(id => { if (PIECES[id].of.length) OPEN.add(id); }); render(); };
 document.getElementById('closeAll').onclick = () => { OPEN.clear(); OPEN.add(ROOT); SELECTED = ROOT; render({ jump: true }); center(); };
-document.getElementById('home').onclick = () => Sky.go('home.html', 60, 30);
+document.getElementById('home').onclick = () => Sky.go('index.html', 60, 30);
 
 // The whole ideas to start from: each concept that no other idea is made of, and the one that is open.
 function roots() {

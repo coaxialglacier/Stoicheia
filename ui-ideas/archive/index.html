@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stoicheia</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+  body { overflow: hidden; }
+  /* The panel on the left: where you want to get to, and the path there, in the order a study teaches it. */
+  .side { position: fixed; left: 0; top: 52px; bottom: 0; width: 400px; padding: 24px 24px 60px; overflow: auto; background: var(--bg-deep); border-right: 1px solid var(--line); z-index: 5;
+    --serif: ui-serif, "New York", "Iowan Old Style", Georgia, serif; }
+  .side h1 { margin: 0 0 12px; font-size: 21px; font-weight: 600; }
+  /* The idea that was chosen: its area, its name, and what it is. */
+  .goalhead { margin: 22px 0 0; padding: 16px 16px 14px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--concept) 40%, transparent);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--concept) 10%, var(--panel)), var(--panel)); animation: rise 0.3s var(--ease); }
+  .goalhead .row { display: flex; align-items: center; gap: 10px; }
+  .goalhead h2 { margin: 0; flex: 1; min-width: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+  .goalhead .area { font: 600 9.5px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); margin-bottom: 4px; }
+  .goalhead .gf { font-family: var(--serif); font-size: 15px; line-height: 1.5; color: var(--muted); margin-top: 6px; }
+  .side input { width: 100%; height: 42px; padding: 0 14px; border-radius: 11px; font: 400 15px var(--sans); color: var(--text); background: var(--bg); border: 1px solid var(--line-3); outline: none; }
+  .side input:focus { border-color: var(--concept); }
+  .sugg { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; }
+  .sugg button { font-size: 12.5px; padding: 4px 10px; border-radius: 8px; cursor: pointer; color: var(--muted); background: none; border: 1px solid var(--line-2); }
+  .sugg button:hover, .sugg button.on { color: var(--text); border-color: var(--concept); }
+  .sum { margin: 24px 0 14px; font-family: var(--serif); font-size: 17px; line-height: 1.5; }
+  .sum b { font-weight: 600; }
+  .k { font: 600 10px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); margin: 18px 0 8px; }
+  .starts { display: flex; flex-wrap: wrap; gap: 6px; }
+  .starts span { font-size: 12.5px; padding: 3px 9px; border-radius: 7px; border: 1px dashed var(--known); color: var(--muted); }
+  .stepc { position: relative; display: grid; grid-template-columns: 30px 1fr; gap: 12px; padding: 0 0 18px; animation: rise 0.4s var(--ease) backwards; cursor: pointer; }
+  .stepc::before { content: ""; position: absolute; left: 14px; top: 30px; bottom: 0; width: 2px; background: color-mix(in srgb, var(--concept) 35%, transparent); }
+  .stepc:last-of-type::before { display: none; }
+  .stepc .num { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font: 700 12px var(--mono); color: var(--concept); border: 1.5px solid var(--concept); background: var(--bg-deep); z-index: 1; }
+  .stepc.goal .num { background: var(--concept); color: var(--bg-deep); box-shadow: 0 0 16px var(--concept); }
+  .stepc .nm { font-size: 15.5px; font-weight: 600; margin-top: 4px; }
+  .stepc .ff { font-family: var(--serif); font-size: 14.5px; color: var(--muted); line-height: 1.45; margin-top: 2px; }
+  .stepc .for { margin-top: 7px; padding: 7px 10px; border-radius: 8px; font-size: 12.5px; line-height: 1.45; background: color-mix(in srgb, var(--concept) 8%, transparent); }
+  .stepc .for span { display: block; font: 600 9px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--concept); margin-bottom: 2px; }
+  .stepc:hover .nm { color: #fff; }
+
+  #view { position: fixed; left: 400px; right: 0; top: 52px; bottom: 0; overflow: hidden; cursor: grab; touch-action: none; }
+  #view.panning { cursor: grabbing; }
+  #world { position: absolute; left: 0; top: 0; transform-origin: 0 0; transition: transform 0.8s var(--ease); }
+  #world.still { transition: none; }
+  .mapbtn { position: fixed; left: 418px; bottom: 16px; z-index: 6; }
+  svg#edges { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+  .region { position: absolute; border-radius: 22px; border: 1px solid var(--line); background: rgba(236, 233, 225, 0.015); }
+  .region .rn { position: absolute; left: 18px; top: 14px; font: 600 10.5px var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--faint); }
+  .nd { position: absolute; width: 160px; height: 34px; display: flex; align-items: center; gap: 9px; padding: 0 12px; border-radius: 17px; cursor: pointer; font-size: 13px; white-space: nowrap;
+    border: 1px solid color-mix(in srgb, var(--concept) 30%, transparent); background: var(--panel); transition: opacity 0.35s, border-color 0.3s, box-shadow 0.3s, background 0.3s; }
+  .nd:hover { border-color: var(--concept); }
+  .nd.known { border: 1px dashed color-mix(in srgb, var(--known) 55%, transparent); color: var(--faint); background: transparent; }
+  #world.path .nd { opacity: 0.18; }
+  #world.path .nd.onpath, #world.path .nd.start { opacity: 1; }
+  .nd.onpath { border-color: var(--concept); background: color-mix(in srgb, var(--concept) 16%, var(--panel)); box-shadow: 0 0 22px -8px var(--concept); }
+  .nd.goal { box-shadow: 0 0 0 1px var(--concept), 0 0 30px -4px var(--concept); }
+  #world.path .nd.goal { opacity: 1; }
+  .nd .pnum { position: absolute; right: -9px; top: -9px; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font: 700 10px var(--mono);
+    background: var(--concept); color: var(--bg-deep); animation: rise 0.3s var(--ease) backwards; }
+  .stepc .vw { display: inline-block; margin-left: 6px; font: 600 9.5px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--concept); }
+  .stepc .knowp { margin-top: 8px; font: 600 9.5px var(--mono); letter-spacing: 0.06em; color: var(--faint); background: none; border: 1px solid var(--line-2); border-radius: 6px; padding: 2px 7px; cursor: pointer; }
+  .stepc .knowp:hover { color: var(--fact); border-color: color-mix(in srgb, var(--fact) 60%, transparent); }
+  .sugg .yours { border-color: color-mix(in srgb, var(--concept) 55%, transparent); color: var(--text); }
+  .sugg .yours::before { content: "Your study: "; color: var(--concept); }
+  .nd .pnum { width: auto; min-width: 20px; padding: 0 5px; border-radius: 10px; }
+  /* The capsules above the top right of an idea: Examine on the chosen idea, then its number on the path. */
+  .nd .tags { position: absolute; right: -9px; top: -11px; display: flex; align-items: center; gap: 5px; }
+  .nd .tags .pnum { position: static; }
+  .nd .examine { height: 22px; display: inline-flex; align-items: center; gap: 5px; padding: 0 10px 0 8px; border-radius: 11px; cursor: pointer;
+    font: 600 11px var(--sans); color: var(--bg-deep); background: #ece9e1; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3), 0 0 22px -4px var(--concept);
+    animation: pop 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s backwards; transition: transform 0.15s, background 0.15s; }
+  .nd .examine:hover { transform: scale(1.06); background: #fff; }
+  .nd .examine svg { width: 11px; height: 11px; }
+  @keyframes pop { from { opacity: 0; transform: scale(0.4) translateY(6px); } }
+
+  /* Examining an idea: its capsule moves to where the main capsule of Expand to Parts sits, and the rest of the page fades. */
+  .side, #view, .mlegend, .top { transition: opacity 0.35s; }
+  body.leaving .side, body.leaving #view, body.leaving .mlegend { opacity: 0; }
+  .flyer { position: fixed; z-index: 50; display: flex; align-items: center; gap: 10px; padding: 0 14px 0 13px; border-radius: 21px; white-space: nowrap; overflow: hidden;
+    font-size: 13px; font-weight: 500; color: var(--text); border: 1px solid var(--concept);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--concept) 26%, #2e2d2b), color-mix(in srgb, var(--concept) 12%, #282725));
+    box-shadow: 0 0 0 1px var(--concept), 0 0 34px -8px var(--concept);
+    transition: left 0.6s var(--ease), top 0.6s var(--ease), width 0.6s var(--ease), height 0.6s var(--ease), font-size 0.6s var(--ease), border-radius 0.6s var(--ease); }
+  .flyer .d { width: 9px; height: 9px; border-radius: 50%; flex: none; background: var(--concept); box-shadow: 0 0 10px var(--concept); }
+  .mlegend { position: fixed; right: 18px; bottom: 16px; z-index: 6; padding: 8px 12px; border-radius: 10px; background: color-mix(in srgb, var(--bg-deep) 90%, transparent); border: 1px solid var(--line); }
+</style>
+</head>
+<body class="dots">
+<div class="top">
+  <span class="title">Stoicheia</span>
+  <span style="color:var(--faint);font-size:13px">Home · the library</span>
+  <span class="grow"></span>
+</div>
+
+<aside class="side" id="side">
+  <h1>Where do you want to get to?</h1>
+  <input id="q" placeholder="Name an idea" autocomplete="off" spellcheck="false">
+  <div class="sugg" id="sugg"></div>
+  <div id="path"></div>
+</aside>
+<div id="view"><div id="world"><svg id="edges"></svg></div></div>
+<div class="maplegend mlegend"><span><span class="sdot"></span>New</span><span><span class="sdot ready"></span>Ready</span><span><span class="sdot studying"></span>Studying</span><span><span class="sdot known"></span>Known</span></div>
+
+<div class="note" style="top:auto;bottom:60px">
+  <p><b>Home.</b> It opens on the study you are in the middle of. The map lights the path from what you know to that idea, numbered in the order the study teaches it, and the panel reads the path in plain sentences.</p>
+  <p>Pick another idea in the box, under it, or on the map, to see its path. On the map, the chosen idea gets an <b>Examine</b> capsule. It opens what the idea is made of, column by column. <b>I know this</b> on a step takes it off the path. Captured variables shows how a concept's views are taught: its In memory view comes after the idea only that view needs.</p>
+</div>
+
+<script src="shared.js"></script>
+<script src="../library-data.js"></script>
+<script src="../library.js"></script>
+<script src="../pages.js"></script>
+<script>
+  const world = document.getElementById('world'), view = document.getElementById('view'), edges = document.getElementById('edges');
+  const { pos, regions } = mapLayout(MAP_ORIGIN);
+  AREAS.filter(a => regions[a.id]).forEach(a => {
+    const r = regions[a.id];
+    world.insertAdjacentHTML('beforeend', `<div class="region" style="left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px"><span class="rn">${a.name}</span></div>`);
+  });
+  Object.keys(IDEAS).forEach(id => world.insertAdjacentHTML('beforeend', `<div class="nd" data-id="${id}" style="left:${pos[id].x}px;top:${pos[id].y}px"></div>`));
+  // Each idea's box shows its state, so the boxes are drawn again whenever what the reader knows changes.
+  function renderNodes() {
+    world.querySelectorAll('.nd').forEach(n => { n.className = `nd ${stateOf(n.dataset.id)}`; n.innerHTML = `${dotHTML(n.dataset.id)}<span>${IDEAS[n.dataset.id].name}</span>`; });
+  }
+
+  // The other concepts to choose from, in teaching order. A known concept is left out.
+  const SUGG = TEACHING_ORDER.filter(id => id !== STUDYING.id);
+  function renderSugg() {
+    document.getElementById('sugg').innerHTML = `<button class="yours" data-goal="${STUDYING.id}">${IDEAS[STUDYING.id].name}</button>`
+      + SUGG.filter(id => !KNOWN.has(id)).map(id => `<button data-goal="${id}">${IDEAS[id].name}</button>`).join('');
+  }
+
+  let goal = null;
+  function setGoal(id) {
+    goal = id;
+    renderNodes();
+    const steps = studyPath(id);
+    const onPath = steps.map(s => s.id);
+    // The known ideas the path stands on: every known idea that an idea on the path lists directly.
+    const starts = [...new Set(onPath.flatMap(p => IDEAS[p].deps).filter(d => KNOWN.has(d)))];
+    world.classList.toggle('path', true);
+    world.querySelectorAll('.nd').forEach(n => {
+      const nums = steps.map((s, i) => s.id === n.dataset.id ? i + 1 : 0).filter(Boolean);
+      n.classList.toggle('onpath', nums.length > 0); n.classList.toggle('goal', n.dataset.id === id); n.classList.toggle('start', starts.includes(n.dataset.id));
+      const examine = n.dataset.id === id ? `<span class="examine" data-examine="${id}" title="See what ${IDEAS[id].name} is made of"><svg viewBox="0 0 12 12"><circle cx="5" cy="5" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M7.8 7.8 L10.6 10.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>Examine</span>` : '';
+      const num = nums.length ? `<span class="pnum" style="animation-delay:${(nums[0] - 1) * 0.12}s">${nums.join(' · ')}</span>` : '';
+      if (examine || num) n.insertAdjacentHTML('beforeend', `<span class="tags">${examine}${num}</span>`);
+    });
+    document.querySelectorAll('.sugg button').forEach(b => b.classList.toggle('on', b.dataset.goal === id));
+
+    // The next step on the path that needs this idea, so each step can say what it is for.
+    const nextUser = i => steps.slice(i + 1).find(q => (q.view === 'code' ? IDEAS[q.id].codeDeps : IDEAS[q.id].deps).includes(steps[i].id) || (q.view === 'memory' && IDEAS[q.id].deps.includes(steps[i].id)));
+    const ideasFirst = [...new Set(onPath.filter(p => p !== id))].length;
+    const name = IDEAS[id].name;
+    // The chosen idea comes first.
+    const head = `<div class="goalhead"><div class="area">${areaName(IDEAS[id].area)} · ${stateText(id)}</div>
+      <div class="row"><h2>${name}</h2></div>
+      <div class="gf">${IDEAS[id].first}</div></div>`;
+    try { sessionStorage.setItem('home', id); } catch (e) {}
+    document.getElementById('path').innerHTML = head + (KNOWN.has(id)
+      ? `<p class="sum">You know <b>${name}</b> already. You can still look at what it is made of.</p>`
+      : `<p class="sum">${ideasFirst ? `To get to <b>${name}</b>, you learn ${ideasFirst === 1 ? 'one idea' : ideasFirst + ' ideas'} on the way, in this order.` : `<b>${name}</b> is ready: you know everything it needs.`}</p>
+        ${starts.length ? `<div class="k">You start from what you know</div><div class="starts">${starts.map(st => `<span>${IDEAS[st].name}</span>`).join('')}</div>` : ''}
+        <div class="k">The path</div>
+        ${steps.map((st, i) => {
+          const u = nextUser(i);
+          const isGoal = st.id === id;
+          return `<div class="stepc ${isGoal ? 'goal' : ''}" data-step="${st.id}" style="animation-delay:${i * 0.08}s"><span class="num">${i + 1}</span><div>
+            <div class="nm">${IDEAS[st.id].name}${VIEW_LABEL[st.view] ? `<span class="vw">${VIEW_LABEL[st.view]}</span>` : ''}</div>
+            ${st.view === 'memory' ? '<div class="ff">How it works in memory, now that the ideas it uses there are known.</div>' : `<div class="ff">${IDEAS[st.id].first}</div>`}
+            ${u ? `<div class="for"><span>Needed for ${IDEAS[u.id].name}${u.view === 'memory' ? ' in memory' : ''}</span>${why(u.id, st.id)}</div>` : ''}
+            ${isGoal ? '' : `<button class="knowp" data-know="${st.id}">✓ I know this</button>`}</div></div>`;
+        }).join('')}
+        <button class="btn primary" data-start="${id}">${STUDYING.id === id ? 'Continue the study' : 'Start the study'} →</button>`);
+    drawEdges(new Set([...onPath, ...starts]));
+    focusSet = new Set([...onPath, ...starts]);
+    fit();
+  }
+
+  function drawEdges(lit) {
+    edges.innerHTML = '';
+    Object.keys(IDEAS).forEach(id => IDEAS[id].deps.forEach(d => {
+      const on = lit && lit.has(id) && lit.has(d);
+      const known = KNOWN.has(d);
+      curve(edges, { x: pos[d].x + 160, y: pos[d].y + 17 }, { x: pos[id].x, y: pos[id].y + 17 }, known ? KIND_COLOR.known : KIND_COLOR.concept, KIND_COLOR.concept,
+        { horizontal: true, op: lit ? (on ? 0.95 : 0.05) : 0.22, width: on ? 2 : 1.2, dash: on && known ? '4 4' : '', travel: on && !known ? 1.8 : 0 });
+    }));
+  }
+
+  // The view zooms to the ideas on the path, with room around them, so their names can be read.
+  let focusSet = null;
+  let cam = { x: 0, y: 0, s: 1 };
+  function apply(still) { world.classList.toggle('still', !!still); world.style.transform = `translate(${cam.x}px, ${cam.y}px) scale(${cam.s})`; }
+  function fit() {
+    const W = view.clientWidth, H = view.clientHeight;
+    const ids = focusSet && focusSet.size ? [...focusSet] : Object.keys(IDEAS);
+    const x0 = Math.min(...ids.map(i => pos[i].x)) - 60, x1 = Math.max(...ids.map(i => pos[i].x)) + 220;
+    const y0 = Math.min(...ids.map(i => pos[i].y)) - 70, y1 = Math.max(...ids.map(i => pos[i].y)) + 100;
+    const sc = Math.min(1.25, W / (x1 - x0), H / (y1 - y0));
+    cam = { x: (W - (x1 - x0) * sc) / 2 - x0 * sc, y: (H - (y1 - y0) * sc) / 2 - y0 * sc, s: sc };
+    apply(false);
+  }
+
+  // The list of what the reader knows. Marking a step known takes it off the path, and every path is worked out again.
+  // saveKnown writes each change to known.json, when the server can.
+  const kl = knownList(NAMES, KNOWN, () => { renderSugg(); setGoal(goal); }, saveKnown);
+
+  function examine(id) {
+    const node = world.querySelector(`.nd[data-id="${id}"]`);
+    const r = node.getBoundingClientRect();
+    const fly = document.createElement('div');
+    fly.className = 'flyer';
+    fly.innerHTML = `<span class="d"></span><span>${IDEAS[id].name}</span>`;
+    Object.assign(fly.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px', fontSize: (13 * r.height / 34) + 'px' });
+    document.body.appendChild(fly);
+    node.style.visibility = 'hidden';
+    document.body.classList.add('leaving');
+    void fly.offsetWidth;
+    // The main capsule of Expand to Parts: 50 pixels from the left, in the middle of the space below its two bars, 230 by 42 pixels.
+    const top = 116 + (innerHeight - 116) / 2 - 21;
+    Object.assign(fly.style, { left: '50px', top: top + 'px', width: '230px', height: '42px', fontSize: '14px' });
+    setTimeout(() => { location.href = `map-expand.html?root=${id}&from=home`; }, 640);
+  }
+
+  document.addEventListener('click', e => {
+    const ex = e.target.closest('[data-examine]');
+    if (ex) { e.stopPropagation(); examine(ex.dataset.examine); return; }
+    const k = e.target.closest('[data-know]');
+    if (k) { e.stopPropagation(); kl.add(k.dataset.know); return; }
+    if (moved && e.target.closest('#view')) return;
+    const g = e.target.closest('[data-goal]') || e.target.closest('.nd');
+    if (g) { setGoal(g.dataset.goal || g.dataset.id); return; }
+    const s = e.target.closest('[data-start]');
+    if (s) { startStudy(s.dataset.start, s); return; }
+  });
+  // Pointing at a step lights that idea on the map.
+  document.getElementById('side').addEventListener('mouseover', e => {
+    const st = e.target.closest('[data-step]');
+    world.querySelectorAll('.nd').forEach(n => n.style.outline = st && n.dataset.id === st.dataset.step ? '2px solid #ece9e1' : '');
+  });
+  document.getElementById('q').addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const t = e.target.value.trim().toLowerCase();
+    const hit = Object.keys(IDEAS).find(id => IDEAS[id].name.toLowerCase().includes(t));
+    if (hit) setGoal(hit);
+  });
+  window.addEventListener('resize', fit);
+
+  // Dragging the background moves the map. The scroll wheel, or a pinch on a trackpad, zooms around the pointer.
+  let drag = null, moved = false;
+  view.addEventListener('pointerdown', e => {
+    if (e.button !== 0 || e.target.closest('.examine')) return;
+    drag = { x: e.clientX, y: e.clientY, cx: cam.x, cy: cam.y }; moved = false;
+  });
+  window.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (!moved && Math.abs(dx) + Math.abs(dy) > 5) { moved = true; view.classList.add('panning'); }
+    if (moved) { cam.x = drag.cx + dx; cam.y = drag.cy + dy; apply(true); }
+  });
+  window.addEventListener('pointerup', () => { drag = null; view.classList.remove('panning'); setTimeout(() => moved = false, 0); });
+  view.addEventListener('wheel', e => {
+    e.preventDefault();
+    const r = view.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
+    const k = Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0015));
+    const sc = Math.max(0.3, Math.min(2.5, cam.s * k));
+    cam.x = px - (px - cam.x) * (sc / cam.s); cam.y = py - (py - cam.y) * (sc / cam.s); cam.s = sc;
+    apply(true);
+  }, { passive: false });
+  // The whole library at once, and back to the chosen idea's path.
+  document.body.insertAdjacentHTML('beforeend', '<div class="mapbtn"><button class="btn" id="showAll">Show the whole library</button> <button class="btn" id="showPath">Back to the path</button></div>');
+  document.getElementById('showAll').onclick = () => { const keep = focusSet; focusSet = null; fit(); focusSet = keep; };
+  document.getElementById('showPath').onclick = () => fit();
+  renderSugg();
+  // The home page opens on the idea chosen last, or on the study in progress.
+  let back = null;
+  try { back = sessionStorage.getItem('home'); } catch (e) {}
+  setGoal(back && IDEAS[back] ? back : STUDYING.id);
+</script>
+</body>
+</html>

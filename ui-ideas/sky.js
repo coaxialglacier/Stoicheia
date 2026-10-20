@@ -1,4 +1,4 @@
-// The constellation theme, shared by the three mockups: the star field, shooting stars, the move from one page to the next,
+// The constellation theme, shared by its three pages: the star field, shooting stars, the move from one page to the next,
 // the hover card, and helpers that draw stars and lines in SVG. Each page loads it after its own markup.
 
 const Sky = (() => {

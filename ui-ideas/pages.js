@@ -1,6 +1,6 @@
 // What Home, Expand to Parts, and Graph and Page read. It opens the concept library from library-data.js,
 // and gives the pages the names they use, such as IDEAS, PIECES, and KNOWN.
-// Load it after shared.js, library-data.js, and library.js.
+// Load it after library-data.js and library.js. The archived pages in archive/ load it as ../pages.js.
 
 const LIB = Library.openLibrary(LIBRARY);
 const AREAS = Library.AREAS;
@@ -121,9 +121,10 @@ function studyIncludes(root, id) {
   (function walk(x) { if (seen.has(x)) return; seen.add(x); (LIB.entryOf(x).dependsOn || []).forEach(d => walk(d.id)); })(root);
   return seen.has(id);
 }
-// Where the study of an idea opens. A concept with an example has its full study in Graph and Page. When it is part of the study
-// of the idea that Expand to Parts has open, it opens inside that study. Every other idea opens in study.html,
-// the Graph and Page layout built from what the idea is made of.
+// Where the study of an idea opens, for the archived pages in archive/. A concept with an example has its full study in
+// graph-page.html. When it is part of the study of the idea that map-expand.html has open, it opens inside that study.
+// Every other idea opens in study.html, the Graph and Page layout built from what the idea is made of.
+// The address is relative, so it opens the page in archive/, next to the page that asked for it.
 function studyHref(id, root, from) {
   const back = from ? `&from=${from}` : '';
   if (!LIB.hasStudy(id)) return `study.html?idea=${id}${root ? `&root=${root}` : ''}${back}`;

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Star Page</title>
-<!-- Graph and Page in the constellation theme. It reads the concept library, as graph-page.html does: library-data.js, library.js, and pages.js. -->
+<!-- Graph and Page in the constellation theme. It reads the concept library, as archive/graph-page.html does: library-data.js, library.js, and pages.js. -->
 <link rel="stylesheet" href="sky.css">
 <style>
 .nebula{background:
@@ -42,13 +42,13 @@ h1{font-family:Cinzel;font-weight:500;font-size:44px;letter-spacing:.05em;margin
 /* Code in a sentence differs from the words around it only by its letters and its color. It has no box, so the space between the lines
    of a sentence stays even, and the eye reads along the line without stopping at each piece of code. A piece of code is never split
    across two lines. A part's name keeps its code in a box, because the name is where the reader looks for the part. */
-code{font-family:'JetBrains Mono',monospace;font-variant-ligatures:none;font-size:.8em;color:var(--gold2);white-space:nowrap;padding:0 .1em;border-radius:3px}
-h5 code{background:rgba(230,196,119,.08);border:1px solid rgba(230,196,119,.18);padding:1px 6px}
+code{font-family:'JetBrains Mono',monospace;font-variant-ligatures:none;font-size:.78em;color:#f3e1b6;white-space:nowrap;padding:0 .12em;border-radius:3px}
+h5 code{font-size:.76em;color:var(--gold2);background:rgba(230,196,119,.09);border:1px solid rgba(230,196,119,.24);padding:2px 7px;border-radius:5px;vertical-align:1px}
 .out{font-family:'JetBrains Mono',monospace;font-size:.8em;color:#fff3cf;background:rgba(3,5,14,.75);border:1px solid rgba(230,196,119,.3);padding:1px 7px}
-.q{margin-bottom:28px}
-/* A question is a heading, so it is larger than the 20px answer under it. */
-.q h4{font-family:Jost;font-weight:400;font-size:17px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
-.q p{font-size:20px;line-height:1.65;color:var(--ink)}
+.q{margin-bottom:32px}
+/* A question is a heading, so it is larger than the answer under it. */
+.q h4{font-family:Jost;font-weight:400;font-size:15px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+.q p{font-size:21px;line-height:1.68;color:var(--ink);max-width:820px}
 .snip{margin:10px 0 14px;font-family:'JetBrains Mono',monospace;font-variant-ligatures:none;font-size:13px;line-height:1.75;padding:12px 16px;background:rgba(3,5,14,.6);border:1px solid rgba(230,196,119,.2);border-radius:12px;color:var(--ink2);white-space:pre}
 
 .codebox{padding:20px 20px 16px}
@@ -183,7 +183,7 @@ samp{font-family:'JetBrains Mono',monospace;font-size:.8em;color:#fff3cf;backgro
 .partcard{position:relative;padding-left:16px}
 .partcard::before{content:"";position:absolute;left:0;top:13px;bottom:15px;width:1px;background:linear-gradient(180deg,var(--teal),rgba(127,232,210,.15));box-shadow:0 0 8px var(--teal);opacity:0;transition:opacity .3s}
 .partcard.lit::before{opacity:1}
-/* A part's name and its "I know this" share one line, as on graph-page.html, so the line to the code leaves from the end of that line
+/* A part's name and its "I know this" share one line, as on archive/graph-page.html, so the line to the code leaves from the end of that line
    and never crosses the part's sentences. In a narrow column, "I know this" goes under the name, at the right. */
 .phead{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px}
 .phead .ik{flex:none}
@@ -264,11 +264,11 @@ svg.links path{fill:none;stroke-linecap:round}
 <div id="card" class="frame"></div>
 
 <script src="sky.js"></script>
-<script src="../library-data.js"></script>
-<script src="../library.js"></script>
-<script src="../pages.js"></script>
+<script src="library-data.js"></script>
+<script src="library.js"></script>
+<script src="pages.js"></script>
 <script>
-// Graph and Page in the constellation theme. Everything on it comes from the concept library, the same as graph-page.html:
+// Graph and Page in the constellation theme. Everything on it comes from the concept library, the same as archive/graph-page.html:
 // LIB.study(id) gives the study of a concept, with each concept's views as HTML, and Library.layoutGraph gives its graph.
 // The address names the concept: page.html?id=closure. When Expand to Parts sends a concept that is inside the study of the
 // idea it has open, as page.html?id=heap-object&root=captured-variables, the page opens that study, on that concept.
@@ -426,7 +426,7 @@ function partsView(c) {
   const P = CONCEPTS[c].parts, st = P.steps[step], last = step === P.steps.length - 1;
   // A part's own parts, when the view explains them, come under its sentences, and each one the reader knows leaves on its own.
   const card = (p, sub) => `<div class="partcard${sub ? ' sub' : ''}" data-part="${p.id}"><div class="phead"><h5>${p.name}</h5><span class="ik" data-part="${p.id}">I know this</span></div><p>${p.html}</p>${(p.parts || []).filter(q => !gone(q.id, c)).map(q => card(q, true)).join('')}</div>`;
-  // The short answer to how it works, from What it is, comes first, as on graph-page.html. The parts and the steps then show it on the code.
+  // The short answer to how it works, from What it is, comes first, as on archive/graph-page.html. The parts and the steps then show it on the code.
   return `<div class="qcard frame how"><span class="caps">How does it work?</span>${CONCEPTS[c].what.how}</div>
     <div class="ps">
     <div><div class="colhead">The parts</div>
@@ -914,7 +914,7 @@ document.addEventListener('click', e => {
   if (r.top < 70 || r.bottom > innerHeight) refs[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
   refs.forEach(x => { x.classList.remove('flash'); void x.offsetWidth; x.classList.add('flash'); });
 });
-document.getElementById('toHome').onclick = () => Sky.go('home.html', 60, 30);
+document.getElementById('toHome').onclick = () => Sky.go('index.html', 60, 30);
 document.getElementById('toExpand').onclick = () => Sky.go('expand.html' + (askedRoot ? `?root=${askedRoot}` : ''), 180, 30);
 if (!MODEL) partPage(askedId);
 else {

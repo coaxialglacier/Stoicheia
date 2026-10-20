@@ -20,7 +20,7 @@ Read these first, every time. They are the rules this work follows:
 
 - List `concepts/`. If the concept or any of its parts already has an entry, read it. An entry that exists is not written again. Change one only to fix something that is wrong, and say so in the report.
 - Read `known.json`. A known concept is not taught, so it changes what the study shows, but not what the entries say.
-- Find every place that already names the concept or its parts, such as the old mockup data in `ui-ideas/expand-data.js` and `ui-ideas/home-data.js`. These are guesses from the first mockups, not facts. They are what step 2 checks.
+- Find every place that already names the concept or its parts, such as the old mockup data in `ui-ideas/archive/expand-data.js` and `ui-ideas/archive/home-data.js`. These are guesses from the first mockups, not facts. They are what step 2 checks.
 
 ## 2. Find out what the concept really is
 
@@ -77,7 +77,7 @@ Fix every problem until both pass. Then make sure each `ir` or `sil` check could
 
 ## 6. Look at the pages
 
-Start the `stoicheia-server` configuration in `.claude/launch.json`. Open Home, Expand to Parts on the concept (`map-expand.html?root=<id>`), and Graph and Page (`graph-page.html?root=<id>`). Step through every view. Read the console for the names-in-sentences check, which `graph-page.html` writes there.
+Start the `stoicheia-server` configuration in `.claude/launch.json`. Open Home (`index.html`), Expand to Parts on the concept (`expand.html?root=<id>`), and Graph and Page (`page.html?id=<id>`). Step through every view. Read the console for the names-in-sentences check, which `page.html` writes there.
 
 ## 7. Report to the user
 

@@ -1,4 +1,5 @@
-// Serves the pages in ui-ideas/, and writes known.json when the reader marks an idea as known or removes one:
+// Serves the pages in ui-ideas/, and writes known.json when the reader marks an idea as known or removes one.
+// The address / opens Home of the star theme, and /archive/ opens the archived pages, the warm-gray UI from before the star theme:
 //   node library/server.js
 // It listens on http://localhost:8772, or on the port in the PORT environment variable.
 //
@@ -103,6 +104,8 @@ function serveFile(req, res) {
   const file = rel && path.join(PAGES, rel);
   if (!file || !file.startsWith(PAGES + path.sep)) return sendJSON(res, 404, { problems: ['No such file.'] });
   fs.readFile(file, (err, data) => {
+    // A folder's address without its last /, such as /archive, goes to /archive/, so the links in its index.html find their pages.
+    if (err && err.code === 'EISDIR') { res.writeHead(301, { ...HEADERS, Location: `${encodeURI(rel)}/` }); return res.end(); }
     if (err) return sendJSON(res, 404, { problems: [`ui-ideas${rel} does not exist.`] });
     res.writeHead(200, { ...HEADERS, 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream', 'Content-Length': data.length });
     res.end(req.method === 'HEAD' ? undefined : data);
