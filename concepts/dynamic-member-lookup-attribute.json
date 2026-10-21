@@ -1,0 +1,6 @@
+{
+  "id": "dynamic-member-lookup-attribute",
+  "name": "Dynamic member lookup attribute",
+  "first": "The attribute, written with an at sign before the declaration of a type, that lets code use member names that the type does not declare.",
+  "parts": []
+}

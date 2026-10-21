@@ -1,0 +1,87 @@
+{
+  "id": "dynamic-member-lookup",
+  "name": "Dynamic member lookup",
+  "area": "swift",
+  "first": "A way for code to read a member of a type by a name that the type does not declare, which swiftc turns into a call of one subscript of the type with the name as a string.",
+  "parts": ["dynamic-member-lookup-attribute", "dynamic-member-subscript", "dynamic-member"],
+  "dependsOn": [
+    { "id": "function", "views": ["what", "parts"],
+      "why": "A dynamic member subscript takes a parameter, runs its body, and returns a value, as a function does." }
+  ],
+  "example": {
+    "code": [
+      "@dynamicMemberLookup",
+      "struct Settings {",
+      "    var values = [\"volume\": 7, \"brightness\": 4]",
+      "    subscript(dynamicMember key: String) -> Int {",
+      "        return values[key] ?? 0",
+      "    }",
+      "}",
+      "let settings = Settings()",
+      "print(settings.volume)",
+      "print(settings.brightness)",
+      "print(settings.contrast)"
+    ],
+    "sil": [
+      { "in": "main", "has": "string_literal utf8 \"volume\"",
+        "shows": "Line 9 makes the name volume into a string, which the program keeps as text." },
+      { "in": "main", "has": "function_ref Settings.subscript.getter",
+        "shows": "Reading settings.volume calls the subscript of Settings." }
+    ]
+  },
+  "snippets": {
+    "typo": {
+      "code": [
+        "@dynamicMemberLookup",
+        "struct Settings {",
+        "    var values = [\"volume\": 7, \"brightness\": 4]",
+        "    subscript(dynamicMember key: String) -> Int {",
+        "        return values[key] ?? 0",
+        "    }",
+        "}",
+        "let settings = Settings()",
+        "print(settings.volum)  // 0, not 7"
+      ],
+      "output": ["0"]
+    }
+  },
+  "views": {
+    "what": {
+      "is": "Dynamic member lookup lets code read a member of a type by a name that the type does not declare. swiftc turns each such name into a call of one subscript of the type, with the name as a string, and the subscript works out the value.",
+      "marks": [
+        { "line": 1, "text": "@dynamicMemberLookup", "part": "dynamic-member-lookup-attribute", "label": "allows undeclared names" },
+        { "line": 9, "text": "volume", "part": "dynamic-member", "label": "not declared" }
+      ],
+      "afterExample": "`Settings` declares no property named `volume`, yet line 9 reads `settings.volume` and prints {{7}}. The subscript on line 4 looks up `\"volume\"` in `values`.",
+      "problem": "Some values have members whose names are known only when the program runs, such as the keys of a dictionary read from a file. Without dynamic member lookup, code reads them with a string in square brackets. With it, code reads them with a dot and a name, as it reads a property.",
+      "how": "When swiftc finds a name after a dot that the type does not declare, it builds a call of the type's subscript whose argument label is `dynamicMember`, and passes the name as a string. So line 9 runs the subscript with `key` set to `\"volume\"`.",
+      "when": [
+        { "text": "Use it when a type's members come from data, such as a dictionary, and code should read them with a dot and a name." },
+        { "text": "Don't use it when the names are known as you write the code. A property for each name lets swiftc check the name. With dynamic member lookup, a misspelled name still builds:", "snippet": "typo" }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "dynamic-member-lookup-attribute", "name": "The attribute `@dynamicMemberLookup`", "text": "An attribute starts with an at sign, and gives swiftc more information about the declaration after it. On line 1, the attribute `@dynamicMemberLookup` lets code write member names after a dot that `Settings` does not declare. swiftc then checks that `Settings` has a subscript whose argument label is `dynamicMember`: without one, line 1 does not build." },
+        { "part": "dynamic-member-subscript", "name": "The dynamic member subscript, lines 4 to 6", "text": "Lines 4 to 6 are the subscript that a type with dynamic member lookup must have. A subscript is code that runs when a value is read with square brackets, as `values[key]` is on line 5. This one's argument label is `dynamicMember`, and its parameter, `key`, gets each member name as a `String`. Its return type, `Int`, is the type of every dynamic member. Line 5 returns the value for `key` in `values`, and `??` gives 0 when `values` has no value for `key`." },
+        { "part": "dynamic-member", "name": "The dynamic members, lines 9 to 11", "text": "On lines 9 to 11, the names `volume`, `brightness`, and `contrast` are written after a dot, as properties are, but `Settings` declares none of them. Each one is a dynamic member. When swiftc builds the program, it turns `settings.volume` into a call of the subscript, with `\"volume\"` as its argument. A name that is not a key in `values`, such as `contrast`, still builds." }
+      ],
+      "marks": [
+        { "line": 1, "text": "@dynamicMemberLookup", "part": "dynamic-member-lookup-attribute", "label": "attribute" },
+        { "line": 4, "text": "subscript(dynamicMember key: String) -> Int", "part": "dynamic-member-subscript", "label": "dynamic member subscript" },
+        { "line": 9, "text": "volume", "part": "dynamic-member", "label": "dynamic member" },
+        { "line": 10, "text": "brightness", "part": "dynamic-member", "label": "dynamic member" },
+        { "line": 11, "text": "contrast", "part": "dynamic-member", "label": "dynamic member" }
+      ],
+      "steps": [
+        { "text": "Line 8 makes a `Settings`, and stores it in `settings`. Its `values` holds 7 for `\"volume\"` and 4 for `\"brightness\"`.", "line": 8, "also": [3] },
+        { "text": "Line 9 reads `settings.volume`. `Settings` declares no member named `volume`, so this is a call of the subscript on line 4, with `key` set to `\"volume\"`.", "line": 9, "also": [4] },
+        { "text": "Line 5 returns the value for `\"volume\"` in `values`, which is 7.", "line": 5, "value": { "line": 5, "name": "key", "is": "\"volume\"" } },
+        { "text": "Line 9 prints {{7}}.", "line": 9, "prints": ["7"] },
+        { "text": "Line 10 reads `settings.brightness`, so the subscript runs again, with `key` set to `\"brightness\"`. Line 5 returns 4, and line 10 prints {{4}}.", "line": 10, "also": [5], "value": { "line": 5, "name": "key", "is": "\"brightness\"" }, "prints": ["4"] },
+        { "text": "Line 11 reads `settings.contrast`, and the subscript runs with `key` set to the string \"contrast\". `values` has no value for it, so `??` on line 5 gives 0, and line 11 prints {{0}}.", "line": 11, "also": [5], "value": { "line": 5, "name": "key", "is": "\"contrast\"" }, "prints": ["0"] }
+      ],
+      "end": { "kind": "answer", "text": "`Settings` declares no `volume`. swiftc turns `settings.volume` into a call of the dynamic member subscript with `\"volume\"`, and the subscript returns the value." }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "id": "dynamic-member",
+  "name": "Dynamic member",
+  "first": "A member name, written after a dot, that a type with dynamic member lookup does not declare, which swiftc turns into a call of the type's dynamic member subscript with the name as a string.",
+  "parts": []
+}

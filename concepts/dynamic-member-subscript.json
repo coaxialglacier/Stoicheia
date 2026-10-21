@@ -1,0 +1,6 @@
+{
+  "id": "dynamic-member-subscript",
+  "name": "Dynamic member subscript",
+  "first": "The subscript that a type with dynamic member lookup must have, which swiftc calls with each member name that the type does not declare.",
+  "parts": []
+}
