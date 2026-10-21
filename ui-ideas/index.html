@@ -33,10 +33,12 @@ body[data-sky="top"] .n-top,body[data-sky="architecture"] .n-architecture,body[d
   radial-gradient(ellipse 45% 35% at 35% 82%,rgba(220,100,90,.11),transparent 70%),
   radial-gradient(ellipse 120% 90% at 55% 45%,#170d24,#06040b 80%)}
 header .caps{color:var(--ink3)}
-.crumbs{display:flex;align-items:center;gap:12px;white-space:nowrap}
-.crumbs a{color:inherit;text-decoration:none;transition:color .2s}
-body:not([data-sky="top"]) .crumbs a{cursor:pointer}
-body:not([data-sky="top"]) .crumbs a:hover{color:var(--gold2)}
+/* On the night sky, the large title is under the top bar, so the top bar does not show it again. Inside a constellation it does. */
+body[data-sky="top"] header .brand{display:none}
+/* The crumbs keep their whole width, and the search field gets narrower when the top bar is short of room. */
+.crumbs{display:flex;align-items:center;gap:12px;white-space:nowrap;flex:none}
+.crumbs a{color:inherit;text-decoration:none}
+body:not([data-sky="top"]) #crumbSky{display:none}
 .crumbs span{color:var(--gold2)}
 
 /* Inside a constellation, the Milky Way, from galaxy.js, fills the sky behind the skill tree. It fades in and out with the tree. */
@@ -53,6 +55,13 @@ body:not([data-sky="top"]) .crumbs a:hover{color:var(--gold2)}
    SVG again in full when anything in it moves, so only the light layer is drawn again every frame. */
 #figures,#twinkles{position:absolute;inset:0;width:100%;height:100%;display:block;will-change:transform;pointer-events:none}
 #hits{position:absolute;inset:0;width:100%;height:100%;display:block}
+/* The title, Wardens of the Swift, from title.js, at the top of the sky. heavens.js sets its size and place. The first time Home
+   opens, it fades in as the sky comes down. While a constellation is pointed at, it dims a little, as the other two do. */
+#title{position:absolute;display:block;overflow:visible;pointer-events:none}
+#title.arrive{animation:titleIn 2.4s ease-out .4s both}
+@keyframes titleIn{from{opacity:0;filter:brightness(1.8)}to{opacity:1;filter:none}}
+#title .wt{transition:opacity .9s}
+#heavens.hovering #title .wt{opacity:.6}
 /* The sky gets darker toward the edges and corners of the window. */
 #heavens::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 75% 70% at 50% 46%,transparent 55%,rgba(1,2,8,.6))}
 /* The first time Home opens, the sky comes down into place from above. */
@@ -287,8 +296,8 @@ body.skill-open #within{right:410px}
 <canvas id="sky"></canvas>
 <div id="stage">
 <header>
-  <a class="brand" href="index.html"><i>✦</i>STOICHEIA</a>
-  <div class="caps crumbs"><a id="crumbSky">The library</a><span id="crumbHere"></span></div>
+  <a class="brand" href="index.html"></a>
+  <div class="caps crumbs"><a id="crumbSky">The constellations</a><span id="crumbHere"></span></div>
   <div class="grow"></div>
   <label class="skysearch"><b>✧</b><input id="sq" placeholder="Search" autocomplete="off" spellcheck="false"></label>
   <a class="harp" id="harp" aria-label="Music"></a>
@@ -297,7 +306,7 @@ body.skill-open #within{right:410px}
 <div id="about"></div>
 <div id="skyResults" class="frame"></div>
 
-<div id="heavens" class="hidden"><canvas id="gas"></canvas><canvas id="nebulae"></canvas><svg id="figures"></svg><svg id="twinkles"></svg><svg id="hits"></svg></div>
+<div id="heavens" class="hidden"><canvas id="gas"></canvas><canvas id="nebulae"></canvas><svg id="title" role="img" aria-label="Wardens of the Swift"></svg><svg id="figures"></svg><svg id="twinkles"></svg><svg id="hits"></svg></div>
 
 <div id="within" class="hidden">
   <div class="row">
@@ -338,6 +347,7 @@ body.skill-open #within{right:410px}
 <script src="pages.js"></script>
 <script src="you.js"></script>
 <script src="figure-art.js"></script>
+<script src="title.js"></script>
 <script src="heavens.js"></script>
 <script src="skilltree.js"></script>
 <script src="galaxy.js"></script>
@@ -544,7 +554,8 @@ function travelTo(next, push = true) {
 }
 addEventListener('popstate', () => { pending = askedSkill(); travelTo(askedSky(), false); });
 document.getElementById('backSky').onclick = () => travelTo(null);
-document.getElementById('crumbSky').onclick = () => { if (sky) travelTo(null); };
+// The title in the top bar shows only inside a constellation, and leads back out to the night sky.
+Sky.onBrand = () => { if (sky) travelTo(null); };
 Heavens.onEnter = id => travelTo(id);
 // A skill in the user icon's panel goes into its constellation, as clicking the constellation does.
 You.onSkill = id => travelTo(id);
@@ -555,7 +566,8 @@ You.onSkill = id => travelTo(id);
 function showView(prev, first) {
   document.body.dataset.sky = sky || 'top';
   const here = sky && CONSTELLATIONS.find(c => c.id === sky);
-  document.getElementById('crumbHere').textContent = here ? '✦  ' + here.name : '';
+  // The top bar names the view: The constellations on the night sky, and, inside one, its name, such as Language constellation.
+  document.getElementById('crumbHere').textContent = here ? here.name + ' constellation' : '';
   // Inside a constellation, the Milky Way replaces the sky's small stars, which show only while they stretch in a move.
   Galaxy.show(!!sky); Sky.quiet(!!sky && Galaxy.ok);
   if (!sky) {

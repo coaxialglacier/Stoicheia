@@ -115,7 +115,8 @@ const You = (() => {
       <div>${button('login', 'dim')}</div><a class="yquiet" data-act="out">Cancel</a>
       <p class="ynote">Stoicheia has no accounts yet. Your name is kept in this browser only, and is sent nowhere.</p>`;
     else if (view === 'settings') {
-      const s = Sky.sound.settings();
+      // The music's volume is the volume now, which a song's volume preset can make lower than the reader's.
+      const s = { ...Sky.sound.settings(), musicVol: Sky.sound.musicVolume() };
       rest = `<div class="ytitle"><span>Settings</span></div>` +
         [['musicVol', 'Music'], ['moveVol', 'Sound effects']].map(([k, name]) => `<label class="yvol"><div class="ytop"><span>${name.toUpperCase()}</span><b>${Math.round(s[k] * 100)}</b></div>
           <span class="yrange"><input type="range" data-vol="${k}" min="0" max="1" step="0.01" value="${s[k]}" style="--p:${s[k]}" aria-label="${name}"></span></label>`).join('') +

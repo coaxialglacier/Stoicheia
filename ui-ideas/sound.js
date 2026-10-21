@@ -597,9 +597,9 @@ const Sound = (() => {
   const gainOf = { music: v => v * v * .9, moves: v => v * v * 1.3 };
 
   // The songs, from audio/songs.js, which library/music.js writes from the songs in music/. They play in a shuffled order: see
-  // shuffled. Each song plays at its own gain, which brings it to the loudness of the others, and the
-  // moves use the song's own notes, so each move is in the key of the song that plays. FADE is how many seconds before a song's
-  // end the next song starts.
+  // shuffled. Each song plays at its own gain, which brings it to the loudness of the others, and its volume preset can lower
+  // the music's volume while it plays: see volume. The moves use the song's own notes, so each move is in the key of the song
+  // that plays. FADE is how many seconds before a song's end the next song starts.
   const SONGS_ = typeof SONGS === 'undefined' ? [] : SONGS, FADE = 8;
   // Chrome treats a media file opened as a file, at a file:// address, as a file of another origin, and gives Web Audio only
   // silence from it. So when this page is opened as a file, a song's bytes come from its script in audio/, which
@@ -662,6 +662,18 @@ const Sound = (() => {
       turning = false;
     }, 250);
   }
+  // The music's volume now, from 0 to 1. It is the reader's music volume, set.musicVol, except that a song with a volume preset
+  // in music/volumes.json starts no louder than its preset. Heaventree, at 80, starts at 80 when the reader's volume is higher,
+  // and at the reader's volume when it is 80 or lower. The reader can still move the volume while the song plays, and that
+  // becomes their music volume. Each new song starts at the reader's music volume, or at its own preset when that is lower.
+  // onVolume is called with each new volume, so that sound.html can show it on the page.
+  let volume = set.musicVol;
+  const api = { onVolume: null };
+  function setVolume(v, tc) {
+    volume = v;
+    if (e) { const g = e.music.vol.gain; g.cancelScheduledValues(ctx.currentTime); g.setTargetAtTime(gainOf.music(v), ctx.currentTime, tc); }
+    if (api.onVolume) api.onVolume(v);
+  }
   // Starts song i on the player p. When this round has no songs left, the next round is shuffled now, so the next song's bytes
   // can load while this one plays.
   function begin(p, i, url, tc) {
@@ -669,6 +681,7 @@ const Sound = (() => {
     try { localStorage.setItem(LAST, SONGS_[i].file); } catch (err) {}
     p.a.src = url; p.a.currentTime = 0; p.a.play().catch(() => {});
     p.g.gain.cancelScheduledValues(ctx.currentTime); p.g.gain.setTargetAtTime(SONGS_[i].gain, ctx.currentTime, tc);
+    setVolume(Math.min(set.musicVol, SONGS_[i].volume ?? 1), 2);
     if (!order.length) order = shuffled(i);
     songUrl(order[0]);
   }
@@ -682,7 +695,7 @@ const Sound = (() => {
     if (!ctx) {
       ctx = new AudioContext({ latencyHint: 'interactive' }); e = engine(ctx);
       e.setMove(set.move); e.master.gain.value = set.on ? 1 : 0;
-      e.music.vol.gain.setValueAtTime(0, ctx.currentTime); e.music.vol.gain.setTargetAtTime(gainOf.music(set.musicVol), ctx.currentTime, 2);
+      e.music.vol.gain.setValueAtTime(0, ctx.currentTime); e.music.vol.gain.setTargetAtTime(gainOf.music(volume), ctx.currentTime, 2);
       e.moves.vol.gain.value = gainOf.moves(set.moveVol);
       meter = ctx.createAnalyser(); meter.fftSize = 1024; meter.smoothingTimeConstant = .75;
       e.music.dry.connect(meter); bins = new Uint8Array(meter.frequencyBinCount);
@@ -693,8 +706,8 @@ const Sound = (() => {
     const p = players[playing];
     if (p && p.a.paused) p.a.play().catch(() => {});
   }
-  // For the music panel: the song's title, where it is in its round of the shuffle and how many songs there are, where it is in seconds, how long it
-  // is, whether it plays, and how loud the music is now in each of n bands of frequencies, from 60 Hz to 12000 Hz, each from 0 to
+  // For the music panel: the song's title, where it is in its round of the shuffle and how many songs there are, where it is in
+  // seconds, how long it is, whether it plays, and how loud the music is now in each of n bands of frequencies, from 60 Hz to 12000 Hz, each from 0 to
   // 1. The bands are measured before the music's volume, so they show the songs themselves.
   function listen(n) {
     const p = players[playing], song = SONGS_[current] || { title: '', seconds: 0 };
@@ -713,10 +726,10 @@ const Sound = (() => {
   function choose(k, v) {
     set[k] = v;
     try { localStorage.setItem(KEY, JSON.stringify(set)); } catch (err) {}
+    if (k === 'musicVol') setVolume(v, .08);
     if (!e) return;
     const t = ctx.currentTime;
     if (k === 'move') e.setMove(v);
-    if (k === 'musicVol') { e.music.vol.gain.cancelScheduledValues(t); e.music.vol.gain.setTargetAtTime(gainOf.music(v), t, .08); }
     if (k === 'moveVol') { e.moves.vol.gain.cancelScheduledValues(t); e.moves.vol.gain.setTargetAtTime(gainOf.moves(v), t, .08); }
     // Turning sound off fades it out in about 0.3 seconds. Turning it on fades it in over about 1 second.
     if (k === 'on') { e.master.gain.cancelScheduledValues(t); e.master.gain.setTargetAtTime(v ? 1 : 0, t, v ? .3 : .08); }
@@ -734,7 +747,7 @@ const Sound = (() => {
       setTimeout(() => { if (!document.hidden) return; paused = players.filter(p => !p.a.paused); paused.forEach(p => p.a.pause()); ctx.suspend(); }, 700);
     } else ctx.resume().then(() => {
       paused.forEach(p => p.a.play().catch(() => {})); paused = [];
-      g.cancelScheduledValues(ctx.currentTime); g.setTargetAtTime(gainOf.music(set.musicVol), ctx.currentTime, .6);
+      g.cancelScheduledValues(ctx.currentTime); g.setTargetAtTime(gainOf.music(volume), ctx.currentTime, .6);
     });
   });
 
@@ -746,8 +759,10 @@ const Sound = (() => {
     return off.startRendering();
   }
 
-  return {
+  return Object.assign(api, {
     start, choose, preview, render, listen, settings: set,
+    // The music's volume now, which a song's preset can make lower than set.musicVol.
+    volume: () => volume,
     started: () => !!ctx,
     state: () => ctx ? ctx.state : 'not started',
     // For testing: where each player of the song is, and a jump to a time in the song that plays now.
@@ -755,5 +770,5 @@ const Sound = (() => {
     seek: s => { if (players[playing]) players[playing].a.currentTime = s; },
     leave: (x, dir) => { if (e) e.leave(x, dir); },
     arrive: (x, dir) => { if (e) e.arrive(x, dir); },
-  };
+  });
 })();

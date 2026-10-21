@@ -98,7 +98,7 @@ function areaOf(id, seen = new Set()) {
 // A concept is on its constellation's skill tree, so the tree opens with it chosen.
 function homeOf(id) {
   const c = id && constellationOf(areaOf(id));
-  return c ? { href: `index.html?constellation=${c}${IDEAS[id] ? `&skill=${id}` : ''}`, name: constellationName(c) } : { href: 'index.html', name: 'The library' };
+  return c ? { href: `index.html?constellation=${c}${IDEAS[id] ? `&skill=${id}` : ''}`, name: constellationName(c) } : { href: 'index.html', name: 'The constellations' };
 }
 
 // ---------- The skill tree of a constellation ----------

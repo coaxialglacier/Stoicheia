@@ -155,30 +155,13 @@ function ideaA() {
     const x = 90 + r() * 820, y = 392 + (r() - .5) * 130 * (1 - Math.abs(x - 500) / 540);
     dust += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(.5 + r() * 1.1)}" fill="#e8f1ff" opacity="${f(.3 + r() * .6)}"/>`;
   }
-  // The crown is a constellation, drawn as on a star chart: each star is a small ring, the brighter ones with a dot inside, and
-  // straight lines join them, stopping short of each ring. The big star is in the middle, with three stars on each side, near a
-  // faint arc but not on it. The right side is the left side in a mirror.
-  const LEFT = [[266, 177, 4.2], [337, 135, 6], [419, 111, 3.6]];
-  const CROWN = [...LEFT, [500, 104, 0], ...LEFT.map(([x, y, r]) => [1000 - x, y, r]).reverse()];
-  const gapOf = r => r ? r + 4 : 24;
-  const lines = CROWN.slice(1).map(([x2, y2, r2], i) => {
-    const [x1, y1, r1] = CROWN[i], d = Math.hypot(x2 - x1, y2 - y1), ux = (x2 - x1) / d, uy = (y2 - y1) / d;
-    return `<line x1="${f(x1 + ux * gapOf(r1))}" y1="${f(y1 + uy * gapOf(r1))}" x2="${f(x2 - ux * gapOf(r2))}" y2="${f(y2 - uy * gapOf(r2))}"/>`;
-  }).join('');
-  const ring = (x, y, r, op = 1) => `<g opacity="${op}"><circle cx="${x}" cy="${y}" r="${f(r * 3)}" fill="url(#haloGold)" opacity=".7"/>
-    <circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="#f3dc9f" stroke-width="1.2"/>${r > 5 ? `<circle cx="${x}" cy="${y}" r="1.7" fill="#fff6dc"/>` : ''}</g>`;
-  const crown = `<path d="M290 172Q500 36 710 172" fill="none" stroke="#e6c477" stroke-opacity=".16" stroke-width="1"/>
-    <g stroke="#e6c477" stroke-opacity=".8" stroke-width="1">${lines}</g>
-    ${CROWN.filter(s => s[2]).map(([x, y, r]) => ring(x, y, r)).join('')}`;
-  return `<svg viewBox="0 0 1000 490" role="img" aria-label="Wardens of the Swift">
+  // The user had the stars above WARDENS, and the line and star under SWIFT, removed on 2026-10-21.
+  return `<svg viewBox="0 170 1000 300" role="img" aria-label="Wardens of the Swift">
     <defs><radialGradient id="bandA"><stop offset="0" stop-color="#bcd6ff" stop-opacity=".2"/><stop offset=".55" stop-color="#7d9fe0" stop-opacity=".07"/><stop offset="1" stop-color="#7d9fe0" stop-opacity="0"/></radialGradient></defs>
     <ellipse cx="500" cy="392" rx="470" ry="78" fill="url(#bandA)"/>${dust}
-    ${crown}
-    ${rayStar(500, 104, 15)}
     ${metal('WARDENS', { x: 500, y: 268, size: 100, len: 690, sheen: true })}
     ${ofThe(318)}
     ${metal('SWIFT', { x: 500, y: 438, size: 130, len: 610, sheen: true })}
-    <rect x="250" y="466" width="500" height="1" fill="url(#fadeBoth)"/>${spark(500, 466.5, 10, 6, '#fff3cf')}
   </svg>`;
 }
 const headerA = () => `<svg width="22" height="34" viewBox="-11 -17 22 34">${rayStar(0, 0, 5.6)}</svg>${wordmark()}`;
@@ -357,7 +340,7 @@ function ideaF() {
 const headerF = () => `<span class="wm"><b><span class="cap">W</span>ARDENS</b><small>OF THE</small><b><span class="cap">S</span>WIFT</b></span>`;
 
 const IDEAS = [
-  ['A · Aether Crown', 'The title in three lines, centered. Above WARDENS, a large star with long rays is the middle of a small constellation, drawn as on a star chart: rings for stars, joined by straight lines, three on each side, the same on both sides, near a faint arc. OF THE is small, between two fine lines that end in diamonds. A soft band of pale light with small stars in it lies behind SWIFT, as the aether. Every ten seconds a band of light crosses the gold letters.', ideaA, headerA],
+  ['A · Aether Crown', 'The chosen title. Three lines, centered, with nothing above WARDENS. OF THE is small, between two fine lines that end in diamonds. A soft band of pale light with small stars in it lies behind SWIFT, as the aether, with no line under it. Every ten seconds a band of light crosses the gold letters.', ideaA, headerA],
   ['B · The Warden\'s Seal', 'A round seal in moonlit silver, which also works small, as an app icon or a stamp. The title runs around the top of the ring, and MMXXVI, the year 2026, around the bottom. In the middle is a swift drawn as a constellation: blue-white stars joined by straight lines, near a faint drawing of the bird, which is banking, so its two wings are not the same.', ideaB, headerB],
   ['C · Swift Wings', 'A swift with its wings spread above the title, the pose that heraldry calls displayed. Each wing is four layers of long curved feathers in gold that fade toward the tips, the narrow, swept-back shape of a swift\'s wings. A star is at the bird\'s head.', ideaC, headerC],
   ['D · The Warden\'s Blade', 'A sword stands between the words. Its pommel is a star under WARDENS, OF and THE sit on its crossguard on each side of a blue gem, and its steel blade is the I of SWIFT, running on past the letters to its point.', ideaD, headerD],

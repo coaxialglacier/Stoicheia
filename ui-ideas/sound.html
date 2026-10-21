@@ -53,6 +53,7 @@ const HEAR = {
     if (!first) Sound.arrive(fromX, goingDir || (d < depth ? -1 : 1));
     first = false; fromX = .5; goingDir = null; depth = d; watching = false;
     show(page, title);
+    tellVolume(Sound.volume());
   },
   // While the music panel under the harp is open, the page watches the song.
   watch({ on }) { if (on && !watching) requestAnimationFrame(report); watching = on; },
@@ -79,6 +80,10 @@ function report() {
   view.contentWindow.postMessage({ song: Sound.listen(48) }, '*');
   requestAnimationFrame(report);
 }
+
+// The page shows the music's volume on its sliders. A song's volume preset can lower it, so each new volume is sent to the page.
+const tellVolume = volume => view.contentWindow.postMessage({ volume }, '*');
+Sound.onVolume = tellVolume;
 
 // The sound starts as soon as this page opens, when the browser lets it, so after a reload a new song starts at once. sound.js
 // says when. This page reloads itself for Command-R, Control-R, and F5, as the page in the iframe does, for the reason sky.js

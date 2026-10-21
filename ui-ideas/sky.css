@@ -45,10 +45,20 @@ body{background:var(--sky0);color:var(--ink);font-family:'EB Garamond',Georgia,s
 .hex:active{transform:scale(.97)}
 
 header{position:fixed;top:0;left:0;right:0;height:58px;display:flex;align-items:center;gap:22px;padding:0 26px;z-index:3;border-bottom:1px solid var(--hair);background:linear-gradient(180deg,rgba(5,7,15,.88),rgba(5,7,15,.35))}
-.brand{font-family:Cinzel;font-weight:500;letter-spacing:.42em;font-size:15px;color:var(--gold2);display:flex;align-items:center;gap:12px;text-decoration:none}
+/* The title, Wardens of the Swift, which sky.js writes into the link. WARDENS and SWIFT are gold, light at the top of the letters,
+   darker just under their middle, and light again at the bottom, as the large title on Home is. OF THE is small between them. */
+.brand{font-family:Cinzel;display:flex;align-items:center;gap:12px;flex:none;white-space:nowrap;text-decoration:none;cursor:pointer}
 .brand i{font-style:normal;color:var(--gold);font-size:13px;filter:drop-shadow(0 0 6px var(--gold))}
+.brand .wm{display:flex;align-items:center}
+.brand b{font-weight:600;font-size:16px;letter-spacing:.26em;background:linear-gradient(180deg,#fff7de 12%,#f2d491 48%,#c4954a 68%,#f0cf86 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 7px rgba(230,196,119,.35))}
+.brand small{font-weight:500;font-size:9px;letter-spacing:.3em;color:var(--gold);margin:0 .75em 0 .15em}
+.brand:hover b{filter:drop-shadow(0 0 9px rgba(230,196,119,.6))}
 .back{font-family:Jost;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink2);text-decoration:none;cursor:pointer}
 .back:hover{color:var(--gold2)}
+/* Nothing in the header wraps onto a second line. The title and the links back keep their size, and a caption that does not
+   fit is cut short with an ellipsis. */
+header .back,header .ttl{white-space:nowrap;flex:none}
+header>.caps{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .grow{flex:1}
 /* The harp at the right end of the header turns all sound on or off. It is a fine gold outline of an Irish harp with no circle
    around it, like the user icon. While sound is on, its strings brighten and fade slowly, each at its own time, and when the

@@ -5,7 +5,8 @@
 // - the same bytes in base64, as a script, such as starlit-hush.js, which sets window.SONG_DATA. sound.js loads it when sound.html
 //   is opened as a file, because Chrome gives Web Audio only silence from an mp3 at a file:// address, and a script at a
 //   file:// address still loads,
-// and it writes ui-ideas/audio/songs.js, the list of songs that sound.js reads. It removes from ui-ideas/audio/ the copies of
+// and it writes ui-ideas/audio/songs.js, the list of songs that sound.js reads, with each song's volume preset from
+// music/volumes.json. It removes from ui-ideas/audio/ the copies of
 // songs that are no longer in music/. It needs ffmpeg, which measures each song. Run it after adding, removing, or changing a
 // song, and after cloning the repository, because git keeps only music/ and songs.js, not the copies:
 //   node library/music.js
@@ -20,6 +21,12 @@ const MUSIC = path.join(ROOT, 'music'), AUDIO = path.join(ROOT, 'ui-ideas', 'aud
 // that it had when it was the only song. A song's gain brings it to this loudness, and is never more than 1, so no song is
 // made louder than it was recorded.
 const TARGET = -20.3;
+// The volume presets, in music/volumes.json: a song's title and the most the music's volume can be when that song starts, from
+// 1 to 100, on the scale of the music volume in the panels, such as { "Heaventree": 80 }. When Heaventree starts, a music
+// volume above 80 comes down to 80, and one at 80 or below stays. The reader can still move the volume while it plays, and the
+// next song starts at the reader's music volume again. A song that the file does not name has 100, which never lowers it.
+const PRESETS = path.join(MUSIC, 'volumes.json');
+const presets = fs.existsSync(PRESETS) ? JSON.parse(fs.readFileSync(PRESETS, 'utf8')) : {};
 
 // The integrated loudness of a song, in LUFS, as EBU R 128 measures it: one number for how loud the whole song sounds. ffmpeg
 // writes it at the end of its report, as "I: -13.4 LUFS".
@@ -91,14 +98,19 @@ const slug = title => title.toLowerCase().replace(/['’]/g, '').replace(/[^a-z0
 const files = fs.readdirSync(MUSIC).filter(f => /\.mp3$/i.test(f)).sort((a, b) => a.localeCompare(b, 'en', { numeric: true }));
 if (!files.length) throw new Error('music/ has no mp3 files');
 fs.mkdirSync(AUDIO, { recursive: true });
+const titles = files.map(f => f.replace(/\.mp3$/i, '').replace(/^\d+\s*/, ''));
+for (const [title, percent] of Object.entries(presets)) {
+  if (!titles.includes(title)) throw new Error(`music/volumes.json names "${title}", which is not a song in music/: ${titles.join(', ')}`);
+  if (!Number.isFinite(percent) || percent < 1 || percent > 100) throw new Error(`music/volumes.json gives "${title}" ${percent}, not a percent from 1 to 100`);
+}
 const songs = files.map(f => {
   const from = path.join(MUSIC, f), title = f.replace(/\.mp3$/i, '').replace(/^\d+\s*/, ''), name = slug(title);
   const lufs = loudness(from);
   const sound = samples(from);
   fs.copyFileSync(from, path.join(AUDIO, name + '.mp3'));
   fs.writeFileSync(path.join(AUDIO, name + '.js'), `// Written by library/music.js from music/${f}. Do not edit.\nwindow.SONG_DATA = '${fs.readFileSync(from).toString('base64')}';\n`);
-  const song = { title, file: name, source: f, seconds: +(sound.length / RATE).toFixed(1), gain: +Math.min(1, Math.pow(10, (TARGET - lufs) / 20)).toFixed(3), notes: notes(sound) };
-  console.log(`${f}: ${song.seconds} s, ${lufs} LUFS, gain ${song.gain}, notes ${song.notes.join(' ')}`);
+  const song = { title, file: name, source: f, seconds: +(sound.length / RATE).toFixed(1), gain: +Math.min(1, Math.pow(10, (TARGET - lufs) / 20)).toFixed(3), volume: (presets[title] ?? 100) / 100, notes: notes(sound) };
+  console.log(`${f}: ${song.seconds} s, ${lufs} LUFS, gain ${song.gain}, volume ${Math.round(song.volume * 100)}%, notes ${song.notes.join(' ')}`);
   return song;
 });
 // The copies of songs that are no longer in music/.
@@ -106,7 +118,8 @@ const keep = new Set(songs.flatMap(s => [s.file + '.mp3', s.file + '.js']).conca
 for (const f of fs.readdirSync(AUDIO)) if (/\.(mp3|js)$/.test(f) && !keep.has(f)) { fs.rmSync(path.join(AUDIO, f)); console.log(`Removed ui-ideas/audio/${f}.`); }
 fs.writeFileSync(path.join(AUDIO, 'songs.js'), `// Written by library/music.js from the songs in music/. Do not edit.
 // Each song: its title, the name of its files in this folder, its file in music/, its length in seconds, the gain that brings it
-// to the loudness of the others, and its notes, which the sounds of a move use. library/site.js copies each song from music/.
+// to the loudness of the others, its volume preset from music/volumes.json, the most the music's volume can be when it starts,
+// from 0 to 1, and its notes, which the sounds of a move use. library/site.js copies each song from music/.
 const SONGS = ${JSON.stringify(songs, null, 1).replace(/\n\s*(\d)/g, ' $1').replace(/\n\s*\]/g, ']')};
 `);
 console.log(`Wrote ui-ideas/audio/: ${songs.length} songs, and songs.js.`);

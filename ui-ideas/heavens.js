@@ -18,7 +18,7 @@ const Heavens = (() => {
   // browser draws an SVG again in full whenever anything in it moves, so the still layer, with its many blurred lines, is drawn
   // again only while a constellation is being pointed at or left, and the light layer is the only one drawn every frame.
   const svg = document.getElementById('figures'), twinkles = document.getElementById('twinkles'), hits = document.getElementById('hits');
-  const about = document.getElementById('about');
+  const about = document.getElementById('about'), title = document.getElementById('title');
   let W = 0, H = 0, dpr = 1, info = [], spots = {}, hot = null, running = false, intro = false, brights = [], defs = null, lightDefs = null, still = false;
   const state = {}, clouds = {};
   const mouse = { x: 0, y: 0, sx: 0, sy: 0 };
@@ -125,20 +125,24 @@ const Heavens = (() => {
 
   // ---------- Where each constellation goes ----------
   // A figure of size S reaches 1.24 S above its middle, and its name and the lines under it end 1.4 S + 130 pixels below it.
-  // Every figure starts 100 pixels from the top of the window, a little below the top bar.
+  // Every figure starts at TOP, under the title, which is at the top of the sky. Without the title, TOP is 100 pixels from
+  // the top of the window, a little below the top bar.
   // The last 84 pixels of the window are for what the pointed-at constellation is about.
   // In a wide window, the constellations are side by side in thirds of the window, each as large as its third and the height
   // allow. In a tall, narrow window, they are one above the other.
   // G is that size. The figure is drawn at S, 85% of G, around the same middle, because the user found the figures too large at
   // G. The gas and the small stars around a figure keep the size G, and so do the letters of the name and the width of the bar under it.
-  const TOP = 100, UNDER = 130, ABOUT = 84, SIGN = .85;
+  let TOP = 100;
+  const UNDER = 130, ABOUT = 84, SIGN = .85;
   const wide = () => W >= H * .95;
   function place() {
     const ids = info.map(c => c.id);
     if (wide()) {
       const third = W / 3, room = H - TOP - UNDER - ABOUT;
+      // Height that the figures do not need is shared: 60% above them and 40% below, so they sit a little low, as the user
+      // asked on 2026-10-21, when everything had looked weighted toward the top of the window.
       const G = Math.max(70, Math.min(third * .385, room / 2.64)), slack = Math.max(0, room - 2.64 * G);
-      return ids.map((id, i) => ({ id, i, x: third * (i + .5), y: TOP + 1.24 * G + slack * .4, S: G * SIGN, G }));
+      return ids.map((id, i) => ({ id, i, x: third * (i + .5), y: TOP + 1.24 * G + slack * .6, S: G * SIGN, G }));
     }
     const row = (H - TOP) / ids.length, G = Math.max(50, Math.min(W * .28, (row - UNDER) / 2.64));
     return ids.map((id, i) => ({ id, i, x: W / 2, y: TOP + row * i + 1.24 * G, S: G * SIGN, G }));
@@ -386,6 +390,7 @@ const Heavens = (() => {
     el('feGaussianBlur', { stdDeviation: 4.5 }, haze);
     const bloom = el('filter', { id: 'bloom', x: '-30%', y: '-30%', width: '160%', height: '160%' }, d.defs);
     el('feGaussianBlur', { stdDeviation: 7 }, bloom);
+    titled();
     spots = Object.fromEntries(place().map(s => [s.id, s]));
     const now = performance.now();
     info.forEach((c, i) => {
@@ -397,11 +402,12 @@ const Heavens = (() => {
     brights = brightStars();
     meridians(d);
     info.forEach(c => figure(c, spots[c.id], d, lightDefs));
-    // Each constellation answers the pointer anywhere in its third of the window. The places it answers in do not move with
-    // the sky, so the sky moving toward a constellation never moves another one under the pointer.
+    // Each constellation answers the pointer anywhere in its third of the window under the title. The title answers nothing,
+    // because the user did not want it to lead anywhere. The places a constellation answers in do not move with the sky, so the
+    // sky moving toward a constellation never moves another one under the pointer.
     info.forEach(c => {
       const s = spots[c.id], n = info.length;
-      const r = wide() ? { x: W / n * s.i, y: 58, width: W / n, height: Math.max(0, H - 58) } : { x: 0, y: TOP + (H - TOP) / n * s.i, width: W, height: Math.max(0, (H - TOP) / n) };
+      const r = wide() ? { x: W / n * s.i, y: TOP, width: W / n, height: Math.max(0, H - TOP) } : { x: 0, y: TOP + (H - TOP) / n * s.i, width: W, height: Math.max(0, (H - TOP) / n) };
       el('rect', { ...r, fill: 'transparent', class: 'hitcon', 'data-id': c.id }, hits);
     });
     // The first time, the sky comes down into place from above, as when a person looks up at it.
@@ -409,13 +415,31 @@ const Heavens = (() => {
     setHot(hot);
     if (api.afterDraw) api.afterDraw();
   }
+  // The title, Wardens of the Swift, from title.js, centered at the top of the sky, under the top bar by 3% of the window's
+  // height, at least 20 pixels, because 6 pixels pressed it against the top bar. Its height is
+  // 10.5% of the window's, from 60 to 115 pixels, because the user found it too large at 14%. In a wide window it is no wider
+  // than 22% of the window, so the meridians beside it never reach its letters, and in a narrow one it is no wider than the
+  // window less 32 pixels. The figures start under it. The header shows no title on the night sky, so the title is here once.
+  // It has an SVG of its own, because a band of light crosses its letters every ten seconds, and a browser draws an SVG again in
+  // full whenever anything in it moves. The first time, it fades in as the sky comes down.
+  function titled() {
+    if (!title || typeof Title === 'undefined') { TOP = 100; return; }
+    const [, , bw, bh] = Title.box;
+    const h = Math.max(60, Math.min(115, H * .105, (wide() ? W * .22 : W - 32) * bh / bw)), w = h * bw / bh;
+    const top = 58 + Math.max(20, H * .03);
+    Object.assign(title.style, { width: w.toFixed(1) + 'px', height: h.toFixed(1) + 'px', left: ((W - w) / 2).toFixed(1) + 'px', top: top.toFixed(1) + 'px' });
+    if (!title.firstChild) { title.setAttribute('viewBox', Title.box.join(' ')); title.innerHTML = `<g class="wt">${Title.svg()}</g>`; }
+    title.classList.toggle('arrive', intro);
+    TOP = top + h;
+  }
   // Two lines between the three constellations, from the top of the sky to the bottom, leaning toward the middle as they rise,
-  // like the meridians of a star atlas, with small marks across them. They fade out above the names, so they never cross one.
+  // like the meridians of a star atlas, with small marks across them. They fade in from under the title, and fade out above the
+  // names, so they never cross either.
   function meridians(d) {
     if (!wide()) return;
     const g = delay(el('g', { class: intro ? 'fade' : '' }, svg), intro ? 300 : 0);
     const s = Object.values(spots)[0], end = s ? s.y + s.S * 1.3 : H;
-    const grad = el('linearGradient', { id: 'meridian', gradientUnits: 'userSpaceOnUse', x1: 0, y1: 64, x2: 0, y2: end }, d.defs);
+    const grad = el('linearGradient', { id: 'meridian', gradientUnits: 'userSpaceOnUse', x1: 0, y1: Math.max(64, TOP - 40), x2: 0, y2: end }, d.defs);
     [[0, 0], [.3, .11], [.75, .11], [1, 0]].forEach(([o, a]) => el('stop', { offset: o, 'stop-color': '#e6c477', 'stop-opacity': a }, grad));
     [1, 2].forEach(i => {
       const x = W * i / 3, lean = (i === 1 ? 1 : -1) * W * .02;

@@ -137,6 +137,23 @@ const Sky = (() => {
     }, 780);
   }
 
+  // ---------- The title in the header ----------
+  // The header of each page starts with a link to the night sky of Home, and this writes the title into it: a small star, then
+  // WARDENS and SWIFT in gold, with OF THE small between them. The user named the game Wardens of the Swift on 2026-10-21.
+  // Clicking it leaves with the move between pages, from the star. A page can set Sky.onBrand to do something else: Home, inside
+  // a constellation, moves back out to the night sky in the same page. On the night sky itself the header has no title, because
+  // the large title is there.
+  document.querySelectorAll('.brand').forEach(a => {
+    a.innerHTML = '<i>✦</i><span class="wm"><b>WARDENS</b><small>OF THE</small><b>SWIFT</b></span>';
+    a.setAttribute('aria-label', 'Wardens of the Swift');
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      if (Sky.onBrand) return Sky.onBrand();
+      const r = a.firstChild.getBoundingClientRect();
+      go(a.getAttribute('href'), r.x + r.width / 2, r.y + r.height / 2);
+    });
+  });
+
   // ---------- The hover card ----------
   const card = document.getElementById('card');
   function show(info, x, y) {
@@ -239,7 +256,8 @@ const Sky = (() => {
 
   // ---------- Panels under the icons of the header ----------
   // A panel opens under an icon at the right end of the header: the music under the harp, and the reader's account under the
-  // user icon, from you.js. Only one panel is open at a time. A click outside a panel and its icon closes it, and so does Escape.
+  // user icon, from you.js. Only one panel is open at a time. A click outside a panel and its icon closes it and does nothing
+  // else, and Escape closes it too.
   // sky.css draws each panel and what is in it. Its edge is drawn here, in SVG, because the edge follows the panel's size: a fine
   // gold line with a fainter line just inside it, a star on the top edge, a small diamond on each side, level with the panel's
   // title, and one at the bottom.
@@ -317,7 +335,20 @@ const Sky = (() => {
     panels.push(p);
     return p;
   }
-  document.addEventListener('pointerdown', e => panels.forEach(p => { if (!p.box.contains(e.target) && !p.icon.contains(e.target)) p.hide(); }));
+  // A press outside every panel and its icon, while a panel is open, only closes the panel. The press, its release, and the
+  // click or context menu it makes stop here, on the window before anything under the pointer hears them, so nothing on the
+  // page answers it. A press on an icon goes on to the icon, which closes its own panel or opens its own in place of the other.
+  // The click comes right after the release, so the release lets the next click through only once that click has passed.
+  let swallow = false;
+  const outside = t => !panels.some(p => p.box.contains(t) || p.icon.contains(t));
+  const stop = e => { e.preventDefault(); e.stopImmediatePropagation(); };
+  addEventListener('pointerdown', e => {
+    swallow = panels.some(p => p.shown) && outside(e.target);
+    if (swallow) { stop(e); panels.forEach(p => p.hide()); }
+  }, true);
+  for (const type of ['mousedown', 'mouseup', 'click', 'contextmenu']) addEventListener(type, e => { if (swallow) stop(e); }, true);
+  addEventListener('pointerup', e => { if (swallow) { stop(e); setTimeout(() => { swallow = false; }, 0); } }, true);
+  addEventListener('pointercancel', () => { swallow = false; }, true);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') panels.forEach(p => p.hide()); });
   // True while a panel shows, and while it fades out after closing.
   const panelShown = () => panels.some(p => p.box.classList.contains('on'));
@@ -356,10 +387,15 @@ const Sky = (() => {
   const SOUND_KEY = 'stoicheiaSound', SOUND_DEFAULTS = { musicVol: .5, moveVol: .7, on: true };
   const settings = { ...SOUND_DEFAULTS };
   try { Object.assign(settings, JSON.parse(localStorage.getItem(SOUND_KEY))); } catch (e) {}
+  // heard is the music's volume now, from sound.html. A song's volume preset can make it lower than the reader's music volume,
+  // and both sliders of the music volume show it.
+  let heard = null;
   const sound = {
     settings: () => settings,
+    musicVolume: () => heard ?? settings.musicVol,
     choose(k, v) {
       settings[k] = v;
+      if (k === 'musicVol') heard = v;
       try { localStorage.setItem(SOUND_KEY, JSON.stringify(settings)); } catch (e) {}
       tell('choose', { k, v });
       if (k === 'on') showSound();
@@ -392,21 +428,36 @@ const Sky = (() => {
   // ---------- The music panel ----------
   // Clicking the harp opens a panel under it. It shows the song that plays, with a picture of the music in the emblem's disc,
   // the song's name and its number, a bar of where the song is with its time and its length, and the music's volume, from 0 to
-  // 100. At its bottom, a capsule turns all sound on or off, music and sound effects together. While the panel is open, the page
-  // watches the song: sound.html sends it, once a frame, what plays, as { song }.
+  // 100, which a song's volume preset can lower while that song plays. At its bottom, a capsule turns all sound on or off,
+  // music and sound effects together. While the panel is open, the page watches the song: sound.html sends it, once a frame,
+  // what plays, as { song }.
   const music = harp && panel('musicPanel', harp);
   let song = null;
-  addEventListener('message', e => { if (shell && e.source === shell && e.data && e.data.song) song = e.data.song; });
+  addEventListener('message', e => {
+    if (!shell || e.source !== shell || !e.data) return;
+    if (e.data.song) song = e.data.song;
+    if (typeof e.data.volume === 'number') { heard = e.data.volume; showVolume(); }
+  });
+  // Moves every slider of the music volume, in the music panel and in Settings, to the volume now, except one the reader is
+  // dragging.
+  function showVolume() {
+    document.querySelectorAll('input[data-vol="musicVol"]').forEach(r => {
+      if (r.matches(':active')) return;
+      const v = sound.musicVolume();
+      r.value = v; r.style.setProperty('--p', v);
+      r.closest('.yvol').querySelector('b').textContent = Math.round(v * 100);
+    });
+  }
   const clock = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
   function showMusic() {
     music.show(body => {
       body.className = 'ybody yv-music';
-      const v = settings.musicVol;
+      const v = sound.musicVolume();
       body.innerHTML = `<div class="yemblem ymusic"></div><div class="ynow"><i></i><span>Now playing</span></div>
         <div class="ysong">${song ? song.title : '&nbsp;'}</div>
-        <div class="yprog"><div class="ybar"><i></i></div><div class="ytimes"><span>0:00</span><span>0:00</span></div></div>
+        <div class="yprog"><div class="ybar"><i></i></div><div class="ytimes"><span class="yat">0:00</span><span class="ylen">0:00</span></div></div>
         <label class="yvol"><div class="ytop"><span>MUSIC</span><b>${Math.round(v * 100)}</b></div>
-          <span class="yrange"><input type="range" min="0" max="1" step="0.01" value="${v}" style="--p:${v}" aria-label="Music volume"></span></label>
+          <span class="yrange"><input type="range" data-vol="musicVol" min="0" max="1" step="0.01" value="${v}" style="--p:${v}" aria-label="Music volume"></span></label>
         <div class="ytools"><a class="ysettings ysound" role="switch"><i>✦</i><span></span></a></div>`;
       const art = body.firstElementChild;
       emblem(art, 'music');
@@ -477,8 +528,7 @@ const Sky = (() => {
     const second = Math.floor(song.at);
     if (second !== shown) {
       shown = second;
-      const [at, length] = body.querySelectorAll('.ytimes span');
-      at.textContent = clock(song.at); length.textContent = clock(song.length);
+      write(body.querySelector('.yat'), clock(song.at)); write(body.querySelector('.ylen'), clock(song.length));
     }
   }
   if (harp) {
