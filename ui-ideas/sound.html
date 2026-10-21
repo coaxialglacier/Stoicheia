@@ -13,8 +13,12 @@
      back. This page has no controls of its own. The harp in each page's header turns all sound on or off, and Settings, in the
      panel of the user icon on Home, sets the volumes. Both send each change here as a message.
      When this page opens, loading.js shows a loading view over the iframe until the first song has loaded and played for 5
-     seconds, and the page in the iframe waits to arrive until then. -->
+     seconds, and the page in the iframe waits to arrive until then.
+     On a phone, on a tablet, and in a browser that is not Google Chrome, blocker.js shows its own view instead, which says that
+     Wardens of the Swift is made for a computer, or for Chrome, and this page loads no page in the iframe, shows no loading
+     view, and plays no sound. -->
 <link rel="stylesheet" href="sky.css">
+<script src="blocker.js"></script>
 <style>
 #view{position:fixed;inset:0;width:100%;height:100%;border:0;display:block}
 
@@ -56,6 +60,66 @@
 .ld-title.leave{transform:translate(-50%,-50%) scale(1.25);opacity:0;filter:brightness(2.2) blur(3px)}
 /* sky.css turns off every animation for a reader whose system asks for less motion, so there the title shows at once. */
 @media (prefers-reduced-motion:reduce){.ld-title.on svg,.ld-title.on .ysong,.ld-ask.on{opacity:1}}
+
+/* The view on a phone, on a tablet, and in a browser that is not Chrome, which blocker.js fills. The class blocked on the root
+   element hides the iframe and the loading view. Behind the view is the Milky Way of galaxy.js, over a dark sky for a browser without WebGL. The view scrolls
+   when the window is too short for it. Its parts rise in one after another, the computer in the emblem is drawn in, and the
+   stars on its screen light up one after another. */
+#blocker{display:none}
+.blocked #view,.blocked #loading{display:none}
+.blocked body{background:radial-gradient(ellipse at 50% 40%,#0b1230,#060918 50%,#020308)}
+.blocked #blocker{display:block;position:fixed;inset:0;overflow-y:auto;user-select:none;-webkit-user-select:none}
+#galaxy{position:fixed;left:0;top:0;pointer-events:none;opacity:0;transition:opacity 1.6s ease}
+#galaxy.on{opacity:1}
+#galaxy canvas{position:absolute;left:0;top:0;display:block}
+.bk-page{position:relative;min-height:100%;display:flex;align-items:center;justify-content:center;padding:32px 24px}
+.bk-col{display:flex;flex-direction:column;align-items:center;text-align:center;width:min(440px,100%)}
+.bk-side,.bk-say{display:flex;flex-direction:column;align-items:center;width:100%}
+.bk-col .bk-side>*,.bk-col .bk-say>*{animation:yrise .8s cubic-bezier(.2,.8,.2,1) both}
+.bk-title{animation-duration:1.6s!important}
+.bk-emblem{animation-delay:.25s!important}
+.bk-say>:nth-child(1){animation-delay:.9s!important}
+.bk-say>:nth-child(2){animation-delay:1.05s!important}
+.bk-say>:nth-child(3){animation-delay:1.25s!important}
+.bk-say>:nth-child(4){animation-delay:1.4s!important}
+.bk-say>:nth-child(5){animation-delay:1.55s!important}
+.bk-title svg{display:block;overflow:visible;width:min(400px,calc(100vw - 56px));height:auto;aspect-ratio:740/272}
+.bk-emblem{width:clamp(118px,36vw,160px);aspect-ratio:1;margin:clamp(14px,3.6vh,32px) 0 clamp(14px,3vh,24px)}
+.bk-emblem svg{display:block;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 0 14px rgba(230,196,119,.2))}
+.bk-dots{fill:none;stroke:rgba(230,196,119,.16);stroke-dasharray:1 3.5}
+.bk-rim{fill:none;stroke:rgba(230,196,119,.45)}
+.bk-marks line{stroke:rgba(230,196,119,.42);stroke-width:.6}
+.bk-four path{fill:#fbe7b0}
+.bk-disc{fill:rgba(5,7,18,.84);stroke:rgba(230,196,119,.3);stroke-dasharray:2 3}
+.bk-pc{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.bk-draw{stroke:#e6c477;stroke-width:1.4;stroke-dasharray:1;animation:ydraw 1.6s cubic-bezier(.5,0,.2,1) .7s both}
+.bk-glass{fill:rgba(90,120,210,.08);stroke:rgba(230,196,119,.2);stroke-width:.6;animation:yfadein 1s ease-out 1.6s both}
+.bk-dot{fill:rgba(230,196,119,.7);stroke:none;animation:yfadein .6s ease-out 1.5s both}
+.bk-bar{stroke:rgba(230,196,119,.38);stroke-width:.6;animation:yfadein .6s ease-out 1.6s both}
+.bk-line{stroke:rgba(230,196,119,.62);stroke-width:.8;stroke-dasharray:1;animation:ydraw .45s ease-out both;animation-delay:calc(2.05s + var(--i) * .2s)}
+.bk-star{fill:#fbe7b0;transform-box:fill-box;transform-origin:center;filter:drop-shadow(0 0 2.5px rgba(251,231,176,.9));animation:ignite .6s cubic-bezier(.2,.9,.3,1.3) both;animation-delay:calc(1.9s + var(--i) * .2s)}
+.bk-say .ytitle{width:100%;font-size:clamp(12px,3.7vw,15px);letter-spacing:.3em}
+.bk-say .ytitle span{margin-right:-.3em}
+.bk-text{margin:14px 0 0;max-width:22em;font-size:clamp(17px,4.8vw,20px);line-height:1.6;color:var(--ink);text-shadow:0 0 14px rgba(2,3,8,.95),0 1px 3px rgba(0,0,0,.8)}
+.bk-where{width:min(300px,100%);margin-top:24px;cursor:default}
+.bk-where .yfield{justify-content:center}
+.bk-address{font-family:Cinzel;font-size:15px;letter-spacing:.1em;color:var(--gold2);text-shadow:0 0 12px rgba(230,196,119,.35);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;user-select:all;-webkit-user-select:all;cursor:text}
+.bk-say .ybtn{margin-top:20px}
+/* In a browser that is not Chrome, a quiet link under the button downloads Chrome. */
+.bk-get{margin-top:18px;font-family:Jost;font-size:10.5px;letter-spacing:.26em;margin-right:-.26em;text-transform:uppercase;color:var(--ink2);text-decoration:none;border-bottom:1px solid var(--goldDim);padding-bottom:3px;transition:color .25s,border-color .25s}
+.bk-get:hover{color:var(--gold2);border-color:var(--gold)}
+/* In a phone held on its side, the title and the emblem are on the left, and the words on the right. */
+@media (orientation:landscape) and (max-height:560px){
+  .bk-page{padding:20px 28px}
+  .bk-col{flex-direction:row;align-items:center;gap:clamp(24px,6vw,64px);width:auto}
+  .bk-side{width:auto}
+  .bk-say{width:min(360px,48vw)}
+  .bk-title svg{width:min(320px,40vw)}
+  .bk-emblem{width:clamp(84px,26vh,128px);margin:clamp(8px,3vh,18px) 0 0}
+  .bk-text{font-size:17px;line-height:1.5}
+  .bk-where{margin-top:16px}
+  .bk-say .ybtn{margin-top:14px}
+}
 </style>
 </head>
 <body>
@@ -66,6 +130,22 @@
   <div class="ld-words"><div class="ld-head"><span>Finding the stars</span></div><div class="ld-ask">Click anywhere to begin</div></div>
   <div class="ld-title"><svg role="img" aria-label="Wardens of the Swift"></svg><div class="ysong"></div></div>
 </div>
+<main id="blocker">
+  <div id="galaxy"><canvas id="mwGlow"></canvas><canvas id="mwStars"></canvas></div>
+  <div class="bk-page"><div class="bk-col">
+    <div class="bk-side">
+      <h1 class="bk-title"><svg role="img" aria-label="Wardens of the Swift"></svg></h1>
+      <div class="bk-emblem"></div>
+    </div>
+    <div class="bk-say">
+      <h2 class="ytitle"><span></span></h2>
+      <p class="bk-text"></p>
+      <div class="ycart bk-where"><i class="l"></i><i class="r"></i><div class="yfield"><span class="bk-address"></span></div></div>
+      <button class="ybtn"><i>✦</i><span>Copy the link</span><i>✦</i></button>
+      <a class="bk-get" href="https://www.google.com/chrome/" target="_blank" rel="noopener">Get Google Chrome</a>
+    </div>
+  </div></div>
+</main>
 <script src="audio/songs.js"></script>
 <script src="sound.js"></script>
 <script src="title.js"></script>
@@ -76,8 +156,9 @@ const view = document.getElementById('view');
 // The page the iframe shows is in this page's address, as ?page=expand.html%3Froot%3Dgenerics, so a reload keeps it.
 // Only the three pages of the star theme are allowed.
 const PAGE = /^(index|expand|page)\.html(\?[^#]*)?$/;
+// On a phone, on a tablet, and in a browser that is not Chrome, the iframe shows nothing, as blocker.js says.
 const asked = new URLSearchParams(location.search).get('page');
-view.src = asked && PAGE.test(asked) ? asked : 'index.html';
+if (!Blocker.on) view.src = asked && PAGE.test(asked) ? asked : 'index.html';
 
 // How deep each page is. A move to a deeper page goes forward, and a move to a shallower page goes back. A move between two
 // pages of the same depth, such as from one study to another, goes forward.
@@ -143,8 +224,8 @@ Sound.onVolume = tellVolume;
 
 // The sound starts as soon as this page opens, when the browser lets it, so after a reload a new song starts at once. sound.js
 // says when. This page reloads itself for Command-R, Control-R, and F5, as the page in the iframe does, for the reason sky.js
-// gives.
-Sound.start();
+// gives. Where blocker.js shows its view, no sound plays.
+if (!Blocker.on) Sound.start();
 addEventListener('keydown', e => {
   if (e.key === 'F5' || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'r')) { e.preventDefault(); location.reload(); }
 });

@@ -21,6 +21,9 @@
 
 const Loading = (() => {
   const box = document.getElementById('loading');
+  // On a phone, on a tablet, and in a browser that is not Chrome, blocker.js shows its own view in place of this one, and no
+  // song plays.
+  if (Blocker.on) { box.remove(); return { onLift: null, up: () => false, ready() {} }; }
   const canvas = document.getElementById('ldSky'), g = canvas.getContext('2d');
   const countEl = box.querySelector('.ld-count'), headEl = box.querySelector('.ld-head'), askEl = box.querySelector('.ld-ask');
   const titleEl = box.querySelector('.ld-title'), wtEl = titleEl.querySelector('svg'), songEl = titleEl.querySelector('.ysong');
