@@ -1825,6 +1825,12 @@ const LIBRARY = {
    "first": "A constant or variable declared in the function around a closure, before the closure's opening brace.",
    "parts": []
   },
+  "dollar-sign": {
+   "id": "dollar-sign",
+   "name": "Dollar sign",
+   "first": "The dollar sign written before the name of a wrapped property, which reads the wrapper's projected value in place of its wrapped value.",
+   "parts": []
+  },
   "func-keyword": {
    "id": "func-keyword",
    "name": "func",
@@ -3477,6 +3483,478 @@ const LIBRARY = {
    "first": "One input of a function or closure. It has a name, and the type of the value it holds.",
    "parts": []
   },
+  "projected-value-property": {
+   "id": "projected-value-property",
+   "name": "Projected value property",
+   "first": "A property that a property wrapper can have beside its wrapped value, which gives a second value, of any type, for each property that the wrapper is used on.",
+   "parts": []
+  },
+  "projected-value": {
+   "id": "projected-value",
+   "name": "Projected value",
+   "area": "ui",
+   "first": "A second value that a property wrapper can give for each property it is used on, read by writing a dollar sign before the property's name.",
+   "parts": [
+    "projected-value-property",
+    "dollar-sign"
+   ],
+   "dependsOn": [
+    {
+     "id": "property-wrapper",
+     "views": [
+      "what",
+      "parts"
+     ],
+     "why": "A projected value belongs to a property wrapper, and is read through a property that uses the wrapper.",
+     "whyInExample": "`game.$score` reads the projected value of `AtMostTen`, the property wrapper that `Game` uses on `score`."
+    }
+   ],
+   "example": {
+    "code": [
+     "@propertyWrapper",
+     "struct AtMostTen {",
+     "    var number = 0",
+     "    var projectedValue = false",
+     "    var wrappedValue: Int {",
+     "        get { return number }",
+     "        set {",
+     "            number = min(newValue, 10)",
+     "            projectedValue = newValue > 10",
+     "        }",
+     "    }",
+     "}",
+     "struct Game {",
+     "    @AtMostTen var score: Int",
+     "}",
+     "var game = Game()",
+     "game.score = 4",
+     "print(game.$score)",
+     "game.score = 25",
+     "print(game.score, game.$score)"
+    ],
+    "sil": [
+     {
+      "in": "Game.$score.getter",
+      "has": "struct_extract %2, #AtMostTen.projectedValue",
+      "shows": "Reading $score reads the projectedValue of the AtMostTen that each Game keeps for score."
+     }
+    ]
+   },
+   "snippets": {
+    "binding": {
+     "code": [
+      "import SwiftUI",
+      "struct NameField: View {",
+      "    @State var name = \"Ana\"",
+      "    var body: some View {",
+      "        TextField(\"Name\", text: $name)",
+      "    }",
+      "}",
+      "print(type(of: NameField().$name))  // Binding<String>"
+     ],
+     "output": [
+      "Binding<String>"
+     ]
+    }
+   },
+   "views": {
+    "what": {
+     "is": "A projected value is a second value that a property wrapper can give for each property it is used on, beside the property's own value. Code reads it by writing a dollar sign before the property's name.",
+     "marks": [
+      {
+       "line": 4,
+       "text": "projectedValue",
+       "part": "projected-value-property",
+       "label": "projected value"
+      },
+      {
+       "line": 18,
+       "text": "$",
+       "part": "dollar-sign",
+       "label": "dollar sign"
+      }
+     ],
+     "afterExample": "The property wrapper `AtMostTen` gives `score` a projected value, which is true when the last value written to `score` was more than 10. Line 18 reads it as `game.$score`.",
+     "problem": "A property wrapper sometimes has more to tell about a property than its value, such as whether it changed the value it was given. A property gives only one value, of its own type. A projected value gives a second value, of any type, through the same property's name.",
+     "how": "swiftc gives `Game` a second property, `$score`, beside `score`. Reading `game.$score` reads the `projectedValue` of the instance of `AtMostTen` that `game` keeps for `score`.",
+     "when": [
+      {
+       "text": "Use one in SwiftUI to give another view a value that a view keeps, so that the other view can change it. The projected value of `@State` is a `Binding`, which reads and writes the state's value:",
+       "snippet": "binding"
+      },
+      {
+       "text": "Use one in your own property wrapper when it has a second value to give, such as `AtMostTen`'s `projectedValue`, which tells whether the last value was more than 10."
+      },
+      {
+       "text": "Don't add one when the wrapped value says everything. A property wrapper needs only `wrappedValue`. Writing `$` before the name of a property whose wrapper has no projected value does not build."
+      }
+     ]
+    },
+    "parts": {
+     "parts": [
+      {
+       "part": "projected-value-property",
+       "name": "The property `projectedValue`, line 4",
+       "text": "Line 4 declares `projectedValue`, a property of the property wrapper `AtMostTen`. A property wrapper that has a property with this name has a projected value, of any type. Here it is a Boolean, and it starts as `false`. Line 9, in the setter of `wrappedValue`, sets it to true when `newValue` is more than 10, and to false when it is not."
+      },
+      {
+       "part": "dollar-sign",
+       "name": "The dollar sign, in `$score`",
+       "text": "A dollar sign before the name of a wrapped property reads the wrapper's projected value, in place of its wrapped value. So on line 18, `game.$score` reads the `projectedValue` of the instance of `AtMostTen` that keeps `score`. On line 20, `game.score` reads its `wrappedValue`."
+      }
+     ],
+     "marks": [
+      {
+       "line": 4,
+       "text": "projectedValue",
+       "part": "projected-value-property",
+       "label": "projected value"
+      },
+      {
+       "line": 9,
+       "text": "projectedValue",
+       "part": "projected-value-property"
+      },
+      {
+       "line": 18,
+       "text": "$",
+       "part": "dollar-sign",
+       "label": "dollar sign"
+      },
+      {
+       "line": 20,
+       "text": "$",
+       "part": "dollar-sign",
+       "label": "dollar sign"
+      }
+     ],
+     "steps": [
+      {
+       "text": "Line 16 makes a `Game`, and stores it in `game`. Its instance of `AtMostTen` for `score` starts with `number` set to 0 and `projectedValue` set to `false`.",
+       "line": 16,
+       "also": [
+        3,
+        4
+       ]
+      },
+      {
+       "text": "Line 17 writes 4 to `game.score`. That runs the setter of `wrappedValue`, with `newValue` set to 4.",
+       "line": 17,
+       "also": [
+        7
+       ]
+      },
+      {
+       "text": "Line 8 stores 4 in `number`. 4 is not more than 10, so line 9 sets `projectedValue` to false.",
+       "line": 9,
+       "also": [
+        8
+       ],
+       "value": {
+        "line": 9,
+        "name": "projectedValue",
+        "is": "false"
+       }
+      },
+      {
+       "text": "Line 18 reads `game.$score`, the `projectedValue` of the instance of `AtMostTen` for `score`. Line 18 prints {{false}}.",
+       "line": 18,
+       "prints": [
+        "false"
+       ]
+      },
+      {
+       "text": "Line 19 writes 25 to `game.score`, and the setter runs again, with `newValue` set to 25.",
+       "line": 19,
+       "also": [
+        7
+       ]
+      },
+      {
+       "text": "Line 8 stores 10 in `number`, because 10 is smaller than 25. 25 is more than 10, so line 9 sets `projectedValue` to true.",
+       "line": 9,
+       "also": [
+        8
+       ],
+       "value": {
+        "line": 9,
+        "name": "projectedValue",
+        "is": "true"
+       }
+      },
+      {
+       "text": "Line 20 reads `game.score`, which is 10, and `game.$score`, which is true. Line 20 prints {{10 true}}.",
+       "line": 20,
+       "prints": [
+        "10 true"
+       ]
+      }
+     ],
+     "end": {
+      "kind": "answer",
+      "text": "A projected value is a second value of a property wrapper. `game.score` reads the wrapper's `wrappedValue`, and `game.$score` reads its `projectedValue`."
+     }
+    }
+   }
+  },
+  "property-wrapper-attribute": {
+   "id": "property-wrapper-attribute",
+   "name": "Property wrapper attribute",
+   "first": "The attribute, written with an at sign before the declaration of a type, that makes the type a property wrapper.",
+   "parts": []
+  },
+  "property-wrapper": {
+   "id": "property-wrapper",
+   "name": "Property wrapper",
+   "area": "swift",
+   "first": "A type that keeps the value of a property, and runs its own code each time the property is read or written.",
+   "parts": [
+    "property-wrapper-attribute",
+    "wrapped-value",
+    "wrapped-property"
+   ],
+   "dependsOn": [
+    {
+     "id": "function",
+     "views": [
+      "what",
+      "parts"
+     ],
+     "why": "The getter and the setter of a property wrapper's wrapped value are blocks of code that run each time the property is read or written, and the getter returns a value, as a function's body does."
+    }
+   ],
+   "example": {
+    "code": [
+     "@propertyWrapper",
+     "struct AtMostTen {",
+     "    var number = 0",
+     "    var wrappedValue: Int {",
+     "        get { return number }",
+     "        set {",
+     "            number = min(newValue, 10)",
+     "        }",
+     "    }",
+     "}",
+     "struct Game {",
+     "    @AtMostTen var score: Int",
+     "}",
+     "var game = Game()",
+     "game.score = 4",
+     "print(game.score)",
+     "game.score = 25",
+     "print(game.score)"
+    ],
+    "sil": [
+     {
+      "in": "Game.score.getter",
+      "has": "struct_extract %0, #Game._score",
+      "shows": "Each Game keeps an AtMostTen for score, in a stored property that swiftc adds and the code does not write."
+     },
+     {
+      "in": "Game.score.getter",
+      "has": "function_ref AtMostTen.wrappedValue.getter",
+      "shows": "Reading score runs the getter of AtMostTen's wrappedValue."
+     }
+    ]
+   },
+   "snippets": {
+    "two": {
+     "code": [
+      "@propertyWrapper",
+      "struct AtMostTen {",
+      "    var number = 0",
+      "    var wrappedValue: Int {",
+      "        get { return number }",
+      "        set { number = min(newValue, 10) }",
+      "    }",
+      "}",
+      "struct Game {",
+      "    @AtMostTen var score: Int",
+      "    @AtMostTen var lives: Int",
+      "}",
+      "var game = Game()",
+      "game.score = 25",
+      "game.lives = 12",
+      "print(game.score, game.lives)  // 10 10"
+     ],
+     "output": [
+      "10 10"
+     ]
+    },
+    "state": {
+     "code": [
+      "import SwiftUI",
+      "struct NameLabel: View {",
+      "    @State var name = \"Ana\"",
+      "    var body: some View {",
+      "        Text(name)",
+      "    }",
+      "}",
+      "print(NameLabel().name)  // Ana"
+     ],
+     "output": [
+      "Ana"
+     ]
+    }
+   },
+   "views": {
+    "what": {
+     "is": "A property wrapper is a type that keeps the value of a property, and runs its own code each time the property is read or written. The code is written once, in the wrapper. Any property can then use it, by writing the wrapper's name before the property, after an at sign.",
+     "marks": [
+      {
+       "line": 1,
+       "text": "@propertyWrapper",
+       "part": "property-wrapper-attribute",
+       "label": "makes it a property wrapper"
+      },
+      {
+       "line": 12,
+       "text": "@AtMostTen var score: Int",
+       "part": "wrapped-property",
+       "label": "uses AtMostTen"
+      }
+     ],
+     "afterExample": "The structure `AtMostTen` is a property wrapper. Line 12 uses it on the property `score`, so `score` is never more than 10: line 17 writes 25, and line 18 prints {{10}}.",
+     "problem": "Some properties need the same code each time they are read or written, such as code that keeps a number at 10 or less. Without a property wrapper, each of those properties writes its own getter and setter with that code in them. A property wrapper keeps the code in one type, and a property uses it with one attribute.",
+     "how": "For a property that uses a wrapper, swiftc adds a stored property that holds an instance of the wrapper. Reading `game.score` runs the getter of the wrapper's `wrappedValue`, and writing it runs the setter.",
+     "when": [
+      {
+       "text": "Use one when several properties need the same code each time they are read or written. Each property writes the wrapper's name before it:",
+       "snippet": "two"
+      },
+      {
+       "text": "SwiftUI's `@State` is a property wrapper. A view writes it before a property, as `Game` writes `@AtMostTen`, and SwiftUI then keeps the value for the view:",
+       "snippet": "state"
+      },
+      {
+       "text": "Don't write one for a single property whose code no other property needs. Then that property's own getter and setter are enough."
+      }
+     ]
+    },
+    "parts": {
+     "parts": [
+      {
+       "part": "property-wrapper-attribute",
+       "name": "The attribute `@propertyWrapper`",
+       "text": "An attribute starts with an at sign, and is written before a declaration to give swiftc more information about it. On line 1, the attribute `@propertyWrapper` makes the structure `AtMostTen` a property wrapper. swiftc then checks that `AtMostTen` has a property named `wrappedValue`: without one, line 2 does not build."
+      },
+      {
+       "part": "wrapped-value",
+       "name": "The wrapped value, lines 4 to 9",
+       "text": "Lines 4 to 9 declare `wrappedValue`, the property that every property wrapper must have. Its getter, on line 5, is code that runs each time the property is read, and it returns `number`. Its setter, on lines 6 to 8, is code that runs each time the property is written, with the value written as `newValue`. Line 7 stores the smaller of `newValue` and 10 in `number`."
+      },
+      {
+       "part": "wrapped-property",
+       "name": "The wrapped property, `score`",
+       "text": "On line 12, the name of the wrapper is written as an attribute, `@AtMostTen`, before `var score: Int`. That makes `score` a wrapped property. Each `Game` keeps an instance of `AtMostTen` for `score`, and reading or writing `score` reads or writes that instance's `wrappedValue`."
+      }
+     ],
+     "marks": [
+      {
+       "line": 1,
+       "text": "@propertyWrapper",
+       "part": "property-wrapper-attribute",
+       "label": "attribute"
+      },
+      {
+       "line": 4,
+       "text": "wrappedValue",
+       "part": "wrapped-value",
+       "label": "wrapped value"
+      },
+      {
+       "line": 5,
+       "text": "get",
+       "part": "wrapped-value",
+       "label": "getter"
+      },
+      {
+       "line": 6,
+       "text": "set",
+       "part": "wrapped-value",
+       "label": "setter"
+      },
+      {
+       "line": 12,
+       "text": "@AtMostTen",
+       "part": "wrapped-property",
+       "label": "wrapper's name"
+      },
+      {
+       "line": 12,
+       "text": "score",
+       "part": "wrapped-property",
+       "label": "wrapped property"
+      }
+     ],
+     "steps": [
+      {
+       "text": "Line 14 makes a `Game`, and stores it in `game`. Its instance of `AtMostTen` for `score` starts with `number` set to 0.",
+       "line": 14,
+       "also": [
+        3
+       ]
+      },
+      {
+       "text": "Line 15 writes 4 to `game.score`. That runs the setter of `wrappedValue`, with `newValue` set to 4.",
+       "line": 15,
+       "also": [
+        6
+       ]
+      },
+      {
+       "text": "Line 7 stores the smaller of 4 and 10, which is 4, in `number`.",
+       "line": 7,
+       "value": {
+        "line": 7,
+        "name": "number",
+        "is": "4"
+       }
+      },
+      {
+       "text": "Line 16 reads `game.score`. That runs the getter on line 5, which returns `number`. Line 16 prints {{4}}.",
+       "line": 16,
+       "also": [
+        5
+       ],
+       "prints": [
+        "4"
+       ]
+      },
+      {
+       "text": "Line 17 writes 25 to `game.score`, and the setter runs again, with `newValue` set to 25.",
+       "line": 17,
+       "also": [
+        6
+       ]
+      },
+      {
+       "text": "Line 7 stores the smaller of 25 and 10, which is 10, in `number`.",
+       "line": 7,
+       "value": {
+        "line": 7,
+        "name": "number",
+        "is": "10"
+       }
+      },
+      {
+       "text": "Line 18 reads `game.score`, and the getter returns 10. Line 18 prints {{10}}.",
+       "line": 18,
+       "also": [
+        5
+       ],
+       "prints": [
+        "10"
+       ]
+      }
+     ],
+     "end": {
+      "kind": "answer",
+      "text": "A property wrapper keeps a property's value in an instance of its own type. Writing `game.score` runs the wrapper's setter, which keeps the value at 10 or less, and reading it runs the wrapper's getter."
+     }
+    }
+   }
+  },
   "protocol-keyword": {
    "id": "protocol-keyword",
    "name": "protocol",
@@ -3980,11 +4458,24 @@ const LIBRARY = {
    "name": "Variable used in the body",
    "first": "A place where a closure's body changes or reads a variable from outside its braces. It is the same variable, not a copy.",
    "parts": []
+  },
+  "wrapped-property": {
+   "id": "wrapped-property",
+   "name": "Wrapped property",
+   "first": "A property with a property wrapper's name before it, written as an attribute, so that reading and writing the property reads and writes the wrapper's wrapped value.",
+   "parts": []
+  },
+  "wrapped-value": {
+   "id": "wrapped-value",
+   "name": "Wrapped value",
+   "first": "The property that every property wrapper must have, which gives the value of each property that the wrapper is used on.",
+   "parts": []
   }
  },
  "known": [
   "function",
-  "closure"
+  "closure",
+  "property-wrapper"
  ],
  "planned": [
   {
@@ -4031,16 +4522,6 @@ const LIBRARY = {
     "generics"
    ],
    "first": "A return type that names only a protocol, while swiftc still knows the real type."
-  },
-  {
-   "id": "property-wrapper",
-   "name": "Property wrapper",
-   "area": "swift",
-   "needs": [
-    "structure",
-    "generics"
-   ],
-   "first": "A type that keeps a property's value, and runs its own code each time the property is read or written."
   },
   {
    "id": "result-builder",
@@ -4195,7 +4676,8 @@ const LIBRARY = {
    "name": "Binding",
    "area": "ui",
    "needs": [
-    "state"
+    "state",
+    "projected-value"
    ],
    "first": "A way for a view to read and change a value that another view keeps."
   },

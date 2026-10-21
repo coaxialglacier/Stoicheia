@@ -1,0 +1,117 @@
+{
+  "id": "property-wrapper",
+  "name": "Property wrapper",
+  "area": "swift",
+  "first": "A type that keeps the value of a property, and runs its own code each time the property is read or written.",
+  "parts": ["property-wrapper-attribute", "wrapped-value", "wrapped-property"],
+  "dependsOn": [
+    { "id": "function", "views": ["what", "parts"],
+      "why": "The getter and the setter of a property wrapper's wrapped value are blocks of code that run each time the property is read or written, and the getter returns a value, as a function's body does." }
+  ],
+  "example": {
+    "code": [
+      "@propertyWrapper",
+      "struct AtMostTen {",
+      "    var number = 0",
+      "    var wrappedValue: Int {",
+      "        get { return number }",
+      "        set {",
+      "            number = min(newValue, 10)",
+      "        }",
+      "    }",
+      "}",
+      "struct Game {",
+      "    @AtMostTen var score: Int",
+      "}",
+      "var game = Game()",
+      "game.score = 4",
+      "print(game.score)",
+      "game.score = 25",
+      "print(game.score)"
+    ],
+    "sil": [
+      { "in": "Game.score.getter", "has": "struct_extract %0, #Game._score",
+        "shows": "Each Game keeps an AtMostTen for score, in a stored property that swiftc adds and the code does not write." },
+      { "in": "Game.score.getter", "has": "function_ref AtMostTen.wrappedValue.getter",
+        "shows": "Reading score runs the getter of AtMostTen's wrappedValue." }
+    ]
+  },
+  "snippets": {
+    "two": {
+      "code": [
+        "@propertyWrapper",
+        "struct AtMostTen {",
+        "    var number = 0",
+        "    var wrappedValue: Int {",
+        "        get { return number }",
+        "        set { number = min(newValue, 10) }",
+        "    }",
+        "}",
+        "struct Game {",
+        "    @AtMostTen var score: Int",
+        "    @AtMostTen var lives: Int",
+        "}",
+        "var game = Game()",
+        "game.score = 25",
+        "game.lives = 12",
+        "print(game.score, game.lives)  // 10 10"
+      ],
+      "output": ["10 10"]
+    },
+    "state": {
+      "code": [
+        "import SwiftUI",
+        "struct NameLabel: View {",
+        "    @State var name = \"Ana\"",
+        "    var body: some View {",
+        "        Text(name)",
+        "    }",
+        "}",
+        "print(NameLabel().name)  // Ana"
+      ],
+      "output": ["Ana"]
+    }
+  },
+  "views": {
+    "what": {
+      "is": "A property wrapper is a type that keeps the value of a property, and runs its own code each time the property is read or written. The code is written once, in the wrapper. Any property can then use it, by writing the wrapper's name before the property, after an at sign.",
+      "marks": [
+        { "line": 1, "text": "@propertyWrapper", "part": "property-wrapper-attribute", "label": "makes it a property wrapper" },
+        { "line": 12, "text": "@AtMostTen var score: Int", "part": "wrapped-property", "label": "uses AtMostTen" }
+      ],
+      "afterExample": "The structure `AtMostTen` is a property wrapper. Line 12 uses it on the property `score`, so `score` is never more than 10: line 17 writes 25, and line 18 prints {{10}}.",
+      "problem": "Some properties need the same code each time they are read or written, such as code that keeps a number at 10 or less. Without a property wrapper, each of those properties writes its own getter and setter with that code in them. A property wrapper keeps the code in one type, and a property uses it with one attribute.",
+      "how": "For a property that uses a wrapper, swiftc adds a stored property that holds an instance of the wrapper. Reading `game.score` runs the getter of the wrapper's `wrappedValue`, and writing it runs the setter.",
+      "when": [
+        { "text": "Use one when several properties need the same code each time they are read or written. Each property writes the wrapper's name before it:", "snippet": "two" },
+        { "text": "SwiftUI's `@State` is a property wrapper. A view writes it before a property, as `Game` writes `@AtMostTen`, and SwiftUI then keeps the value for the view:", "snippet": "state" },
+        { "text": "Don't write one for a single property whose code no other property needs. Then that property's own getter and setter are enough." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "property-wrapper-attribute", "name": "The attribute `@propertyWrapper`", "text": "An attribute starts with an at sign, and is written before a declaration to give swiftc more information about it. On line 1, the attribute `@propertyWrapper` makes the structure `AtMostTen` a property wrapper. swiftc then checks that `AtMostTen` has a property named `wrappedValue`: without one, line 2 does not build." },
+        { "part": "wrapped-value", "name": "The wrapped value, lines 4 to 9", "text": "Lines 4 to 9 declare `wrappedValue`, the property that every property wrapper must have. Its getter, on line 5, is code that runs each time the property is read, and it returns `number`. Its setter, on lines 6 to 8, is code that runs each time the property is written, with the value written as `newValue`. Line 7 stores the smaller of `newValue` and 10 in `number`." },
+        { "part": "wrapped-property", "name": "The wrapped property, `score`", "text": "On line 12, the name of the wrapper is written as an attribute, `@AtMostTen`, before `var score: Int`. That makes `score` a wrapped property. Each `Game` keeps an instance of `AtMostTen` for `score`, and reading or writing `score` reads or writes that instance's `wrappedValue`." }
+      ],
+      "marks": [
+        { "line": 1, "text": "@propertyWrapper", "part": "property-wrapper-attribute", "label": "attribute" },
+        { "line": 4, "text": "wrappedValue", "part": "wrapped-value", "label": "wrapped value" },
+        { "line": 5, "text": "get", "part": "wrapped-value", "label": "getter" },
+        { "line": 6, "text": "set", "part": "wrapped-value", "label": "setter" },
+        { "line": 12, "text": "@AtMostTen", "part": "wrapped-property", "label": "wrapper's name" },
+        { "line": 12, "text": "score", "part": "wrapped-property", "label": "wrapped property" }
+      ],
+      "steps": [
+        { "text": "Line 14 makes a `Game`, and stores it in `game`. Its instance of `AtMostTen` for `score` starts with `number` set to 0.", "line": 14, "also": [3] },
+        { "text": "Line 15 writes 4 to `game.score`. That runs the setter of `wrappedValue`, with `newValue` set to 4.", "line": 15, "also": [6] },
+        { "text": "Line 7 stores the smaller of 4 and 10, which is 4, in `number`.", "line": 7, "value": { "line": 7, "name": "number", "is": "4" } },
+        { "text": "Line 16 reads `game.score`. That runs the getter on line 5, which returns `number`. Line 16 prints {{4}}.", "line": 16, "also": [5], "prints": ["4"] },
+        { "text": "Line 17 writes 25 to `game.score`, and the setter runs again, with `newValue` set to 25.", "line": 17, "also": [6] },
+        { "text": "Line 7 stores the smaller of 25 and 10, which is 10, in `number`.", "line": 7, "value": { "line": 7, "name": "number", "is": "10" } },
+        { "text": "Line 18 reads `game.score`, and the getter returns 10. Line 18 prints {{10}}.", "line": 18, "also": [5], "prints": ["10"] }
+      ],
+      "end": { "kind": "answer", "text": "A property wrapper keeps a property's value in an instance of its own type. Writing `game.score` runs the wrapper's setter, which keeps the value at 10 or less, and reading it runs the wrapper's getter." }
+    }
+  }
+}

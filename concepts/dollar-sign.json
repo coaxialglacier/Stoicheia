@@ -1,0 +1,6 @@
+{
+  "id": "dollar-sign",
+  "name": "Dollar sign",
+  "first": "The dollar sign written before the name of a wrapped property, which reads the wrapper's projected value in place of its wrapped value.",
+  "parts": []
+}

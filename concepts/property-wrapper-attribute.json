@@ -1,0 +1,6 @@
+{
+  "id": "property-wrapper-attribute",
+  "name": "Property wrapper attribute",
+  "first": "The attribute, written with an at sign before the declaration of a type, that makes the type a property wrapper.",
+  "parts": []
+}

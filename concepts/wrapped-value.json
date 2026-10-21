@@ -1,0 +1,6 @@
+{
+  "id": "wrapped-value",
+  "name": "Wrapped value",
+  "first": "The property that every property wrapper must have, which gives the value of each property that the wrapper is used on.",
+  "parts": []
+}

@@ -1,0 +1,6 @@
+{
+  "id": "wrapped-property",
+  "name": "Wrapped property",
+  "first": "A property with a property wrapper's name before it, written as an attribute, so that reading and writing the property reads and writes the wrapper's wrapped value.",
+  "parts": []
+}

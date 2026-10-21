@@ -1,0 +1,6 @@
+{
+  "id": "projected-value-property",
+  "name": "Projected value property",
+  "first": "A property that a property wrapper can have beside its wrapped value, which gives a second value, of any type, for each property that the wrapper is used on.",
+  "parts": []
+}
