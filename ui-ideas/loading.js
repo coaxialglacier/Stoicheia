@@ -7,8 +7,9 @@
 // goes twice around the ring, and each star appears when the alidade passes it, with a small flash: the brightest fifth of the
 // stars the first time around, and the rest the second time. A ring closes on each of the brightest as it is found. As the last,
 // faintest stars appear, the faint glow of the Milky Way comes up. The number inside the ring counts the stars found.
-// The alidade starts slowly, speeds up, and slows to a stop at the top of the ring, over at least 5 seconds. It never gets ahead
-// of the song: until the song has loaded, it goes no further than 80% of the way. When it stops, every star is found.
+// The alidade starts slowly, speeds up, and slows to a gentle stop at the top of the ring, over at least 5.6 seconds. It never
+// gets ahead of the song: until the song has loaded, it goes no further than about 80% of the way. When it stops, every star is
+// found.
 // A browser lets a page start sound only after the reader clicks or presses a key on it, so when it has not let sound.html start
 // sound yet, the view then asks the reader to click. Then the song starts, the ring opens out and fades, and the title, Wardens of the Swift, comes in, with the
 // song's name under it. When the song has played for 5 seconds, the stars stretch away from the middle, as in a move between
@@ -21,7 +22,7 @@
 const Loading = (() => {
   const box = document.getElementById('loading');
   const canvas = document.getElementById('ldSky'), g = canvas.getContext('2d');
-  const countEl = box.querySelector('.ld-count'), headEl = box.querySelector('.ld-head span'), askEl = box.querySelector('.ld-ask');
+  const countEl = box.querySelector('.ld-count'), headEl = box.querySelector('.ld-head'), askEl = box.querySelector('.ld-ask');
   const titleEl = box.querySelector('.ld-title'), wtEl = titleEl.querySelector('svg'), songEl = titleEl.querySelector('.ysong');
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const TAU = Math.PI * 2;
@@ -132,28 +133,33 @@ const Loading = (() => {
 
   // ---------- What happens, in order ----------
   // state is finding, found, asking, starting, titled, or leaving, and since is when it started. f is how far the finding has
-  // gone, from 0 to 1, and fv is how fast it goes, in shares of the whole finding each second. FIND is the shortest time the
-  // finding takes, in milliseconds, and SPRING sets how closely f follows its aim.
-  const t0 = performance.now(), FIND = 5000, SPRING = 3.5;
-  let state = 'finding', since = t0, f = 0, fv = 0, found = 0;
+  // gone, from 0 to 1, and fv is how fast it goes, in shares of the whole finding each second. f follows the curve
+  // 6c^5 - 15c^4 + 10c^3 of its clock c, from 0 to 1, so its speed and how fast its speed changes are both 0 at the start and
+  // at the end: the alidade starts gently and comes to rest exactly at the top of the ring. The clock runs at rate, which is 1
+  // for a finding of FIND milliseconds.
+  const t0 = performance.now(), FIND = 5600;
+  let state = 'finding', since = t0, c = 0, rate = 0, f = 0, fv = 0, found = 0;
   let foundAt = null, titledAt = null, songFrom = 0, pageReady = false, lifted = false, arrived = false, running = true, last = t0;
   function to(next, now) { state = next; since = now; }
 
   function step(now, dt) {
     if (state === 'finding') {
-      // The aim of f follows a smooth curve from 0 to 1 over FIND milliseconds, which starts slowly, speeds up, and slows to a
-      // stop. Until the song has loaded, the aim is at most 80% of how much of it has come. f moves toward its aim as a spring
-      // that does not swing past it, so it eases in and out even when the song finishes loading late. It never goes back.
-      const l = music ? Sound.loading() : { done: true }, p = clamp((now - t0) / FIND);
-      const aim = Math.min(p * p * (3 - 2 * p), l.done ? 1 : .8 * l.part);
-      fv = Math.max(0, fv + (SPRING * SPRING * (aim - f) - 2 * SPRING * fv) * dt);
-      f = Math.min(1, f + fv * dt);
-      if (aim === 1 && f > .998) { f = 1; fv = 0; }
+      // Until the song has loaded, f must stay below 80% of how much of it has come, so the clock slows as f comes within 8% of
+      // that limit, and waits there. rate moves smoothly toward the rate wanted, so the alidade never starts or stops at once,
+      // also when the song finishes loading late. f never goes back.
+      const l = music ? Sound.loading() : { done: true };
+      const want = l.done ? 1 : clamp((.8 * l.part - f) / .08);
+      rate += (want - rate) * (1 - Math.exp(-dt / .35));
+      c = Math.min(1, c + rate * dt * 1000 / FIND);
+      f = c * c * c * (c * (c * 6 - 15) + 10);
+      fv = 30 * c * c * (1 - c) * (1 - c) * rate * 1000 / FIND;
       // The alidade finds each star it passes on that star's time around.
       while (next < queue.length && queue[next].when <= f) { queue[next++].at = now; found++; }
-      if (f === 1 && found === stars.length) {
+      if (c === 1 && found === stars.length) {
         to('found', now); foundAt = now;
-        headEl.textContent = 'The stars are found';
+        // The words under the ring, and their lines, fade out, change, and fade back in.
+        headEl.classList.add('out');
+        setTimeout(() => { headEl.firstElementChild.textContent = 'The stars are found'; headEl.classList.remove('out'); }, 380);
         // When the browser does not let the song play yet, the song gets its address now, so that the reader's click can start it.
         if (music && Sound.state() !== 'running') { release(); to('asking', now); askEl.classList.add('on'); box.classList.add('asking'); }
       }
@@ -293,7 +299,7 @@ const Loading = (() => {
     g.fillStyle = disc; g.beginPath(); g.arc(cx, cy, r * 1.2, 0, TAU); g.fill();
 
     // The alidade, which comes to rest at the top of the ring when the stars are found, and fades over the next 0.9 seconds.
-    const seen = foundAt ? clamp(1 - (now - foundAt) / 900) : 1;
+    const seen = foundAt ? 1 - ease(clamp((now - foundAt) / 900)) : 1;
     if (seen > 0 && !still) {
       const th = -Math.PI / 2 + TAU * TURNS * f, far = Math.hypot(W, H), from = r + 22, trail = .6, speed = clamp(fv * TAU * TURNS / 3.5);
       if (g.createConicGradient && speed > .01) {
@@ -323,22 +329,23 @@ const Loading = (() => {
     });
 
     // The arc of how far the finding has gone, from the top, clockwise.
-    const ar = r - 9 * scale, a0 = -Math.PI / 2, a1 = a0 + f * TAU, pulse = foundAt ? clamp(1 - (now - foundAt) / 1300) : 0;
+    // When the stars are found, the arc brightens over 0.25 seconds and dims over the next second.
+    const q = foundAt ? (now - foundAt) / 1300 : 0, pulse = foundAt ? ease(clamp(q / .2)) * (1 - ease(clamp((q - .2) / .8))) : 0;
+    const ar = r - 9 * scale, a0 = -Math.PI / 2, a1 = a0 + f * TAU;
     g.save();
     g.shadowColor = 'rgba(230,196,119,.9)'; g.shadowBlur = 10 + 14 * pulse;
     g.strokeStyle = `rgba(251,231,176,${((.85 + .15 * pulse) * alpha).toFixed(3)})`; g.lineWidth = 1.6 + pulse;
     g.beginPath(); g.arc(cx, cy, ar, a0, a1); g.stroke();
-    if (f > 0 && f < 1) {
+    if (f > 0 && seen > 0) {
       const hx = cx + Math.cos(a1) * ar, hy = cy + Math.sin(a1) * ar;
-      g.fillStyle = `rgba(255,250,235,${alpha.toFixed(3)})`; g.beginPath(); g.arc(hx, hy, 1.8, 0, TAU); g.fill();
+      g.globalAlpha = seen; g.fillStyle = `rgba(255,250,235,${alpha.toFixed(3)})`; g.beginPath(); g.arc(hx, hy, 1.8, 0, TAU); g.fill();
       g.lineWidth = .8; g.beginPath(); g.moveTo(hx - 6, hy); g.lineTo(hx + 6, hy); g.moveTo(hx, hy - 6); g.lineTo(hx, hy + 6); g.stroke();
     }
     g.restore();
-    // When the stars are found, a ring of light spreads out from the ring and fades over 1.3 seconds.
+    // When the stars are found, a ring of light spreads out from the ring over 1.3 seconds, brightening and then fading.
     if (pulse > 0 && !still) {
-      const q = 1 - pulse;
       g.strokeStyle = gold(.7 * pulse); g.lineWidth = 1.4;
-      g.beginPath(); g.arc(cx, cy, r * (1 + .7 * ease(q)), 0, TAU); g.stroke();
+      g.beginPath(); g.arc(cx, cy, r * (1 + .7 * ease(clamp(q))), 0, TAU); g.stroke();
     }
   }
 

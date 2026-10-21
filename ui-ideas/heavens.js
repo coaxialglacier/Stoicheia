@@ -410,8 +410,16 @@ const Heavens = (() => {
       const r = wide() ? { x: W / n * s.i, y: TOP, width: W / n, height: Math.max(0, H - TOP) } : { x: 0, y: TOP + (H - TOP) / n * s.i, width: W, height: Math.max(0, (H - TOP) / n) };
       el('rect', { ...r, fill: 'transparent', class: 'hitcon', 'data-id': c.id }, hits);
     });
-    // The first time, the sky comes down into place from above, as when a person looks up at it.
-    if (first) { box.classList.add('rise'); box.addEventListener('animationend', () => box.classList.remove('rise'), { once: true }); }
+    // The first time, the sky comes down into place from above, as when a person looks up at it. The class comes off when that
+    // animation ends. An animation inside the sky, such as a star lighting up, also sends its end up to the sky, and taking the
+    // class off then cut the sky's descent short, so it jumped the rest of the way.
+    if (first) {
+      box.classList.add('rise');
+      box.addEventListener('animationend', function landed(ev) {
+        if (ev.target !== box) return;
+        box.classList.remove('rise'); box.removeEventListener('animationend', landed);
+      });
+    }
     setHot(hot);
     if (api.afterDraw) api.afterDraw();
   }
