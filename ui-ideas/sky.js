@@ -14,6 +14,21 @@ const Sky = (() => {
   // browser treats each page opened as a file as its own origin, and does not let one such page read or call another.
   function tell(sound, data) { if (shell) shell.postMessage({ sound, ...data }, '*'); }
   tell('here', { page: here(), title: document.title });
+  // When sound.html opens, it shows a loading view over this page until its first song has loaded and played for 5 seconds.
+  // It answers 'here' with { loading: true } while that view is up, and sends { loading: false } when it lifts, or answers
+  // { loading: false } at once. Until then the page holds its arrival, and whenShown(fn) holds fn, so that the page arrives as
+  // the loading view lifts. A sound.html from before the loading view sends no answer, so with no answer after 1.5 seconds
+  // the page arrives.
+  let loading = !!shell, answered = false;
+  const held = [];
+  function whenShown(fn) { if (loading) held.push(fn); else fn(); }
+  function arrive() { loading = false; held.splice(0).forEach(fn => fn()); }
+  addEventListener('message', e => {
+    if (!shell || e.source !== shell || !e.data || !('loading' in e.data)) return;
+    answered = true;
+    if (!e.data.loading && loading) arrive();
+  });
+  if (shell) setTimeout(() => { if (!answered && loading) arrive(); }, 1500);
   // A browser lets sound.html start sound only after the reader clicks or presses a key, and a click in this page counts.
   for (const ev of ['pointerdown', 'keydown']) addEventListener(ev, () => tell('start'), true);
   // Chrome keeps its permission to play sound through a reload that the page starts, and not through one that the browser
@@ -103,8 +118,10 @@ const Sky = (() => {
     mouse.x = mouse.sx = from.mx; mouse.y = mouse.sy = from.my; panX = panTarget = from.pan;
     stage.style.transformOrigin = `${from.x}px ${from.y}px`;
     stage.classList.add('arriving');
-    warp = { out: false, t0: performance.now(), dur: 900, x: from.x, y: from.y };
-    requestAnimationFrame(() => requestAnimationFrame(() => { stage.classList.add('arrived'); stage.classList.remove('arriving'); }));
+    whenShown(() => {
+      warp = { out: false, t0: performance.now(), dur: 900, x: from.x, y: from.y };
+      requestAnimationFrame(() => requestAnimationFrame(() => { stage.classList.add('arrived'); stage.classList.remove('arriving'); }));
+    });
   }
   // Leaving for another page, from the point (x, y): the page grows toward that point and fades, and the stars stretch away from it.
   // The next page reads that point, so its stars pull in toward the same place on the screen.
@@ -538,5 +555,5 @@ const Sky = (() => {
   }
   showSound();
 
-  return { go, travel, show, hide, hint, pan, el, defsFor, star, burst, wrap, sentence, sparkle, panel, panelShown, emblem, sound, quiet: on => { quiet = on; } };
+  return { go, travel, whenShown, show, hide, hint, pan, el, defsFor, star, burst, wrap, sentence, sparkle, panel, panelShown, emblem, sound, quiet: on => { quiet = on; } };
 })();

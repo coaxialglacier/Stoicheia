@@ -605,10 +605,30 @@ const Sound = (() => {
   // silence from it. So when this page is opened as a file, a song's bytes come from its script in audio/, which
   // library/music.js writes from the mp3, and the song plays from a Blob URL, which has this page's own origin. A song's bytes
   // are loaded when it is about to play: the next song's when the one before it starts.
-  const urls = {};
-  function songUrl(i) {
+  // The first song is loaded in full before it plays, with whole set, so that the loading view of sound.html can show how much
+  // of it has come, and the song never stops to wait for more of it. Over http, its bytes come with fetch, and it plays from a
+  // Blob URL. opening.part is how much of it has come, from 0 to 1, and opening.done is true when all of it has, or when it
+  // could not be fetched, and then it plays from its address. A later song loads from its address while the song before it
+  // plays.
+  const urls = {}, opening = { part: 0, done: false };
+  async function fetched(i) {
+    const song = SONGS_[i], url = `audio/${song.file}.mp3`;
+    try {
+      const res = await fetch(url);
+      if (!res.ok || !res.body) throw new Error(res.status);
+      // The size from Content-Length, or about 22 kB for each second of the song when the server does not send it.
+      const size = +res.headers.get('Content-Length') || song.seconds * 22000, reader = res.body.getReader(), parts = [];
+      for (let got = 0; ;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        parts.push(value); got += value.length; opening.part = Math.min(.99, got / size);
+      }
+      return URL.createObjectURL(new Blob(parts, { type: 'audio/mpeg' }));
+    } catch (err) { return url; }
+  }
+  function songUrl(i, whole) {
     const file = SONGS_[i].file;
-    if (!urls[file]) urls[file] = location.protocol !== 'file:' ? Promise.resolve(`audio/${file}.mp3`) : new Promise(done => {
+    if (!urls[file]) urls[file] = location.protocol !== 'file:' ? (whole ? fetched(i) : Promise.resolve(`audio/${file}.mp3`)) : new Promise(done => {
       const s = document.createElement('script');
       s.src = `audio/${file}.js`;
       s.onload = () => {
@@ -649,8 +669,10 @@ const Sound = (() => {
     let last = null;
     try { last = localStorage.getItem(LAST); } catch (err) {}
     order = shuffled(SONGS_.findIndex(s => s.file === last));
-    const first = order.shift();
-    begin(players[0], first, await songUrl(first), .5);
+    const first = order.shift(), url = await songUrl(first, true);
+    opening.part = 1; opening.done = true;
+    if (held) await held;
+    begin(players[0], first, url, .5);
     setInterval(async () => {
       const p = players[playing];
       if (turning || p.a.paused || !p.a.duration || p.a.currentTime < p.a.duration - FADE) return;
@@ -685,6 +707,11 @@ const Sound = (() => {
     if (!order.length) order = shuffled(i);
     songUrl(order[0]);
   }
+
+  // The loading view of sound.html starts the first song when it has found the stars, so that the song starts with the title.
+  // hold() keeps the first song from starting, and returns a function that lets it start.
+  let held = null;
+  function hold() { let go; held = new Promise(done => { go = done; }); return () => go(); }
 
   // sound.html calls start() as soon as it opens. Chrome lets it start the sound then only after a reload that the page itself
   // started, from a click or a key press, as sound.html does for Command-R. After any other reload, and on a first visit, the
@@ -760,7 +787,9 @@ const Sound = (() => {
   }
 
   return Object.assign(api, {
-    start, choose, preview, render, listen, settings: set,
+    start, choose, preview, render, listen, hold, settings: set,
+    // How much of the first song has loaded: { part, done }.
+    loading: () => ({ ...opening }),
     // The music's volume now, which a song's preset can make lower than set.musicVol.
     volume: () => volume,
     started: () => !!ctx,

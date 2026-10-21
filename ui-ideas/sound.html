@@ -11,16 +11,63 @@
      The page in the iframe asks for each sound with a message: the sound of a move when it calls Sky.go or Sky.travel, and
      the sound of arriving when the next page or view comes in, with the direction of the move: forward to a deeper page, or
      back. This page has no controls of its own. The harp in each page's header turns all sound on or off, and Settings, in the
-     panel of the user icon on Home, sets the volumes. Both send each change here as a message. -->
+     panel of the user icon on Home, sets the volumes. Both send each change here as a message.
+     When this page opens, loading.js shows a loading view over the iframe until the first song has loaded and played for 5
+     seconds, and the page in the iframe waits to arrive until then. -->
 <link rel="stylesheet" href="sky.css">
 <style>
 #view{position:fixed;inset:0;width:100%;height:100%;border:0;display:block}
+
+/* The loading view, which loading.js draws, over the page in the iframe. loading.js sets --cy, the height of the middle of
+   the ring, --R, the ring's radius, and --tw and --th, the size of the title. */
+#loading{position:fixed;inset:0;z-index:2;background:#020308;user-select:none;-webkit-user-select:none;transition:opacity .9s ease-out}
+#loading.asking{cursor:pointer}
+#loading.lift{opacity:0;pointer-events:none}
+#ldSky{position:absolute;inset:0;width:100%;height:100%;display:block}
+/* Inside the ring: the number of stars found. */
+.ld-ring{position:absolute;left:50%;top:var(--cy);transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px;transition:opacity .9s,transform 1.1s cubic-bezier(.2,.7,.2,1)}
+.ld-count{font-family:'EB Garamond',serif;font-style:italic;font-weight:400;font-size:34px;line-height:1.1;color:#fff6e2;text-shadow:0 0 24px rgba(251,231,176,.32),0 1px 3px rgba(0,0,0,.6);font-variant-numeric:tabular-nums}
+.ld-ring span{font-family:Jost;font-size:9.5px;letter-spacing:.32em;margin-right:-.32em;text-transform:uppercase;color:var(--ink3)}
+/* Under the ring: what the view is doing, between two fine lines, and, when the browser does not let the song start yet, a
+   request to click, which brightens and dims slowly. */
+.ld-words{position:absolute;left:50%;top:calc(var(--cy) + var(--R) + 40px);transform:translateX(-50%);width:min(460px,calc(100vw - 32px));transition:opacity .9s}
+.ld-head{display:flex;align-items:center;gap:14px;font-family:Cinzel;font-weight:500;font-size:13px;letter-spacing:.34em;text-transform:uppercase;color:var(--gold2);text-shadow:0 0 18px rgba(230,196,119,.4);white-space:nowrap}
+.ld-head span{margin-right:-.34em}
+.ld-head::before,.ld-head::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--goldDim))}
+.ld-head::after{transform:scaleX(-1)}
+.ld-ask{margin-top:22px;text-align:center;font-family:Jost;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold2);opacity:0;transition:opacity 1s}
+.ld-ask::before,.ld-ask::after{content:"✦";color:var(--gold);font-size:9px;margin:0 1.1em;text-shadow:0 0 8px var(--gold)}
+.ld-ask.on{opacity:1;animation:ldBreathe 2.8s ease-in-out 1s infinite}
+@keyframes ldBreathe{50%{opacity:.4}}
+#loading.opened .ld-ring{opacity:0;transform:translate(-50%,-50%) scale(1.25)}
+#loading.opened .ld-words{opacity:0}
+/* The title, from title.js, and under it the name of the song that plays, in the music panel's letters. Leaving, it grows and fades, as a
+   page does when the reader leaves it. */
+.ld-title{position:absolute;left:50%;top:var(--cy);transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;text-align:center;pointer-events:none;transition:transform .8s cubic-bezier(.6,0,.9,.4),opacity .7s ease-in,filter .7s}
+.ld-title svg{display:block;overflow:visible;width:var(--tw);height:var(--th);opacity:0}
+.ld-title .ysong{margin:10px 0 0;max-width:calc(100vw - 32px);opacity:0}
+.ld-title.quiet .ysong{display:none}
+.ld-title.on svg{animation:ldTitle 2.6s ease-out .6s both}
+.ld-title.on .ysong{animation:ldIn 1.4s ease-out 2.2s both}
+@keyframes ldTitle{from{opacity:0;filter:brightness(1.9) blur(3px);transform:scale(.97)}to{opacity:1;filter:none;transform:none}}
+@keyframes ldIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.ld-title.leave{transform:translate(-50%,-50%) scale(1.25);opacity:0;filter:brightness(2.2) blur(3px)}
+/* sky.css turns off every animation for a reader whose system asks for less motion, so there the title shows at once. */
+@media (prefers-reduced-motion:reduce){.ld-title.on svg,.ld-title.on .ysong,.ld-ask.on{opacity:1}}
 </style>
 </head>
 <body>
 <iframe id="view" title="Stoicheia"></iframe>
+<div id="loading">
+  <canvas id="ldSky"></canvas>
+  <div class="ld-ring"><b class="ld-count">0</b><span>Stars found</span></div>
+  <div class="ld-words"><div class="ld-head"><span>Finding the stars</span></div><div class="ld-ask">Click anywhere to begin</div></div>
+  <div class="ld-title"><svg role="img" aria-label="Wardens of the Swift"></svg><div class="ysong"></div></div>
+</div>
 <script src="audio/songs.js"></script>
 <script src="sound.js"></script>
+<script src="title.js"></script>
+<script src="loading.js"></script>
 <script>
 const view = document.getElementById('view');
 
@@ -48,12 +95,16 @@ function show(page, title) {
 let first = true, fromX = .5, goingDir = null, depth = 0;
 const HEAR = {
   start() { Sound.start(); },
+  // The page waits to arrive while the loading view is up, so this page tells it whether it is. The first page arrives when
+  // the loading view lifts, and loading.js plays the sounds of that move.
   here({ page, title }) {
     const d = depthOf(page);
     if (!first) Sound.arrive(fromX, goingDir || (d < depth ? -1 : 1));
     first = false; fromX = .5; goingDir = null; depth = d; watching = false;
     show(page, title);
     tellVolume(Sound.volume());
+    view.contentWindow.postMessage({ loading: Loading.up() }, '*');
+    Loading.ready();
   },
   // While the music panel under the harp is open, the page watches the song.
   watch({ on }) { if (on && !watching) requestAnimationFrame(report); watching = on; },
@@ -80,6 +131,9 @@ function report() {
   view.contentWindow.postMessage({ song: Sound.listen(48) }, '*');
   requestAnimationFrame(report);
 }
+
+// When the loading view lifts, the page in the iframe arrives, and keys go to it.
+Loading.onLift = () => { view.contentWindow.postMessage({ loading: false }, '*'); view.focus(); };
 
 // The page shows the music's volume on its sliders. A song's volume preset can lower it, so each new volume is sent to the page.
 const tellVolume = volume => view.contentWindow.postMessage({ volume }, '*');

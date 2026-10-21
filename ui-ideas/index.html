@@ -639,7 +639,8 @@ let resizing = 0;
 addEventListener('resize', () => { clearTimeout(resizing); resizing = setTimeout(() => { if (sky) SkillTree.redraw(); }, 150); });
 
 
-showView(null, true);
+// The night sky comes down into place when the page can be seen, which is after the loading view of sound.html lifts.
+Sky.whenShown(() => showView(null, true));
 </script>
 </body>
 </html>
