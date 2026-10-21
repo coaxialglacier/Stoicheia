@@ -1,6 +1,6 @@
 {
   "id": "type-constraint",
   "name": "Type constraint",
-  "first": "A protocol or a class written after a type parameter, with a colon: every type the parameter gets must conform to it or inherit from it, which lets the generic code use what that protocol requires or that class has.",
+  "first": "A rule written after a type parameter (with a colon) that limits which types it is allowed to be, so the generic code knows what operations that type supports.",
   "parts": []
 }

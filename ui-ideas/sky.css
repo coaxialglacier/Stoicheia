@@ -1,5 +1,5 @@
 /* The constellation theme, shared by the three mockups: colors, type, the sky, frames, buttons, the hover card, and the moves between pages. */
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Jost:wght@300;400;500&family=JetBrains+Mono:wght@400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400&family=Jost:wght@300;400;500&family=Lexend:wght@300;400;500&display=swap');
 
 :root{--sky0:#05070f;--ink:#ece6d6;--ink2:#b9b3a4;--ink3:#7e7c90;--gold:#e6c477;--gold2:#fbe7b0;--goldDim:rgba(230,196,119,.38);
   --violet:#c3b0ff;--ice:#9ad9ff;--teal:#7fe8d2;--known:#8d92a8;--panel:rgba(9,13,30,.8);--hair:rgba(230,196,119,.16)}
@@ -8,7 +8,7 @@
 *{scrollbar-width:none!important}
 *::-webkit-scrollbar{display:none!important;width:0!important;height:0!important}
 html,body{height:100%}
-body{background:var(--sky0);color:var(--ink);font-family:'EB Garamond',Georgia,serif;overflow:hidden}
+body{background:var(--sky0);color:var(--ink);font-family:'EB Garamond',Georgia,serif;-webkit-font-smoothing:antialiased;overflow:hidden}
 
 /* The sky: clouds of color behind a canvas of stars. The clouds drift slowly. */
 .nebula{position:fixed;inset:-6%;pointer-events:none;animation:drift 60s ease-in-out infinite alternate}
@@ -27,6 +27,10 @@ body{background:var(--sky0);color:var(--ink);font-family:'EB Garamond',Georgia,s
 /* Plate: for code and drawings of memory. One fine line all the way round, rounded corners, and a small star resting on the top edge. */
 .plate{position:relative;border:1px solid rgba(230,196,119,.2);border-radius:16px;background:rgba(8,11,26,.74);backdrop-filter:blur(8px)}
 .plate::before{content:"✦";position:absolute;top:-9px;left:50%;transform:translateX(-50%);width:20px;height:18px;line-height:18px;text-align:center;font-size:10px;color:var(--gold);background:#0b1024;border-radius:50%;text-shadow:0 0 8px var(--gold);pointer-events:none}
+/* A keyword, such as protocol: its name in the letters of code, and a tag after it, in the violet that colors keywords in code.
+   The tag keeps the keyword from reading as the concept of the same name, such as Protocol. */
+.kwname{font-family:'JetBrains Mono',monospace;font-variant-ligatures:none;font-size:.86em;letter-spacing:0;text-transform:none}
+.kwtag{display:inline-block;vertical-align:.18em;margin-left:.7em;padding:3px 8px 3px 10px;border:1px solid rgba(195,176,255,.5);border-radius:999px;background:rgba(195,176,255,.08);font-family:Jost,sans-serif;font-size:9px;font-weight:400;font-style:normal;line-height:1;letter-spacing:.24em;text-transform:uppercase;color:var(--violet);-webkit-text-fill-color:var(--violet);text-shadow:none;white-space:nowrap}
 .caps{font-family:Jost,sans-serif;text-transform:uppercase;letter-spacing:.2em;font-size:10.5px;color:var(--ink3);font-weight:400}
 .rule{display:flex;align-items:center;gap:10px;color:var(--gold);font-size:9px;margin:20px 0}
 .rule::before,.rule::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--goldDim))}
@@ -46,6 +50,20 @@ header{position:fixed;top:0;left:0;right:0;height:58px;display:flex;align-items:
 .back{font-family:Jost;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink2);text-decoration:none;cursor:pointer}
 .back:hover{color:var(--gold2)}
 .grow{flex:1}
+/* The harp at the right end of the header turns all sound on or off. It is a fine gold outline of an Irish harp with no circle
+   around it, like the user icon. While sound is on, its strings brighten and fade slowly, each at its own time, and when the
+   pointer is on it they light one after another. With sound off, its frame is grey, its strings are dark, and they do not move. */
+.harp{display:block;width:26px;height:26px;flex:none;cursor:pointer;opacity:.85;transition:opacity .2s,filter .25s}
+.harp:hover{opacity:1;filter:drop-shadow(0 0 6px rgba(230,196,119,.55))}
+.harp svg{display:block;overflow:visible}
+.harp .frame,.harp .hstar{transition:stroke .4s,fill .4s,opacity .4s}
+.harp .str{stroke:#fbe7b0;stroke-width:.6;opacity:.8;animation:hshimmer 5s ease-in-out calc(var(--i) * -1s) infinite;transition:opacity .4s}
+.harp:hover .str,.harp.strum .str{animation:hstrum .6s ease-out calc(var(--i) * 60ms) both}
+@keyframes hshimmer{0%,100%{opacity:.5}50%{opacity:.95}}
+@keyframes hstrum{0%{opacity:.5}30%{opacity:1;stroke-width:1.05}100%{opacity:.85;stroke-width:.6}}
+.sound-off .harp .frame{stroke:var(--ink3)}
+.sound-off .harp .str{opacity:.12;animation:none}
+.sound-off .harp .hstar{fill:var(--ink3);opacity:.6}
 
 /* Stars and lines in SVG. */
 .halo{animation:tw 4.5s ease-in-out infinite}
@@ -79,5 +97,150 @@ header{position:fixed;top:0;left:0;right:0;height:58px;display:flex;align-items:
 #ctag.on .t{opacity:1;transform:none}
 #ctag .t::before{content:"";position:absolute;left:-17px;top:-19px;width:24px;height:1px;background:linear-gradient(90deg,rgba(230,196,119,0),var(--gold));transform-origin:0 0;transform:rotate(48deg)}
 #ctag .hex{filter:drop-shadow(0 0 10px rgba(230,196,119,.45))}
+
+/* The user icon, for the reader's own account and settings: a fine gold outline of a person, with a small star beside it. */
+.you{display:block;width:26px;height:26px;cursor:pointer;opacity:.85;transition:opacity .2s,filter .25s}
+.you svg{display:block;overflow:visible}
+.you:hover,.you.on{opacity:1;filter:drop-shadow(0 0 6px rgba(230,196,119,.55))}
+.you .head{transition:fill .3s}
+.you.in .head{fill:rgba(230,196,119,.4)}
+/* A panel under an icon at the right end of the header: the music under the harp, from sky.js, and the reader's account under
+   the user icon, from you.js. Its edge is a fine gold line with a fainter line just inside it, a star on the top edge, a small
+   diamond on each side, level with the title, and one at the bottom. Opening the panel draws both lines from the star, down both
+   sides, to the bottom diamond. sky.js places each panel under its icon. */
+.ypanel{position:fixed;top:72px;right:14px;z-index:6;width:min(336px,calc(100vw - 28px));display:none;border-radius:22px;
+  background:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(230,196,119,.12),transparent 72%),radial-gradient(ellipse 110% 55% at 50% 100%,rgba(84,64,170,.14),transparent 70%),rgba(6,8,20,.95);
+  box-shadow:0 26px 70px rgba(0,0,0,.65),0 0 50px rgba(230,196,119,.05);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.ypanel.on{display:block;animation:yopen .4s cubic-bezier(.2,.8,.2,1)}
+.ypanel.closing{opacity:0;transform:translateY(-6px);transition:opacity .2s,transform .2s}
+@keyframes yopen{from{opacity:0;transform:translateY(-8px)}}
+.ypanel .ygold{color:var(--gold)}
+.yedge{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+.yedge path.line{fill:none;stroke-dasharray:1 1}
+.ypanel.opening .yedge path.line{animation:ydraw 1.05s cubic-bezier(.5,0,.2,1) both}
+.ypanel.opening .yedge path.inner{animation-delay:.15s}
+.ypanel.opening .yedge .ycrown{animation:ignite .7s cubic-bezier(.2,.9,.3,1.3) both}
+.ypanel.opening .yedge .yside{animation:yfadein .4s ease-out .5s both}
+.ypanel.opening .yedge .yend{animation:yfadein .4s ease-out .95s both}
+@keyframes ydraw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes yfadein{from{opacity:0}}
+/* The contents scroll inside the edge when the window is short, and change height smoothly when the panel changes view. */
+.ybody{position:relative;max-height:calc(100vh - 98px);overflow-y:auto;padding:24px 28px 24px;text-align:center;transition:height .42s cubic-bezier(.2,.8,.2,1)}
+.ybody>*{animation:yrise .55s cubic-bezier(.2,.8,.2,1) both}
+.ybody>.still{animation:none}
+@keyframes yrise{from{opacity:0;transform:translateY(8px)}}
+/* The emblem: a turning ring around a small disc of sky. The disc shows the outline of a person when the reader is logged out,
+   and the stars of the reader's name in the login form and when they are logged in. */
+.yemblem{width:132px;height:132px;margin:0 auto 8px;transition:width .5s cubic-bezier(.2,.8,.2,1),height .5s cubic-bezier(.2,.8,.2,1)}
+.yv-in .yemblem{width:118px;height:118px}
+.yemblem svg{display:block;width:100%;height:100%;overflow:visible;transition:filter .4s}
+.yemblem .yfig{transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+.yline{fill:none;stroke:rgba(230,196,119,.6);stroke-width:.8;stroke-linecap:round}
+.yline.fresh{stroke-dasharray:1 1;animation:ydraw .32s cubic-bezier(.5,0,.2,1) both}
+.ystar.fresh{animation:ignite .6s cubic-bezier(.2,.9,.3,1.3) both}
+.yseed{animation:yseed 2.4s ease-in-out infinite}
+@keyframes yseed{0%,100%{opacity:.25}50%{opacity:.9}}
+.yflash{opacity:0}
+.yemblem.sealed svg{filter:drop-shadow(0 0 16px rgba(230,196,119,.65))}
+.yemblem.sealed .yflash{animation:yflash .9s ease-out}
+@keyframes yflash{30%{opacity:1}}
+/* A title between two fine lines. */
+.ytitle{display:flex;align-items:center;gap:14px;margin:4px 0 2px;font-family:Cinzel;font-weight:500;font-size:16px;letter-spacing:.34em;text-transform:uppercase;color:var(--gold2);text-shadow:0 0 18px rgba(230,196,119,.4);white-space:nowrap}
+.ytitle span{margin-right:-.34em}
+.ytitle::before,.ytitle::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--goldDim))}
+.ytitle::after{transform:scaleX(-1)}
+.ylead{font-size:17px;font-style:italic;line-height:1.45;color:var(--ink2);margin:10px 0 22px}
+/* The name field: a capsule on a fine gold line, with a diamond at each end of the line. The name is written in Cinzel, and a
+   long name is written smaller, so that all of it fits. */
+.ycart{position:relative;display:block;margin-top:18px;padding:0 24px;cursor:text}
+.ycart::before{content:"";position:absolute;left:8px;right:8px;top:50%;height:1px;background:var(--goldDim)}
+.ycart i{position:absolute;top:50%;width:6px;height:6px;border:1px solid var(--gold);background:#0b0f22;transform:translateY(-50%) rotate(45deg);transition:background .3s,box-shadow .3s}
+.ycart i.l{left:3px}.ycart i.r{right:3px}
+.ycart:focus-within i{background:var(--gold);box-shadow:0 0 8px var(--gold)}
+.yfield{position:relative;display:flex;align-items:center;height:46px;padding:0 18px;border-radius:999px;border:1px solid rgba(230,196,119,.34);background:linear-gradient(180deg,#04050d,#0c0f24);box-shadow:inset 0 2px 10px rgba(0,0,0,.7);transition:border-color .3s,box-shadow .3s}
+.ycart:focus-within .yfield{border-color:rgba(230,196,119,.75);box-shadow:inset 0 2px 10px rgba(0,0,0,.7),0 0 0 4px rgba(230,196,119,.06),0 0 24px rgba(230,196,119,.2)}
+.yfield input{all:unset;flex:1;min-width:0;text-align:center;font-family:Cinzel;font-size:17px;letter-spacing:.12em;color:var(--gold2);text-shadow:0 0 12px rgba(230,196,119,.35);caret-color:var(--gold)}
+.yfield input::placeholder{font-family:'EB Garamond',serif;font-style:italic;font-size:17px;letter-spacing:.02em;color:var(--ink3);text-shadow:none}
+.ycart.nudge .yfield{animation:ynudge .4s}
+@keyframes ynudge{20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
+.yhint{font-size:14.5px;font-style:italic;line-height:1.4;color:var(--ink3);margin:10px 0 20px}
+/* The gold button: a capsule with a ring of faint light around it, a small star at each side of its word, and a band of light
+   that crosses it when the pointer is on it. It is dim until there is a name to log in with. */
+.ybtn{all:unset;position:relative;display:inline-flex;align-items:center;gap:13px;overflow:hidden;cursor:pointer;padding:12px 28px 12px 31px;border-radius:999px;font-family:Jost;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:#fff3cf;border:1px solid var(--gold);background:linear-gradient(180deg,#3b3117,#17130a);box-shadow:0 0 0 4px rgba(230,196,119,.07),0 0 24px rgba(230,196,119,.2),inset 0 1px 0 rgba(255,240,200,.25);transition:box-shadow .25s,opacity .3s,filter .3s}
+.ybtn i{font-style:normal;font-size:9px;letter-spacing:0;color:var(--gold);text-shadow:0 0 8px var(--gold)}
+.ybtn::after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:40%;background:linear-gradient(100deg,transparent,rgba(255,244,214,.3),transparent);transform:skewX(-20deg);pointer-events:none}
+.ybtn:hover::after{left:130%;transition:left .8s ease}
+.ybtn:hover{box-shadow:0 0 0 4px rgba(230,196,119,.12),0 0 32px rgba(230,196,119,.4),inset 0 1px 0 rgba(255,240,200,.3)}
+.ybtn:active{transform:scale(.97)}
+.ybtn.dim{opacity:.42;filter:saturate(.5);box-shadow:none}
+.ybtn.dim::after{display:none}
+.yquiet,.yfoot a{display:block;width:max-content;margin:16px auto 0;font-family:Jost;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--ink3);cursor:pointer;transition:color .2s}
+.yquiet:hover,.yfoot a:hover{color:var(--gold2)}
+.ynote{position:relative;font-size:14px;font-style:italic;line-height:1.45;color:var(--ink3);margin-top:20px;padding-top:16px}
+.ynote::before{content:"";position:absolute;top:0;left:22%;right:22%;height:1px;background:linear-gradient(90deg,transparent,rgba(230,196,119,.3),transparent)}
+.yname{font-family:Cinzel;font-size:22px;letter-spacing:.08em;color:var(--gold2);text-align:center;text-shadow:0 0 18px rgba(230,196,119,.35)}
+.ylevel{display:flex;align-items:baseline;justify-content:center;gap:10px;margin:8px 0 10px}
+.ylevel b{font-family:Cinzel;font-weight:500;font-size:20px;color:var(--ink)}
+/* A thin bar between two small diamonds, like the bars of Skyrim. */
+.ybar{--c:var(--gold);--c0:rgba(230,196,119,.45);position:relative;height:3px;margin:0 9px;background:rgba(236,230,214,.1);border-radius:2px}
+.ybar::before,.ybar::after{content:"";position:absolute;top:50%;width:5px;height:5px;transform:translateY(-50%) rotate(45deg);border:1px solid var(--goldDim);background:#0b0f22}
+.ybar::before{left:-9px}.ybar::after{right:-9px}
+.ybar i{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:linear-gradient(90deg,var(--c0),var(--c));box-shadow:0 0 8px var(--c0)}
+.ysmall{font-family:Jost;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink3);margin-top:8px;text-align:center}
+.yskill{padding:10px 8px 9px;margin:0 -8px;cursor:pointer;border-radius:12px;transition:background .2s}
+.yskill:hover{background:rgba(230,196,119,.06)}
+.yskill[data-go="architecture"] .ybar{--c:#c2dbff;--c0:rgba(194,219,255,.4)}
+.yskill[data-go="language"] .ybar{--c:#f3d58e;--c0:rgba(243,213,142,.4)}
+.yskill[data-go="algorithms"] .ybar{--c:#edf3ea;--c0:rgba(237,243,234,.4)}
+.ytop{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px}
+.ytop span{font-family:Cinzel;font-size:14px;letter-spacing:.12em;color:var(--ink)}
+.ytop b{font-family:Cinzel;font-weight:500;font-size:17px;color:var(--gold2)}
+.yskill .ysmall{text-align:left}
+.yperk{display:flex;justify-content:space-between;align-items:baseline;font-family:Jost;font-size:13px;letter-spacing:.04em;color:var(--ink2)}
+.yperk b{font-family:Cinzel;font-weight:500;font-size:17px;color:var(--gold2)}
+.yfoot{margin-top:4px}
+/* At the bottom of the panel, under a fine line: the Settings capsule. */
+.ytools{position:relative;display:flex;align-items:center;justify-content:center;margin-top:22px;padding-top:18px}
+.ytools::before{content:"";position:absolute;top:0;left:22%;right:22%;height:1px;background:linear-gradient(90deg,transparent,rgba(230,196,119,.3),transparent)}
+.ysettings{display:inline-flex;align-items:center;gap:10px;height:32px;padding:0 18px 0 16px;border-radius:999px;border:1px solid rgba(230,196,119,.26);background:rgba(5,7,18,.55);font-family:Jost;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--ink2);cursor:pointer;user-select:none;transition:color .2s,border-color .25s,box-shadow .25s}
+.ysettings:hover{color:var(--gold2);border-color:rgba(230,196,119,.55);box-shadow:0 0 16px rgba(230,196,119,.14)}
+.ysettings i{font-style:normal;font-size:11px;letter-spacing:0;color:var(--gold)}
+/* Settings: one volume for the music and one for the sound effects. Each is a bar between two small diamonds, like a skill's
+   bar, with a star to drag along it. With all sound off, both are dim. */
+.yvol{display:block;padding:12px 0 6px;text-align:left;cursor:pointer;transition:opacity .3s}
+.yv-settings .ytitle{margin-bottom:12px}
+.sound-off .yv-settings .yvol{opacity:.45}
+.yrange{position:relative;display:block;margin:0 9px}
+.yrange::before,.yrange::after{content:"";position:absolute;top:50%;width:5px;height:5px;transform:translateY(-50%) rotate(45deg);border:1px solid var(--goldDim);background:#0b0f22;pointer-events:none}
+.yrange::before{left:-9px}.yrange::after{right:-9px}
+.yrange input{--p:.5;-webkit-appearance:none;appearance:none;display:block;width:100%;height:24px;margin:0;background:transparent;cursor:pointer}
+.yrange input:focus{outline:none}
+.yrange input::-webkit-slider-runnable-track{height:3px;border-radius:2px;background:linear-gradient(90deg,rgba(230,196,119,.45),var(--gold)) 0 0/calc(11px + var(--p) * (100% - 22px)) 100% no-repeat,rgba(236,230,214,.1)}
+.yrange input::-moz-range-track{height:3px;border-radius:2px;background:linear-gradient(90deg,rgba(230,196,119,.45),var(--gold)) 0 0/calc(11px + var(--p) * (100% - 22px)) 100% no-repeat,rgba(236,230,214,.1)}
+.yrange input::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;margin-top:-9.5px;border:0;background:var(--ythumb) center/contain no-repeat;transition:transform .2s}
+.yrange input::-moz-range-thumb{width:22px;height:22px;border:0;background:var(--ythumb) center/contain no-repeat;transition:transform .2s}
+.yrange input:hover::-webkit-slider-thumb,.yrange input:focus-visible::-webkit-slider-thumb{transform:scale(1.2)}
+.yrange input:hover::-moz-range-thumb,.yrange input:focus-visible::-moz-range-thumb{transform:scale(1.2)}
+.ypanel{--ythumb:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-11 -11 22 22'%3E%3Cdefs%3E%3CradialGradient id='h'%3E%3Cstop offset='0' stop-color='%23e6c477' stop-opacity='.75'/%3E%3Cstop offset='.4' stop-color='%23e6c477' stop-opacity='.2'/%3E%3Cstop offset='1' stop-color='%23e6c477' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle r='11' fill='url(%23h)'/%3E%3Cpath d='M0 -8.5L2 -2L8.5 0L2 2L0 8.5L-2 2L-8.5 0L-2 -2Z' fill='%23fbe7b0'/%3E%3Ccircle r='1.6' fill='%23fff'/%3E%3C/svg%3E")}
+
+/* The music panel under the harp. The emblem's disc shows the music, drawn by sky.js on a canvas over the disc. Under it are the
+   song's name, a bar of where the song is, with its time and its length, the music's volume, and a capsule that turns all sound
+   on or off. With all sound off, the name, the bar, and the volume are dim, and the capsule is grey. */
+.ymusic{position:relative}
+.ymusic canvas{position:absolute;left:50%;top:50%;width:94px;height:94px;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none}
+/* "Now playing" is a small, quiet label, with a small gold light that pulses while the song plays. The song's name is set apart
+   from everything else in the panels, which is in capitals: it is in a large italic serif, in warm white, with a soft glow. */
+.ynow{display:flex;align-items:center;justify-content:center;gap:9px;margin-top:4px;font-family:Jost;font-size:9.5px;letter-spacing:.32em;text-transform:uppercase;color:var(--ink3)}
+.ynow span{margin-right:-.32em}
+.ynow i{width:5px;height:5px;border-radius:50%;background:var(--ink3);transition:background .3s,box-shadow .3s}
+.ynow.live i{background:var(--gold);box-shadow:0 0 8px var(--gold);animation:tw 1.6s ease-in-out infinite}
+.ysong{font-family:'EB Garamond',serif;font-style:italic;font-weight:400;font-size:31px;line-height:1.15;letter-spacing:.01em;color:#fff6e2;text-shadow:0 0 24px rgba(251,231,176,.32),0 1px 3px rgba(0,0,0,.6);margin:4px 0 20px;transition:opacity .3s}
+.yprog{transition:opacity .3s}
+.yprog .ybar i{transition:width .3s linear}
+.ytimes{display:flex;justify-content:space-between;margin:9px 0 0;font-family:Jost;font-size:10px;letter-spacing:.16em;color:var(--ink3)}
+.yv-music .yvol{margin-top:12px}
+.sound-off .yv-music .ysong,.sound-off .yv-music .yprog,.sound-off .yv-music .yvol{opacity:.45}
+.ysound.off{color:var(--ink3);border-color:rgba(126,124,144,.35)}
+.ysound.off i{color:var(--ink3)}
 
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.draw{stroke-dashoffset:0}.ignite,.fade{opacity:1}}

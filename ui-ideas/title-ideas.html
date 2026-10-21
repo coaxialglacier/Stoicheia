@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Title ideas</title>
+<!-- Six ideas for the title Wardens of the Swift. Each is drawn large, as on a title screen, and then at the size of the header bar. -->
+<link rel="stylesheet" href="sky.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=Cinzel+Decorative:wght@400;700;900&display=swap">
+<style>
+.nebula{background:
+  radial-gradient(ellipse 45% 40% at 25% 20%,rgba(150,90,230,.15),transparent 70%),
+  radial-gradient(ellipse 50% 45% at 75% 55%,rgba(40,120,200,.13),transparent 70%),
+  radial-gradient(ellipse 120% 90% at 50% 40%,#0c1330,#05070f 80%)}
+body{overflow:auto}
+main{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:64px 16px 90px}
+.intro{text-align:center;margin-bottom:76px}
+.intro h1{font-family:Cinzel;font-weight:500;font-size:15px;letter-spacing:.42em;color:var(--gold2)}
+.intro p{margin-top:10px;font-size:17px;color:var(--ink2)}
+section{margin-bottom:120px}
+.label{font-family:Cinzel;font-size:15px;letter-spacing:.16em;color:var(--gold2)}
+.note{margin-top:6px;max-width:740px;font-size:16.5px;line-height:1.6;color:var(--ink2)}
+.logo{margin:36px 0 34px}
+.logo svg{display:block;width:100%;height:auto;overflow:visible}
+.size{margin-bottom:8px}
+/* The header bar at its real size, 58 pixels tall, as on every page. */
+.hbar{display:flex;align-items:center;gap:22px;height:58px;padding:0 26px;border-top:1px solid var(--hair);border-bottom:1px solid var(--hair);background:linear-gradient(180deg,rgba(5,7,15,.88),rgba(5,7,15,.35))}
+.mark{display:flex;align-items:center;gap:12px;white-space:nowrap}
+.mark svg{display:block;flex:none;overflow:visible}
+.wm{display:flex;align-items:center;font-family:Cinzel;white-space:nowrap}
+.wm b{font-weight:600;font-size:16px;letter-spacing:.26em;background:linear-gradient(180deg,#fff7de 12%,#f2d491 48%,#c4954a 68%,#f0cf86 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 7px rgba(230,196,119,.35))}
+.wm small{font-weight:500;font-size:9px;letter-spacing:.3em;color:var(--gold);margin:0 .75em 0 .15em}
+.wm.silver b{background-image:linear-gradient(180deg,#fff 12%,#dfe8fb 48%,#8ea1c7 68%,#d8e2f7 100%);filter:drop-shadow(0 0 7px rgba(154,217,255,.35))}
+.wm.silver small{color:#b9c8e8}
+.wm .cap{font-family:'Cinzel Decorative';font-weight:900;font-size:27px;letter-spacing:.06em}
+.fake{margin-left:auto;display:flex;align-items:center;gap:8px;height:30px;padding:0 16px;border-radius:999px;border:1px solid rgba(230,196,119,.3);font-family:Jost;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink3)}
+.fake b{color:var(--gold);font-weight:400}
+</style>
+</head>
+<body>
+<div class="nebula"></div>
+<canvas id="sky"></canvas>
+<div id="card"></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <radialGradient id="haloGold"><stop offset="0" stop-color="#fff2cc" stop-opacity=".6"/><stop offset=".25" stop-color="#e6c477" stop-opacity=".22"/><stop offset="1" stop-color="#e6c477" stop-opacity="0"/></radialGradient>
+  <radialGradient id="haloIce"><stop offset="0" stop-color="#eef7ff" stop-opacity=".6"/><stop offset=".25" stop-color="#9ad9ff" stop-opacity=".22"/><stop offset="1" stop-color="#9ad9ff" stop-opacity="0"/></radialGradient>
+  <linearGradient id="fadeIn"><stop offset="0" stop-color="#e6c477" stop-opacity="0"/><stop offset="1" stop-color="#e6c477" stop-opacity=".85"/></linearGradient>
+  <linearGradient id="fadeOut"><stop offset="0" stop-color="#e6c477" stop-opacity=".85"/><stop offset="1" stop-color="#e6c477" stop-opacity="0"/></linearGradient>
+  <linearGradient id="fadeBoth"><stop offset="0" stop-color="#e6c477" stop-opacity="0"/><stop offset=".5" stop-color="#fbe7b0" stop-opacity=".9"/><stop offset="1" stop-color="#e6c477" stop-opacity="0"/></linearGradient>
+  <filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter>
+</defs></svg>
+<main id="ideas"></main>
+<script>
+// This page does not load sky.js, because sky.js moves a page into sound.html, which shows only the three pages of the star
+// theme. So it draws its own still stars, in the colors sky.js uses.
+function rnd(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+(() => {
+  const c = document.getElementById('sky'), x = c.getContext('2d'), d = devicePixelRatio || 1;
+  c.width = innerWidth * d; c.height = innerHeight * d; c.style.width = innerWidth + 'px'; c.style.height = innerHeight + 'px';
+  const r = rnd(29);
+  for (let i = 0; i < 420; i++) {
+    const h = r();
+    x.fillStyle = `rgba(${h < .14 ? '170,205,255' : h < .22 ? '255,226,180' : '236,236,255'},${(.2 + r() * .6).toFixed(2)})`;
+    x.beginPath(); x.arc(r() * c.width, r() * c.height, (.3 + r() * (i < 40 ? 1.6 : .7)) * d, 0, 7); x.fill();
+  }
+})();
+
+// Cinzel's capitals are about 0.7 of its font size, so a word's capitals run from y - 0.7 * size up to its baseline y.
+const CAP = .7;
+let uid = 0;
+const f = n => +n.toFixed(2);
+
+// Two metals for the large words. Each is light at the top of the capitals, darker just under their middle, and light again
+// at the baseline, with a glow of its own color and a dark copy a little lower that gives the letters depth.
+const METALS = {
+  gold: { stops: [[0, '#fff8e3'], [.36, '#f5dc9b'], [.55, '#ddb262'], [.62, '#a77b35'], [.71, '#d4a756'], [1, '#f5d68e']], glow: '#e6c477', glowA: .42, deep: '#3b290b', rim: 'rgba(255,246,222,.55)' },
+  silver: { stops: [[0, '#ffffff'], [.38, '#e4ecfd'], [.56, '#b7c6e6'], [.63, '#7d90bb'], [.72, '#b3c3e5'], [1, '#e9f0ff']], glow: '#9ad9ff', glowA: .32, deep: '#0f1734', rim: 'rgba(255,255,255,.5)' },
+};
+function grad(id, y1, y2, stops, x2 = 0) {
+  return `<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="0" y1="${f(y1)}" x2="${x2}" y2="${f(y2)}">${stops.map(([o, c]) => `<stop offset="${o}" stop-color="${c}"/>`).join('')}</linearGradient>`;
+}
+// A band of white light that crosses the letters once every ten seconds.
+function sheenGrad(id) {
+  return `<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="150" y2="-70">
+    <stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".7"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    <animateTransform attributeName="gradientTransform" type="translate" values="-300 0;1300 0;1300 0" keyTimes="0;.3;1" dur="10s" begin="1.2s" repeatCount="indefinite"/></linearGradient>`;
+}
+// Words in metal. parts is a string, or a list of pieces { t, size, fam, w, dx, dy } that share one baseline unless dy moves it.
+function metal(parts, o) {
+  if (typeof parts === 'string') parts = [{ t: parts }];
+  const { x, y, size, w = 700, len, anchor = 'middle', kind = 'gold', ls = 0, sheen = false } = o;
+  const M = METALS[kind], id = 'm' + (++uid);
+  let defs = `<filter id="${id}b" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur stdDeviation="${f(size * .11)}"/></filter>`;
+  const spans = face => {
+    let base = y;
+    return parts.map((p, i) => {
+      const s = p.size || size; base += p.dy || 0;
+      let a = `font-size="${s}" font-family="${p.fam || 'Cinzel'}" font-weight="${p.w || w}"`;
+      if (p.dx) a += ` dx="${p.dx}"`;
+      if (p.dy) a += ` dy="${p.dy}"`;
+      if (face) { defs += grad(`${id}f${i}`, base - s * CAP, base, M.stops); a += ` fill="url(#${id}f${i})"`; }
+      return `<tspan ${a}>${p.t}</tspan>`;
+    }).join('');
+  };
+  const face = spans(true), plain = spans(false);
+  if (sheen) defs += sheenGrad(id + 's');
+  const at = `x="${x}" y="${y}" text-anchor="${anchor}" letter-spacing="${ls}"` + (len ? ` textLength="${len}" lengthAdjust="spacing"` : '');
+  return `<defs>${defs}</defs>
+    <text ${at} fill="${M.glow}" opacity="${M.glowA}" filter="url(#${id}b)">${plain}</text>
+    <text ${at} fill="${M.deep}" stroke="${M.deep}" stroke-width="${f(size * .03)}" stroke-linejoin="round" transform="translate(0 ${f(size * .025)})">${plain}</text>
+    <text ${at} stroke="${M.rim}" stroke-width="${f(size * .007)}">${face}</text>` +
+    (sheen ? `<text ${at} fill="url(#${id}s)">${plain}</text>` : '');
+}
+
+// A star of four points with curved sides, as on the user icon: rx and ry are how far its points reach across and up.
+function spark(x, y, rx, ry, fill, k = .12) {
+  const q = Math.min(rx, ry) * k;
+  return `<path d="M${f(x)} ${f(y - ry)}Q${f(x + q)} ${f(y - q)} ${f(x + rx)} ${f(y)}Q${f(x + q)} ${f(y + q)} ${f(x)} ${f(y + ry)}Q${f(x - q)} ${f(y + q)} ${f(x - rx)} ${f(y)}Q${f(x - q)} ${f(y - q)} ${f(x)} ${f(y - ry)}Z" fill="${fill}"/>`;
+}
+// A bright star: a halo, long thin rays up and down, short rays across, short rays on the diagonals, and a white middle.
+function rayStar(x, y, r, o = {}) {
+  const c = o.color || '#fff6dc';
+  return `<circle cx="${x}" cy="${y}" r="${f(r * 2.6)}" fill="url(#${o.halo || 'haloGold'})"/>
+    ${spark(x, y, r * (o.wide || 1.2), r * (o.tall || 2.6), c, .1)}
+    <g transform="rotate(45 ${x} ${y})">${spark(x, y, r * .5, r * .5, c, .22)}</g>
+    <circle cx="${x}" cy="${y}" r="${f(r * .2)}" fill="#fff"/>`;
+}
+const dia = (x, y, r, fill) => `<path d="M${f(x)} ${f(y - r)}L${f(x + r * .62)} ${f(y)}L${f(x)} ${f(y + r)}L${f(x - r * .62)} ${f(y)}Z" fill="${fill}"/>`;
+
+// OF THE, small and centered on x = 500, between two fine lines that fade outward and end in diamonds.
+function ofThe(y, o = {}) {
+  const size = o.size || 22, gap = o.gap || 72, len = o.len || 118, ls = size * .45, ly = y - size * CAP / 2;
+  const c = o.color || '#e6c477', fill = o.fill || '#f3dc9f';
+  return `<text x="${f(500 + ls / 2)}" y="${y}" text-anchor="middle" font-family="Cinzel" font-weight="600" font-size="${size}" letter-spacing="${f(ls)}" fill="${fill}" style="filter:drop-shadow(0 0 6px rgba(230,196,119,.5))">OF THE</text>
+    <rect x="${500 - gap - len}" y="${f(ly - .5)}" width="${len}" height="1" fill="url(#fadeIn)"/>
+    <rect x="${500 + gap}" y="${f(ly - .5)}" width="${len}" height="1" fill="url(#fadeOut)"/>
+    ${dia(500 - gap - len - 7, ly, 4.5, c)}${dia(500 + gap + len + 7, ly, 4.5, c)}`;
+}
+const wordmark = (cls = '') => `<span class="wm ${cls}"><b>WARDENS</b><small>OF THE</small><b>SWIFT</b></span>`;
+
+// A swift seen from below, head up, banking a little, so its right wing reaches further and lower than its left. The box is
+// 200 wide and 120 tall, with the bird's middle at (100, 62).
+const SWIFT = 'M100 24C103.5 24 106 28.5 106 34C106 38 106.5 41 107.5 44C124 37 152 35 172 44C185 50 193 63 198 82C188 70 171 61 150 58.5' +
+  'C132 56.5 117 57 107.5 61C107.5 68 106.5 74 105 80L112 101L100 90L88 101L95 80C93.5 74 92.5 68 92.5 61C83 57 68 56 52 57.5' +
+  'C34 59 20 64 10 70C14 58 22 50 34 45C52 37 77 38 92.5 44C93.5 41 94 38 94 34C94 28.5 96.5 24 100 24Z';
+// Its constellation: stars near the bird, not on its outline, with two stars along the right wing and one along the left.
+const SWIFT_STARS = [[101, 21, 3.4], [98, 49, 2.2], [141, 40, 2.5], [177, 50, 2], [196, 85, 2.9], [56, 43, 2.3], [12, 66, 2.6], [87, 105, 2.2]];
+const SWIFT_EDGES = [[0, 1], [1, 2], [2, 3], [3, 4], [1, 5], [5, 6], [1, 7]];
+
+// ---------- A · Aether Crown ----------
+function ideaA() {
+  const r = rnd(11);
+  let dust = '';
+  for (let i = 0; i < 30; i++) {
+    const x = 90 + r() * 820, y = 392 + (r() - .5) * 130 * (1 - Math.abs(x - 500) / 540);
+    dust += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(.5 + r() * 1.1)}" fill="#e8f1ff" opacity="${f(.3 + r() * .6)}"/>`;
+  }
+  // The crown is a constellation, drawn as on a star chart: each star is a small ring, the brighter ones with a dot inside, and
+  // straight lines join them, stopping short of each ring. The big star is in the middle, with three stars on each side, near a
+  // faint arc but not on it. The right side is the left side in a mirror.
+  const LEFT = [[266, 177, 4.2], [337, 135, 6], [419, 111, 3.6]];
+  const CROWN = [...LEFT, [500, 104, 0], ...LEFT.map(([x, y, r]) => [1000 - x, y, r]).reverse()];
+  const gapOf = r => r ? r + 4 : 24;
+  const lines = CROWN.slice(1).map(([x2, y2, r2], i) => {
+    const [x1, y1, r1] = CROWN[i], d = Math.hypot(x2 - x1, y2 - y1), ux = (x2 - x1) / d, uy = (y2 - y1) / d;
+    return `<line x1="${f(x1 + ux * gapOf(r1))}" y1="${f(y1 + uy * gapOf(r1))}" x2="${f(x2 - ux * gapOf(r2))}" y2="${f(y2 - uy * gapOf(r2))}"/>`;
+  }).join('');
+  const ring = (x, y, r, op = 1) => `<g opacity="${op}"><circle cx="${x}" cy="${y}" r="${f(r * 3)}" fill="url(#haloGold)" opacity=".7"/>
+    <circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="#f3dc9f" stroke-width="1.2"/>${r > 5 ? `<circle cx="${x}" cy="${y}" r="1.7" fill="#fff6dc"/>` : ''}</g>`;
+  const crown = `<path d="M290 172Q500 36 710 172" fill="none" stroke="#e6c477" stroke-opacity=".16" stroke-width="1"/>
+    <g stroke="#e6c477" stroke-opacity=".8" stroke-width="1">${lines}</g>
+    ${CROWN.filter(s => s[2]).map(([x, y, r]) => ring(x, y, r)).join('')}`;
+  return `<svg viewBox="0 0 1000 490" role="img" aria-label="Wardens of the Swift">
+    <defs><radialGradient id="bandA"><stop offset="0" stop-color="#bcd6ff" stop-opacity=".2"/><stop offset=".55" stop-color="#7d9fe0" stop-opacity=".07"/><stop offset="1" stop-color="#7d9fe0" stop-opacity="0"/></radialGradient></defs>
+    <ellipse cx="500" cy="392" rx="470" ry="78" fill="url(#bandA)"/>${dust}
+    ${crown}
+    ${rayStar(500, 104, 15)}
+    ${metal('WARDENS', { x: 500, y: 268, size: 100, len: 690, sheen: true })}
+    ${ofThe(318)}
+    ${metal('SWIFT', { x: 500, y: 438, size: 130, len: 610, sheen: true })}
+    <rect x="250" y="466" width="500" height="1" fill="url(#fadeBoth)"/>${spark(500, 466.5, 10, 6, '#fff3cf')}
+  </svg>`;
+}
+const headerA = () => `<svg width="22" height="34" viewBox="-11 -17 22 34">${rayStar(0, 0, 5.6)}</svg>${wordmark()}`;
+
+// ---------- B · The Warden's Seal ----------
+// A round seal in silver. The title runs around the top of its ring, MMXXVI around the bottom, and the swift's constellation
+// is in the middle.
+function sealParts(cx, cy, s, full) {
+  const R = v => f(v * s);
+  let ticks = '';
+  const n = full ? 120 : 36;
+  for (let i = 0; i < n; i++) {
+    const a = i / n * Math.PI * 2, long = full ? i % 10 === 0 : i % 3 === 0, r1 = (long ? 154 : 160) * s, r2 = 166 * s;
+    ticks += `<line x1="${f(cx + r1 * Math.sin(a))}" y1="${f(cy - r1 * Math.cos(a))}" x2="${f(cx + r2 * Math.sin(a))}" y2="${f(cy - r2 * Math.cos(a))}"/>`;
+  }
+  const bird = `translate(${cx} ${cy + 8 * s}) rotate(-8) scale(${f(1.12 * s)}) translate(-100 -62)`;
+  const lines = SWIFT_EDGES.map(([a, b]) => `<line x1="${SWIFT_STARS[a][0]}" y1="${SWIFT_STARS[a][1]}" x2="${SWIFT_STARS[b][0]}" y2="${SWIFT_STARS[b][1]}"/>`).join('');
+  const stars = SWIFT_STARS.map(([x, y, r], i) => full
+    ? `<g><circle cx="${x}" cy="${y}" r="${f(r * 3.2)}" fill="url(#haloIce)"/><circle cx="${x}" cy="${y}" r="${f(r * .62)}" fill="#f4f8ff"/><animate attributeName="opacity" values="1;.6;1" dur="${f(3.2 + i * .7)}s" repeatCount="indefinite"/></g>`
+    : '').join('');
+  return `<circle cx="${cx}" cy="${cy}" r="${R(236)}" fill="url(#discB)"/>
+    <g fill="none" stroke="#c9d6f2">
+      <circle cx="${cx}" cy="${cy}" r="${R(236)}" stroke-width="${f(1.6 * Math.max(s, .5))}"/>
+      ${full ? `<circle cx="${cx}" cy="${cy}" r="${R(229)}" stroke-width=".6" stroke-opacity=".6"/>` : ''}
+      <circle cx="${cx}" cy="${cy}" r="${R(170)}" stroke-width="${full ? 1 : .6}" stroke-opacity=".8"/>
+      <g stroke-width="${full ? .8 : .5}" stroke-opacity=".55">${ticks}</g>
+      <circle cx="${cx}" cy="${cy}" r="${R(150)}" stroke-width="${full ? .8 : .5}" stroke-opacity=".6"/>
+    </g>
+    <g transform="${bird}">
+      <path d="${SWIFT}" fill="${full ? 'rgba(160,200,255,.08)' : '#dfe8fb'}" stroke="${full ? 'rgba(200,222,255,.4)' : 'none'}" stroke-width="1" vector-effect="non-scaling-stroke"/>
+      ${full ? `<g stroke="rgba(228,238,255,.7)" stroke-width=".9" vector-effect="non-scaling-stroke">${lines}</g>${stars}` : ''}
+    </g>`;
+}
+function ideaB() {
+  const cx = 500, cy = 266, r = rnd(5);
+  let dust = '';
+  for (let i = 0; i < 46; i++) {
+    const a = r() * Math.PI * 2, d = Math.sqrt(r()) * 140;
+    dust += `<circle cx="${f(cx + d * Math.cos(a))}" cy="${f(cy + d * Math.sin(a))}" r="${f(.4 + r() * .8)}" fill="#e8f1ff" opacity="${f(.25 + r() * .5)}"/>`;
+  }
+  // Points on the bottom of the ring, by their angle from the bottom.
+  const at = (deg, rad) => [cx + rad * Math.sin(deg * Math.PI / 180), cy + rad * Math.cos(deg * Math.PI / 180)];
+  const marks = [-44, -29, 29, 44].map(d => { const [x, y] = at(d, 199); return spark(x, y, 4.5, 6, '#dfe8fb'); }).join('') +
+    [-60, -54, 54, 60].map(d => { const [x, y] = at(d, 199); return `<circle cx="${f(x)}" cy="${f(y)}" r="1.5" fill="#c9d6f2"/>`; }).join('');
+  const top = `M${cx} ${cy + 187}A187 187 0 1 1 ${cx} ${cy - 187}A187 187 0 1 1 ${cx} ${cy + 187}`;
+  const bottom = `M${cx - 208} ${cy}A208 208 0 0 0 ${cx + 208} ${cy}`;
+  const ring = `<textPath href="#ringTopB" startOffset="50%" text-anchor="middle">WARDENS<tspan font-size="22" dy="-4"> ✦ </tspan><tspan dy="4">OF THE</tspan><tspan font-size="22" dy="-4"> ✦ </tspan><tspan dy="4">SWIFT</tspan></textPath>`;
+  return `<svg viewBox="0 0 1000 540" role="img" aria-label="Wardens of the Swift">
+    <defs>
+      <radialGradient id="discB"><stop offset="0" stop-color="#101a3d" stop-opacity=".95"/><stop offset=".7" stop-color="#0a1029" stop-opacity=".94"/><stop offset="1" stop-color="#070a1a" stop-opacity=".9"/></radialGradient>
+      <radialGradient id="ringB" gradientUnits="userSpaceOnUse" cx="${cx}" cy="${cy}" r="230"><stop offset="0" stop-color="#8396c0"/><stop offset=".81" stop-color="#8396c0"/><stop offset=".86" stop-color="#cbd8f4"/><stop offset=".92" stop-color="#ffffff"/><stop offset="1" stop-color="#e3ebfd"/></radialGradient>
+      <filter id="ringGlowB" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="4"/></filter>
+      <path id="ringTopB" d="${top}" fill="none"/><path id="ringBotB" d="${bottom}" fill="none"/>
+    </defs>
+    <circle cx="${cx}" cy="${cy}" r="300" fill="url(#haloIce)" opacity=".35"/>
+    ${sealParts(cx, cy, 1, true)}${dust}
+    <g font-family="Cinzel" font-weight="700" font-size="33" letter-spacing="5">
+      <text fill="#9ad9ff" opacity=".4" filter="url(#ringGlowB)">${ring}</text>
+      <text fill="none" stroke="#0f1734" stroke-width="3">${ring}</text>
+      <text fill="url(#ringB)" stroke="rgba(255,255,255,.45)" stroke-width=".3">${ring}</text>
+    </g>
+    <text font-family="Cinzel" font-weight="600" font-size="17" letter-spacing="7" fill="#c9d6f2"><textPath href="#ringBotB" startOffset="50%" text-anchor="middle">MMXXVI</textPath></text>
+    ${marks}
+  </svg>`;
+}
+const headerB = () => `<svg width="40" height="40" viewBox="-20 -20 40 40">${sealParts(0, 0, .084, false)}</svg>${wordmark('silver')}`;
+
+// ---------- C · Swift Wings ----------
+// A swift with its wings spread, the pose that heraldry calls displayed. Each wing is four layers of long, curved feathers,
+// the longest at the leading edge, each fading toward its tip. The right wing is the left one drawn in a mirror.
+const FEATHERS = [
+  [[488, 124], [430, 40], [230, 26], [30, 150], [190, 84], [390, 104], [484, 138]],
+  [[486, 136], [420, 80], [250, 70], [80, 182], [240, 124], [395, 128], [482, 150]],
+  [[484, 148], [424, 112], [300, 108], [160, 206], [300, 150], [404, 152], [480, 162]],
+  [[482, 160], [436, 142], [356, 142], [250, 218], [356, 176], [424, 172], [478, 174]],
+];
+function wingSvg(full) {
+  const p = ([a, b, c, d, e, g, h]) => `M${a}C${b} ${c} ${d}C${e} ${g} ${h}Z`;
+  const one = FEATHERS.map((L, i) => `<path d="${p(L)}" fill="#0a0e22"/><path d="${p(L)}" fill="url(#featherC)" fill-opacity="${1 - i * .14}" stroke="url(#featherEdgeC)" stroke-width="${full ? 1.1 : 2.4}"/>`).join('');
+  // The body is short and round at the head, as a swift's is, and its tail is forked.
+  return `<g>${one}</g><g transform="translate(1000 0) scale(-1 1)">${one}</g>
+    <path d="M494 180L483 214L500 199L517 214L506 180Z" fill="url(#bodyC)" stroke="#3b290b" stroke-width="${full ? .8 : 2}"/>
+    <path d="M500 102C507 102 511 108 511 116C514 128 513 150 508 172C506 180 503 185 500 188C497 185 494 180 492 172C487 150 486 128 489 116C489 108 493 102 500 102Z" fill="url(#bodyC)" stroke="#3b290b" stroke-width="${full ? .8 : 2}"/>`;
+}
+const wingDefs = `<linearGradient id="featherC" gradientUnits="userSpaceOnUse" x1="480" y1="0" x2="40" y2="0"><stop offset="0" stop-color="#e6c477" stop-opacity=".45"/><stop offset=".55" stop-color="#e6c477" stop-opacity=".2"/><stop offset="1" stop-color="#e6c477" stop-opacity="0"/></linearGradient>
+  <linearGradient id="featherEdgeC" gradientUnits="userSpaceOnUse" x1="480" y1="0" x2="40" y2="0"><stop offset="0" stop-color="#fbe7b0" stop-opacity=".95"/><stop offset=".7" stop-color="#fbe7b0" stop-opacity=".55"/><stop offset="1" stop-color="#fbe7b0" stop-opacity=".1"/></linearGradient>
+  ${grad('bodyC', 98, 216, METALS.gold.stops)}`;
+function ideaC() {
+  return `<svg viewBox="0 0 1000 500" role="img" aria-label="Wardens of the Swift">
+    <defs>${wingDefs}</defs>
+    <circle cx="500" cy="140" r="150" fill="url(#haloGold)" opacity=".5"/>
+    ${wingSvg(true)}
+    ${rayStar(500, 70, 11)}
+    ${metal('WARDENS', { x: 500, y: 300, size: 96, len: 660, sheen: true })}
+    ${ofThe(348)}
+    ${metal('SWIFT', { x: 500, y: 470, size: 122, len: 570, sheen: true })}
+  </svg>`;
+}
+const headerC = () => `<svg width="80" height="30" viewBox="20 20 960 210">${wingSvg(false)}${rayStar(500, 70, 24)}</svg>${wordmark()}`;
+
+// ---------- D · The Warden's Blade ----------
+// A sword stands between the words: its pommel star under WARDENS, OF and THE on its crossguard, and its blade is the I of SWIFT.
+function swordSvg(full) {
+  const guard = 'M500 230C440 229 330 230 252 234C232 235 220 242 214 254C228 248 244 246 262 245C340 243 440 244 500 246Z';
+  let wraps = '';
+  for (let y = 182; y < 230; y += 8) wraps += `<line x1="490" y1="${y}" x2="510" y2="${y + 5}"/>`;
+  return `<rect x="494" y="250" width="12" height="300" fill="#bcd6ff" opacity=".35" filter="url(#soft)"/>
+    <path d="M489 248L511 248L510 486L500 564L490 486Z" fill="url(#bladeD)" stroke="#2a3558" stroke-width="${full ? .8 : 2}"/>
+    ${full ? '<line x1="500" y1="256" x2="500" y2="540" stroke="#fff" stroke-opacity=".55" stroke-width=".8"/>' : ''}
+    <rect x="490" y="176" width="20" height="58" rx="3" fill="url(#gripD)"/>
+    ${full ? `<g stroke="#e6c477" stroke-opacity=".5" stroke-width="1">${wraps}</g>` : ''}
+    <path d="${guard}" fill="url(#guardD)" stroke="#3b290b" stroke-width="${full ? .8 : 2}"/>
+    <path d="${guard}" transform="translate(1000 0) scale(-1 1)" fill="url(#guardD)" stroke="#3b290b" stroke-width="${full ? .8 : 2}"/>
+    <path d="M500 223L509 238L500 253L491 238Z" fill="url(#gemD)" stroke="#e6c477" stroke-width="${full ? 1.2 : 2.4}"/>
+    ${full ? '<path d="M497 230L500 225L503 230Z" fill="#fff" opacity=".8"/>' : ''}
+    <path d="M500 160L507 170L500 180L493 170Z" fill="url(#guardD)" stroke="#3b290b" stroke-width="${full ? .8 : 2}"/>`;
+}
+const swordDefs = `<linearGradient id="bladeD" gradientUnits="userSpaceOnUse" x1="489" y1="0" x2="511" y2="0"><stop offset="0" stop-color="#f6f8ff"/><stop offset=".46" stop-color="#d8e0f1"/><stop offset=".54" stop-color="#8f9dbf"/><stop offset="1" stop-color="#bac6e2"/></linearGradient>
+  <linearGradient id="gripD" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2b2013"/><stop offset=".5" stop-color="#5a4426"/><stop offset="1" stop-color="#2b2013"/></linearGradient>
+  ${grad('guardD', 222, 256, METALS.gold.stops)}
+  <radialGradient id="gemD" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#eaf5ff"/><stop offset=".35" stop-color="#7fb0f0"/><stop offset="1" stop-color="#1c3787"/></radialGradient>`;
+function ideaD() {
+  return `<svg viewBox="0 0 1000 590" role="img" aria-label="Wardens of the Swift">
+    <defs>${swordDefs}</defs>
+    ${swordSvg(true)}
+    ${rayStar(500, 150, 9)}
+    ${metal('WARDENS', { x: 500, y: 122, size: 98, len: 660, sheen: true })}
+    <text x="372" y="221" text-anchor="middle" font-family="Cinzel" font-weight="600" font-size="22" letter-spacing="9" fill="#f3dc9f" style="filter:drop-shadow(0 0 6px rgba(230,196,119,.5))">OF</text>
+    <text x="632" y="221" text-anchor="middle" font-family="Cinzel" font-weight="600" font-size="22" letter-spacing="9" fill="#f3dc9f" style="filter:drop-shadow(0 0 6px rgba(230,196,119,.5))">THE</text>
+    ${metal('SW', { x: 482, y: 414, size: 134, anchor: 'end', ls: 6, sheen: true })}
+    ${metal('FT', { x: 527, y: 414, size: 134, anchor: 'start', ls: 6, sheen: true })}
+    ${spark(500, 566, 7, 12, '#eef4ff')}
+  </svg>`;
+}
+const headerD = () => `<svg width="16" height="46" viewBox="440 140 120 430"><defs>${swordDefs.replace(/id="/g, 'id="h')}</defs>${swordSvg(false).replace(/url\(#/g, 'url(#h').replace('url(#hsoft)', 'url(#soft)')}${rayStar(500, 150, 16)}</svg>${wordmark()}`;
+
+// ---------- E · Aether Stream ----------
+// Six thin lines of light rise from under SWIFT and meet at a bright star at the top right. Neighboring lines bow opposite
+// ways, as the lines of Expand to Parts do, and a small light moves along each one.
+function streams(n) {
+  return Array.from({ length: n }, (_, i) => {
+    const sy = 348 + i * 12, bow = (i % 2 ? 1 : -1) * (14 + i * 3);
+    const c1x = 380 + Math.sin(i * 1.7) * 60, c1y = 398 + bow, c2x = 790 + Math.sin(i * 2.3) * 30, c2y = 330 - bow * .6;
+    return `M${20 + i * 14} ${sy}C${f(c1x)} ${f(c1y)} ${f(c2x)} ${f(c2y)} ${f(878 + Math.sin(i * 3.1) * 4)} ${f(100 + Math.cos(i * 1.3) * 4)}`;
+  });
+}
+function ideaE() {
+  const paths = streams(6);
+  const lines = paths.map((d, i) => `<path d="${d}" fill="none" stroke="url(#streamE)" stroke-width="${[1.6, .8, 1.2, .7, 1.4, .9][i]}" stroke-linecap="round"/>`).join('');
+  const glow = paths.map(d => `<path d="${d}" fill="none" stroke="url(#streamE)" stroke-width="9" opacity=".16" filter="url(#soft)"/>`).join('');
+  const lights = paths.map((d, i) => `<circle r="${i % 2 ? 1.8 : 2.4}" fill="#fff"><animateMotion dur="${9 + i * 1.3}s" begin="${-i * 1.7}s" repeatCount="indefinite" path="${d}"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.15;.85;1" dur="${9 + i * 1.3}s" begin="${-i * 1.7}s" repeatCount="indefinite"/></circle>`).join('');
+  return `<svg viewBox="0 0 1000 420" role="img" aria-label="Wardens of the Swift">
+    <defs><linearGradient id="streamE" gradientUnits="userSpaceOnUse" x1="20" y1="360" x2="880" y2="100">
+      <stop offset="0" stop-color="#7fe8d2" stop-opacity="0"/><stop offset=".2" stop-color="#7fe8d2"/><stop offset=".45" stop-color="#9ad9ff"/><stop offset=".72" stop-color="#c3b0ff"/><stop offset="1" stop-color="#fbe7b0"/></linearGradient></defs>
+    ${glow}${lines}${lights}
+    ${rayStar(878, 100, 13)}
+    ${metal([{ t: 'WARDENS' }, { t: 'OF THE', size: 30, dx: 24, w: 600 }], { x: 112, y: 132, size: 54, anchor: 'start', ls: 11 })}
+    ${metal('SWIFT', { x: 104, y: 322, size: 190, anchor: 'start', len: 640, sheen: true })}
+  </svg>`;
+}
+const headerE = () => `${wordmark()}<svg width="46" height="26" viewBox="0 70 900 360" style="margin-left:-8px">${streams(3).map((d, i) => `<path d="${d}" fill="none" stroke="url(#streamH)" stroke-width="${[22, 14, 18][i]}" stroke-linecap="round"/>`).join('')}${rayStar(878, 100, 40)}
+  <defs><linearGradient id="streamH" gradientUnits="userSpaceOnUse" x1="20" y1="360" x2="880" y2="100"><stop offset="0" stop-color="#7fe8d2" stop-opacity="0"/><stop offset=".4" stop-color="#9ad9ff"/><stop offset=".72" stop-color="#c3b0ff"/><stop offset="1" stop-color="#fbe7b0"/></linearGradient></defs></svg>`;
+
+// ---------- F · Illuminated Capitals ----------
+// The title on one line, with the first letters of WARDENS and SWIFT set large in Cinzel Decorative.
+function ideaF() {
+  const big = { fam: 'Cinzel Decorative', size: 136, w: 900 };
+  return `<svg viewBox="0 0 1000 300" role="img" aria-label="Wardens of the Swift">
+    <defs>${grad('swashF', 0, 0, [[0, 'rgba(230,196,119,0)'], [.2, '#e6c477'], [.8, '#fbe7b0'], [1, '#fff6dc']], 1)}
+      <linearGradient id="swashFill" gradientUnits="userSpaceOnUse" x1="140" y1="0" x2="870" y2="0"><stop offset="0" stop-color="#e6c477" stop-opacity="0"/><stop offset=".25" stop-color="#e6c477" stop-opacity=".8"/><stop offset="1" stop-color="#fbe7b0"/></linearGradient></defs>
+    ${metal([{ t: 'W', ...big }, { t: 'ARDENS' }, { t: 'OF THE', size: 21, w: 600, dx: 22, dy: -17 }, { t: 'S', ...big, dx: 22, dy: 17 }, { t: 'WIFT' }], { x: 500, y: 204, size: 68, ls: 4, sheen: true })}
+    <path d="M140 238C360 223 650 222 862 230C650 231 360 232 140 238Z" fill="url(#swashFill)"/>
+    ${spark(874, 230, 12, 8, '#fff3cf')}
+  </svg>`;
+}
+const headerF = () => `<span class="wm"><b><span class="cap">W</span>ARDENS</b><small>OF THE</small><b><span class="cap">S</span>WIFT</b></span>`;
+
+const IDEAS = [
+  ['A · Aether Crown', 'The title in three lines, centered. Above WARDENS, a large star with long rays is the middle of a small constellation, drawn as on a star chart: rings for stars, joined by straight lines, three on each side, the same on both sides, near a faint arc. OF THE is small, between two fine lines that end in diamonds. A soft band of pale light with small stars in it lies behind SWIFT, as the aether. Every ten seconds a band of light crosses the gold letters.', ideaA, headerA],
+  ['B · The Warden\'s Seal', 'A round seal in moonlit silver, which also works small, as an app icon or a stamp. The title runs around the top of the ring, and MMXXVI, the year 2026, around the bottom. In the middle is a swift drawn as a constellation: blue-white stars joined by straight lines, near a faint drawing of the bird, which is banking, so its two wings are not the same.', ideaB, headerB],
+  ['C · Swift Wings', 'A swift with its wings spread above the title, the pose that heraldry calls displayed. Each wing is four layers of long curved feathers in gold that fade toward the tips, the narrow, swept-back shape of a swift\'s wings. A star is at the bird\'s head.', ideaC, headerC],
+  ['D · The Warden\'s Blade', 'A sword stands between the words. Its pommel is a star under WARDENS, OF and THE sit on its crossguard on each side of a blue gem, and its steel blade is the I of SWIFT, running on past the letters to its point.', ideaD, headerD],
+  ['E · Aether Stream', 'Six thin lines of light in the colors of the theme, teal, blue, violet, and gold, rise from under SWIFT and meet at a bright star at the top right. A small light moves along each line. The title is set to the left, and SWIFT is much larger than the other words.', ideaE, headerE],
+  ['F · Illuminated Capitals', 'The title on one line. The W of WARDENS and the S of SWIFT are large initial capitals in Cinzel Decorative, the ornamented version of Cinzel. A thin gold line under the title tapers at its left end and ends in a star at its right.', ideaF, headerF],
+];
+document.getElementById('ideas').innerHTML = `<div class="intro"><h1>WARDENS OF THE SWIFT</h1><p>Six ideas for the title. Each one is drawn large first, as on a title screen, and then in the header bar at its real size.</p></div>` +
+  IDEAS.map(([name, note, big, small]) => `<section><div class="label">${name}</div><p class="note">${note}</p>
+    <div class="logo">${big()}</div>
+    <div class="caps size">In the header</div>
+    <div class="hbar"><span class="mark">${small()}</span><span class="caps">The library</span><span class="fake"><b>✧</b>Search</span></div></section>`).join('');
+</script>
+</body>
+</html>

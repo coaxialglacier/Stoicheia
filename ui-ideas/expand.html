@@ -27,6 +27,13 @@ main svg{display:block}
 .nm.known{fill:#8d92a8}
 .nm.sel{fill:var(--gold2)}
 .nm.root{font-family:Cinzel;font-size:19px;letter-spacing:.12em;fill:#f1e7ff}
+.nm.kwn{font-family:'JetBrains Mono',monospace;font-variant-ligatures:none;letter-spacing:0}
+/* The tag after a keyword's name, as .kwtag is in HTML. */
+.kwt{pointer-events:none;transition:opacity .2s}
+.kwt rect{fill:rgba(16,12,38,.92);stroke:rgba(195,176,255,.6);stroke-width:.8}
+.kwt text{font-family:Jost,sans-serif;font-size:8.5px;letter-spacing:.22em;fill:var(--violet)}
+.kwt.known rect{stroke:rgba(141,146,168,.55)}
+.kwt.known text{fill:#8d92a8}
 .cnt{font-family:Jost;font-size:11px;fill:rgba(230,196,119,.75);letter-spacing:.1em;pointer-events:none}
 .region .cloud{opacity:.75;transition:opacity .6s}
 .region.on .cloud,.region.lit .cloud{opacity:1}
@@ -75,12 +82,16 @@ svg.focus .ln{opacity:.12}
 svg.focus .ln.lit{opacity:1}
 svg.focus .nm{fill:#5d5b70}
 svg.focus .nm.lit{fill:var(--gold2)}
+svg.focus .kwt{opacity:.4}
+svg.focus .kwt.lit{opacity:1}
 .hit{cursor:pointer}
 
 aside{position:fixed;top:132px;right:18px;max-height:calc(100vh - 150px);width:358px;z-index:2;padding:26px 26px 22px;overflow-y:auto}
 aside .caps.top{color:var(--gold)}
 .selhead{display:flex;align-items:flex-start;gap:12px;margin-top:10px}
 .selhead h2{font-family:Cinzel;font-weight:500;font-size:24px;line-height:1.15;letter-spacing:.04em;color:var(--gold2);text-shadow:0 0 20px rgba(230,196,119,.35);flex:1}
+/* The panel is narrow, so a keyword's tag goes under its name. */
+.selhead h2 .kwtag{display:table;margin:9px 0 0}
 .mag{display:flex;gap:6px;align-items:center;margin-top:12px}
 .mag i{display:block;border-radius:50%;border:1px solid rgba(160,180,255,.35)}
 .mag i.on{background:#fff;border-color:#fff;box-shadow:0 0 8px #a8c4ff}
@@ -94,6 +105,8 @@ aside .caps.top{color:var(--gold)}
 .parts li:hover{color:var(--gold2)}
 .parts li small{margin-left:auto;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink3)}
 .parts li.known{color:var(--known)}
+.parts li .kwtag{margin-left:-4px}
+.parts li.known .kwtag{color:var(--known);-webkit-text-fill-color:var(--known);border-color:rgba(141,146,168,.45);background:none}
 .dot{width:12px;height:12px;border-radius:50%;flex:none;background:radial-gradient(circle,#fff 0 25%,rgba(160,190,255,.5) 35%,transparent 70%)}
 .dot.atom{background:radial-gradient(circle,#fff 0 25%,rgba(143,240,220,.6) 35%,transparent 70%)}
 .dot.known{background:none;border:1px dashed var(--known)}
@@ -110,6 +123,9 @@ aside .caps.top{color:var(--gold)}
   <a class="back" id="home">← The library</a>
   <span class="ttl">EXPAND TO PARTS</span>
   <span class="caps">From a whole idea to its smallest parts</span>
+  <span class="grow"></span>
+  <a class="harp" id="harp" aria-label="Music"></a>
+  <a class="you" id="you" aria-label="You"></a>
 </header>
 <div class="bar">
   <span id="roots"></span>
@@ -140,6 +156,7 @@ aside .caps.top{color:var(--gold)}
 <script src="library-data.js"></script>
 <script src="library.js"></script>
 <script src="pages.js"></script>
+<script src="you.js"></script>
 <script>
 const { el } = Sky;
 const svg = document.getElementById('map'), main = document.getElementById('main');
@@ -158,6 +175,8 @@ const ATOM = '#8ff0dc';
 const R = c => [13, 8, 6, 5, 4.4][Math.min(c, 4)];
 // The first column starts after the whole idea's name, so a long name has room. The name is split onto lines of at most 14 characters.
 const ROOT_WRAP = 14;
+// The width of the tag after a keyword's name.
+const KW_W = 66;
 // Where the whole idea's star is. The space to its left holds the compass.
 const LEFT = 220;
 const X = c => {
@@ -256,7 +275,10 @@ function draw(L, tweenPlace) {
     const p = P[id], max = id === ROOT ? ROOT_WRAP : OPEN.has(id) ? 12 : 18;
     p.lines = Sky.wrap(PIECES[id].name, max);
     p.lx = p.x + (id === ROOT ? 52 : 46);
-    p.cx = p.lx + Math.max(...p.lines.map(l => l.length)) * (id === ROOT ? 13.5 : 7.6) + 10;
+    // A keyword's name is in the letters of code, which are 7.8 pixels wide, and a tag after it says that it is a keyword.
+    const kw = PIECES[id].keyword, w = Math.max(...p.lines.map(l => l.length)) * (id === ROOT ? 13.5 : kw ? 7.8 : 7.6);
+    p.tx = kw ? p.lx + w + 9 : null;
+    p.cx = (kw ? p.tx + KW_W : p.lx + w) + 10;
     p.end = p.cx + 26;
   }
 
@@ -368,9 +390,15 @@ function draw(L, tweenPlace) {
     if (fresh.has(id)) { o.classList.add('ignite'); delay(o, wave(id)); }
     el('circle', { r: Math.max(14, r * 2), fill: 'transparent' }, g);
     el('rect', { x: -16, y: -18 - (p.lines.length - 1) * 9, width: p.cx - 6 - p.x + 16, height: 36 + (p.lines.length - 1) * 18, fill: 'transparent' }, g);
-    const t = el('text', { x: p.lx, y: p.y + 4.5 - (p.lines.length - 1) * (id === ROOT ? 11 : 8), class: 'nm' + (id === ROOT ? ' root' : '') + (known ? ' known' : '') + (isSel ? ' sel' : '') + (fresh.has(id) ? ' fade' : ''), 'data-id': id }, svg);
+    const t = el('text', { x: p.lx, y: p.y + 4.5 - (p.lines.length - 1) * (id === ROOT ? 11 : 8), class: 'nm' + (id === ROOT ? ' root' : '') + (PIECES[id].keyword ? ' kwn' : '') + (known ? ' known' : '') + (isSel ? ' sel' : '') + (fresh.has(id) ? ' fade' : ''), 'data-id': id }, svg);
     if (fresh.has(id)) delay(t, wave(id) + 150);
     p.lines.forEach((l, i) => { el('tspan', { x: p.lx, dy: i ? (id === ROOT ? 22 : 16) : 0 }, t).textContent = l; });
+    if (p.tx !== null) {
+      const kt = el('g', { transform: `translate(${p.tx},${p.y})`, class: 'kwt' + (known ? ' known' : '') + (fresh.has(id) ? ' fade' : ''), 'data-id': id }, svg);
+      if (fresh.has(id)) delay(kt, wave(id) + 150);
+      el('rect', { x: 0, y: -7.5, width: KW_W, height: 15, rx: 7.5 }, kt);
+      el('text', { x: KW_W / 2 + 1, y: 3, 'text-anchor': 'middle' }, kt).textContent = 'KEYWORD';
+    }
     // How many parts it has: ‹ when they are showing, › when they are not. Clicking it opens or closes them. An atom has a small diamond.
     const n = PIECES[id].of.length, cy = p.y + 4.5 - (n ? (p.lines.length - 1) * 8 : 0);
     const tg = n && id !== ROOT ? el('g', { class: 'toggle', 'data-id': id }, svg) : svg;
@@ -405,6 +433,7 @@ function draw(L, tweenPlace) {
   panel(L, K);
   roots();
   remember();
+  document.getElementById('home').textContent = '← ' + homeOf(ROOT).name;
   return L;
 }
 
@@ -416,7 +445,7 @@ function draw(L, tweenPlace) {
 function waysBack() {
   const ids = Object.keys(PIECES).filter(k => PIECES[k].of.includes(ROOT));
   ids.sort((a, b) => (b === cameFrom) - (a === cameFrom) || (LIB.hasStudy(b) ? 1 : 0) - (LIB.hasStudy(a) ? 1 : 0));
-  return ids.length ? ids.map(id => ({ id, name: PIECES[id].name })) : [{ id: '#home', name: 'the library' }];
+  return ids.length ? ids.map(id => ({ id, name: PIECES[id].name })) : [{ id: '#home', name: homeOf(ROOT).name }];
 }
 function compass(cx, cy, d) {
   const ways = waysBack().slice(0, 3);
@@ -456,7 +485,7 @@ function goEast(to) {
 // with the idea we came from open and selected inside it.
 function goWest(to) {
   Sky.hint.cancel(); armed = null;
-  if (to === '#home') { const b = svg.querySelector('.compass').getBoundingClientRect(); Sky.go('index.html', b.x + b.width / 2, b.y + b.height / 2); return; }
+  if (to === '#home') { const b = svg.querySelector('.compass').getBoundingClientRect(); Sky.go(homeOf(ROOT).href, b.x + b.width / 2, b.y + b.height / 2); return; }
   const from = ROOT;
   cameFrom = null;
   Sky.pan(320);
@@ -478,15 +507,15 @@ function panel(L, K) {
   const users = [...new Set(L.edges.concat(L.back).filter(([, b]) => b === id).map(([a]) => a))];
   document.getElementById('panel').innerHTML = `
     <div class="caps top">Selected</div>
-    <div class="selhead"><h2>${piece.name}</h2><a class="hex gold" id="toPage" style="margin-top:2px"><span>Graph and Page →</span></a></div>
+    <div class="selhead"><h2>${nameHTML(id)}</h2><a class="hex gold" id="toPage" style="margin-top:2px"><span>Graph and Page →</span></a></div>
     <div class="mag">${[7, 6, 5, 4, 3].map((s, i) => `<i style="width:${s}px;height:${s}px" class="${i === (n ? Math.min(col, 3) : 4) ? 'on' : ''}"></i>`).join('')}<span class="caps" style="margin-left:8px">${where}</span></div>
     <p class="first">${piece.first.replace(/</g, '&lt;')}</p>
     <p class="facts">${n ? `Made of <b>${n}</b> ideas. Under it are <b>${u.all}</b> ideas in all, and <b>${u.atoms}</b> of them are atoms.` : 'It cannot be split any further.'}</p>
     ${known ? '<div class="knownTag"><i></i>Known</div>' : '<a class="hex" id="iknow" style="margin-top:14px"><span>I know this</span></a>'}
     ${n ? `<div class="rule">✦</div><div class="caps">What it is made of</div><ul class="parts">${piece.of.map(c => {
       const kn = K.has(c), m = PIECES[c].of.length;
-      return `<li data-id="${c}" class="${kn ? 'known' : ''}"><span class="dot ${kn ? 'known' : m ? '' : 'atom'}"></span>${PIECES[c].name}<small>${kn ? 'Known' : m ? m + ' parts' : 'Atom'}</small></li>`; }).join('')}</ul>` : ''}
-    ${users.length ? `<div class="rule">✦</div><div class="caps">Open ideas that use it</div><div class="used">${users.map(a => `<span data-id="${a}">${PIECES[a].name}</span>`).join('')}</div>` : ''}`;
+      return `<li data-id="${c}" class="${kn ? 'known' : ''}"><span class="dot ${kn ? 'known' : m ? '' : 'atom'}"></span>${nameHTML(c)}<small>${kn ? 'Known' : m ? m + ' parts' : 'Atom'}</small></li>`; }).join('')}</ul>` : ''}
+    ${users.length ? `<div class="rule">✦</div><div class="caps">Open ideas that use it</div><div class="used">${users.map(a => `<span data-id="${a}">${nameHTML(a, false)}</span>`).join('')}</div>` : ''}`;
   document.getElementById('toPage').onclick = toPage;
   // "I know this": the star flares, then turns into a known star, and so does everything it is made of.
   const ik = document.getElementById('iknow');
@@ -552,7 +581,7 @@ svg.addEventListener('mouseover', e => {
   const id = g.dataset.id, near = new Set([id]);
   svg.classList.add('focus');
   svg.querySelectorAll('.ln').forEach(l => { const on = l.dataset.a === id || l.dataset.b === id; l.classList.toggle('lit', on); if (on) { near.add(l.dataset.a); near.add(l.dataset.b); } });
-  svg.querySelectorAll('.nm').forEach(t => t.classList.toggle('lit', near.has(t.dataset.id)));
+  svg.querySelectorAll('.nm, .kwt').forEach(t => t.classList.toggle('lit', near.has(t.dataset.id)));
   const group = (layoutCache.edges.find(([, b]) => b === id) || [])[0];
   svg.querySelectorAll('.region').forEach(r => r.classList.toggle('lit', r.dataset.group === group || r.dataset.group === id));
 });
@@ -565,7 +594,8 @@ svg.addEventListener('mouseout', e => {
 
 document.getElementById('openAll').onclick = () => { Object.keys(PIECES).forEach(id => { if (PIECES[id].of.length) OPEN.add(id); }); render(); };
 document.getElementById('closeAll').onclick = () => { OPEN.clear(); OPEN.add(ROOT); SELECTED = ROOT; render({ jump: true }); center(); };
-document.getElementById('home').onclick = () => Sky.go('index.html', 60, 30);
+// The way back to Home leads into the constellation of the whole idea, and says its name.
+document.getElementById('home').onclick = () => Sky.go(homeOf(ROOT).href, 60, 30);
 
 // The whole ideas to start from: each concept that no other idea is made of, and the one that is open.
 function roots() {

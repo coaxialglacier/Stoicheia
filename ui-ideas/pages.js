@@ -19,7 +19,16 @@ const IDEAS = Object.fromEntries(Object.values(LIB.ideas).filter(i => i.area).ma
   return [i.id, { name: i.name, area: i.area, first: i.first, deps: i.deps, ...(code ? { codeDeps: code } : {}) }];
 }));
 // Every idea, and what it is made of, for Expand to Parts. An idea with an empty list cannot be split any further.
-const PIECES = Object.fromEntries(Object.values(LIB.ideas).map(i => [i.id, { name: i.name, first: i.first, of: i.of }]));
+const PIECES = Object.fromEntries(Object.values(LIB.ideas).map(i => [i.id, { name: i.name, first: i.first, of: i.of, keyword: i.keyword }]));
+// An idea's name as HTML. A keyword, such as protocol, is code: its name is in the letters of code, and a tag after it says
+// that it is a keyword, so it does not read as the concept of the same name. With tag false, the name comes without the tag.
+const KEYWORD_TAG = '<span class="kwtag">Keyword</span>';
+function nameHTML(id, tag = true) {
+  const p = PIECES[id], name = Library.escapeHTML(p.name);
+  return p.keyword ? `<code class="kwname">${name}</code>${tag ? KEYWORD_TAG : ''}` : name;
+}
+// The tag alone, after a name that a page writes itself, such as the name of a part in Parts and Steps.
+const kwTag = id => PIECES[id] && PIECES[id].keyword ? KEYWORD_TAG : '';
 // Every concept in the library, each after the concepts it depends on.
 const TEACHING_ORDER = (() => {
   const out = [];
@@ -58,6 +67,54 @@ function stateText(id) {
 // The number of concepts in a study: the idea itself, and every idea on its path.
 function studyLength(id) { return new Set(studyPath(id).map(s => s.id)).size; }
 function areaName(id) { return AREAS.find(a => a.id === id).name; }
+
+// ---------- The constellations of Home ----------
+
+// Architecture, Language, and Algorithms, from left to right. Each is made of areas.
+const CONSTELLATIONS = Library.CONSTELLATIONS;
+function constellationOf(area) { const c = CONSTELLATIONS.find(c => c.areas.includes(area)); return c ? c.id : null; }
+function constellationName(id) { return CONSTELLATIONS.find(c => c.id === id).name; }
+// The ideas of one constellation: the ideas of each of its areas, in the order of its areas.
+function constellationIdeas(id) { return CONSTELLATIONS.find(c => c.id === id).areas.flatMap(areaOrder); }
+// What heavens.js draws for each constellation on Home, and the user icon's panel shows as a skill: its name, the areas it is
+// made of, how many ideas it has and how many of them the reader knows, and the study in progress when it is one of its ideas.
+// An area with the same name as its constellation, such as Algorithms, is not named again.
+function constellationInfo() {
+  return CONSTELLATIONS.map(c => {
+    const ids = constellationIdeas(c.id);
+    return { id: c.id, name: c.name, sub: c.areas.map(areaName).filter(n => n !== c.name).join(' · '), about: c.about, ideas: ids.length,
+      known: ids.filter(id => KNOWN.has(id)).length, studying: ids.includes(STUDYING.id) && !KNOWN.has(STUDYING.id) ? IDEAS[STUDYING.id].name : null };
+  });
+}
+// The area of any idea. A part has no area of its own, so it takes the area of the first concept found that is made of it.
+function areaOf(id, seen = new Set()) {
+  if (IDEAS[id]) return IDEAS[id].area;
+  if (seen.has(id)) return null;
+  seen.add(id);
+  for (const k in PIECES) if (PIECES[k].of.includes(id)) { const a = areaOf(k, seen); if (a) return a; }
+  return null;
+}
+// Where the way back to Home leads from an idea: inside the constellation of its area, or the whole sky when it has none.
+// A concept is on its constellation's skill tree, so the tree opens with it chosen.
+function homeOf(id) {
+  const c = id && constellationOf(areaOf(id));
+  return c ? { href: `index.html?constellation=${c}${IDEAS[id] ? `&skill=${id}` : ''}`, name: constellationName(c) } : { href: 'index.html', name: 'The library' };
+}
+
+// ---------- The skill tree of a constellation ----------
+
+// The ideas that a skill tree shows before they have an entry, from planned.json: each { id, name, area, first, needs }.
+const PLANNED = Object.fromEntries((LIBRARY.planned || []).map(p => [p.id, p]));
+// What an idea on a skill tree needs: the concepts it depends on, or, for a planned idea, what planned.json says it needs.
+function needsOf(id) { return IDEAS[id] ? IDEAS[id].deps : PLANNED[id] ? PLANNED[id].needs : []; }
+// Where an idea stands on the skill tree: known; ready, when the reader knows everything it needs; locked, when they do not;
+// studying, for the study in progress; or planned, when it has no entry yet.
+function skillState(id) {
+  if (PLANNED[id]) return 'planned';
+  if (KNOWN.has(id)) return 'known';
+  if (id === STUDYING.id) return 'studying';
+  return isReady(id) ? 'ready' : 'locked';
+}
 // Why an idea needs an idea it depends on, in one sentence.
 function why(idea, needed) { return LIB.why(idea, needed); }
 
@@ -136,8 +193,8 @@ function startStudy(id) { location.href = studyHref(id); }
 
 // ---------- Writing what the reader knows ----------
 
-// library/server.js serves these pages and writes known.json. Each id the reader marks as known, and each id they remove
-// in What I know, is sent to it, so the change is still there after a reload.
+// library/server.js serves these pages and writes known.json. Each id the reader marks as known is sent to it, so the change
+// is still there after a reload.
 // A server that only serves files, such as python3 -m http.server or GitHub Pages, cannot write known.json. There each change
 // is kept in this browser's localStorage instead, as the ids added to known.json's list and the ids removed from it.
 // They are applied to known.json's ids each time a page opens, so an id added to known.json later still reaches this browser.

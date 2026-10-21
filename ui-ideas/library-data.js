@@ -1,4 +1,4 @@
-// Made by library/build.js from concepts/ and known.json. Do not edit it: change those files, and run node library/build.js.
+// Made by library/build.js from concepts/, known.json, and planned.json. Do not edit it: change those files, and run node library/build.js.
 const LIBRARY = {
  "entries": {
   "argument-label": {
@@ -2048,7 +2048,7 @@ const LIBRARY = {
   "generic-parameter-clause": {
    "id": "generic-parameter-clause",
    "name": "Generic parameter clause",
-   "first": "The angle brackets right after the name of a function or a type, which make it generic: they declare its type parameters, and any type constraint on each one.",
+   "first": "The angle brackets after a function or type name that set up placeholder types, so the code works with many types instead of just one.",
    "parts": [
     "type-parameter",
     "type-constraint"
@@ -2268,17 +2268,35 @@ const LIBRARY = {
       {
        "part": "generic-parameter-clause",
        "name": "The generic parameter clause, `<T: Comparable>`",
-       "text": "The angle brackets right after the name `largest` make it a generic function. The parameter list, in parentheses after them, declares the values that each call gives the function. The generic parameter clause declares the types that each call gives it.",
+       "text": "A normal function only has `(_ a: T, _ b: T)` for its inputs. Putting `<T: Comparable>` before the inputs makes `largest` a generic function that works with many types.",
        "parts": [
         {
          "part": "type-parameter",
          "name": "The type parameter, `T`",
-         "text": "A type parameter is a parameter that gets a type, not a value. The parameters `a` and `b` have the type `T`, and the return type, after `->`, is `T` too. So in one call, both arguments and the return value have the same type. The name `T` exists only inside `largest(_:_:)`."
+         "text": "Inside the angle brackets, `T` creates a placeholder for a type. On line 7 `T` becomes `Int`, and on line 8 `T` becomes `String`."
+        },
+        {
+         "part": "type-parameter",
+         "id": "type-parameter-inputs",
+         "name": "Using `T` for the inputs, `_ a: T, _ b: T`",
+         "text": "Both inputs, `a` and `b`, use `T` as their type. That means the two values in a call must be the same type as each other."
+        },
+        {
+         "part": "type-parameter",
+         "id": "type-parameter-return",
+         "name": "Using `T` for the return type, `-> T`",
+         "text": "The return arrow `-> T` also uses `T`. Pass in two `Int` values and `largest` returns an `Int`; pass in two `String` values and it returns a `String`."
         },
         {
          "part": "type-constraint",
          "name": "The type constraint, `: Comparable`",
-         "text": "A type constraint is written after a type parameter, with a colon. Here it requires every type that `T` gets to conform to `Comparable`, a protocol in Swift's standard library for values that can be put in order. The protocol's requirements include the comparison that `a > b` uses, on line 2. Without the constraint, swiftc does not build line 2, because it cannot know that every type `T` might get can be compared that way."
+         "text": "Putting `: Comparable` after `T` adds a rule: `T` must conform to `Comparable`. `Comparable` is Swift's protocol for values that can be compared with `>`."
+        },
+        {
+         "part": "type-constraint",
+         "id": "type-constraint-why",
+         "name": "Why line 2 needs the rule, `a > b`",
+         "text": "Line 2 checks `a > b`. Because `: Comparable` guarantees that `T` supports `>`, Swift knows line 2 is safe to build."
         }
        ]
       },
@@ -2305,6 +2323,21 @@ const LIBRARY = {
        "text": ": Comparable",
        "part": "type-constraint",
        "label": "type constraint"
+      },
+      {
+       "line": 1,
+       "text": "_ a: T, _ b: T",
+       "part": "type-parameter-inputs"
+      },
+      {
+       "line": 1,
+       "text": "-> T",
+       "part": "type-parameter-return"
+      },
+      {
+       "line": 2,
+       "text": "a > b",
+       "part": "type-constraint-why"
       },
       {
        "line": 7,
@@ -3921,13 +3954,13 @@ const LIBRARY = {
   "type-constraint": {
    "id": "type-constraint",
    "name": "Type constraint",
-   "first": "A protocol or a class written after a type parameter, with a colon: every type the parameter gets must conform to it or inherit from it, which lets the generic code use what that protocol requires or that class has.",
+   "first": "A rule written after a type parameter (with a colon) that limits which types it is allowed to be, so the generic code knows what operations that type supports.",
    "parts": []
   },
   "type-parameter": {
    "id": "type-parameter",
    "name": "Type parameter",
-   "first": "A parameter of generic code that gets a type, not a value: each call or use of that code gives it one type.",
+   "first": "A placeholder for a type in generic code: each call or use of that code fills it in with a concrete type.",
    "parts": []
   },
   "used-in-body": {
@@ -3952,5 +3985,239 @@ const LIBRARY = {
  "known": [
   "function",
   "closure"
+ ],
+ "planned": [
+  {
+   "id": "optional",
+   "name": "Optional",
+   "area": "swift",
+   "needs": [],
+   "first": "A value that is either a value of its type, or nil."
+  },
+  {
+   "id": "structure",
+   "name": "Structure",
+   "area": "swift",
+   "needs": [
+    "function"
+   ],
+   "first": "A type that groups values under one name, and is copied when it is assigned or passed."
+  },
+  {
+   "id": "class",
+   "name": "Class",
+   "area": "swift",
+   "needs": [
+    "structure",
+    "heap-object"
+   ],
+   "first": "A type whose instances are shared: assigning one copies its address, not the instance."
+  },
+  {
+   "id": "escaping-closure",
+   "name": "Escaping closure",
+   "area": "swift",
+   "needs": [
+    "closure-value"
+   ],
+   "first": "A closure that can be called after the function it was passed to has returned."
+  },
+  {
+   "id": "opaque-type",
+   "name": "Opaque type",
+   "area": "swift",
+   "needs": [
+    "protocol",
+    "generics"
+   ],
+   "first": "A return type that names only a protocol, while swiftc still knows the real type."
+  },
+  {
+   "id": "property-wrapper",
+   "name": "Property wrapper",
+   "area": "swift",
+   "needs": [
+    "structure",
+    "generics"
+   ],
+   "first": "A type that keeps a property's value, and runs its own code each time the property is read or written."
+  },
+  {
+   "id": "result-builder",
+   "name": "Result builder",
+   "area": "swift",
+   "needs": [
+    "closure",
+    "generics"
+   ],
+   "first": "A type whose methods combine the lines of a closure's body into one value."
+  },
+  {
+   "id": "arc",
+   "name": "Automatic Reference Counting",
+   "area": "memory",
+   "needs": [
+    "heap-object",
+    "class"
+   ],
+   "first": "Swift counts the references to each class instance, and frees the instance when the count reaches zero."
+  },
+  {
+   "id": "strong-reference-cycle",
+   "name": "Strong reference cycle",
+   "area": "memory",
+   "needs": [
+    "arc",
+    "capture"
+   ],
+   "first": "Two instances that refer to each other, so neither count reaches zero and neither is freed."
+  },
+  {
+   "id": "weak-reference",
+   "name": "Weak reference",
+   "area": "memory",
+   "needs": [
+    "strong-reference-cycle",
+    "optional"
+   ],
+   "first": "A reference that does not keep its instance, and becomes nil when the instance is freed."
+  },
+  {
+   "id": "copy-on-write",
+   "name": "Copy on write",
+   "area": "memory",
+   "needs": [
+    "structure",
+    "arc"
+   ],
+   "first": "A value whose copies share one storage on the heap, until one copy is changed."
+  },
+  {
+   "id": "task",
+   "name": "Task",
+   "area": "conc",
+   "needs": [
+    "async-function",
+    "closure"
+   ],
+   "first": "Work that runs an async closure, at the same time as the code that started it."
+  },
+  {
+   "id": "task-group",
+   "name": "Task group",
+   "area": "conc",
+   "needs": [
+    "task"
+   ],
+   "first": "A set of child tasks that run at the same time, whose results the task that made them waits for."
+  },
+  {
+   "id": "actor",
+   "name": "Actor",
+   "area": "conc",
+   "needs": [
+    "task",
+    "class"
+   ],
+   "first": "A reference type that runs one piece of its code at a time, so its state is never changed by two tasks at once."
+  },
+  {
+   "id": "main-actor",
+   "name": "Main actor",
+   "area": "conc",
+   "needs": [
+    "actor"
+   ],
+   "first": "The actor that runs code on the main thread, where an app's user interface is changed."
+  },
+  {
+   "id": "sendable",
+   "name": "Sendable",
+   "area": "conc",
+   "needs": [
+    "actor",
+    "structure"
+   ],
+   "first": "A type whose values can be passed safely from one task or actor to another."
+  },
+  {
+   "id": "data-race-safety",
+   "name": "Data-race safety",
+   "area": "conc",
+   "needs": [
+    "sendable",
+    "main-actor"
+   ],
+   "first": "Swift 6 checks, when it builds a program, that no two pieces of code that run at the same time can change the same value."
+  },
+  {
+   "id": "view",
+   "name": "View",
+   "area": "ui",
+   "needs": [
+    "structure",
+    "protocol",
+    "opaque-type"
+   ],
+   "first": "A type that describes part of an app's user interface, built from its body."
+  },
+  {
+   "id": "view-modifier",
+   "name": "View modifier",
+   "area": "ui",
+   "needs": [
+    "view"
+   ],
+   "first": "A method that returns a new view with one change, such as more space around it."
+  },
+  {
+   "id": "view-builder",
+   "name": "View builder",
+   "area": "ui",
+   "needs": [
+    "view",
+    "result-builder"
+   ],
+   "first": "The result builder that turns the views listed in a body into one view."
+  },
+  {
+   "id": "state",
+   "name": "State",
+   "area": "ui",
+   "needs": [
+    "view",
+    "property-wrapper"
+   ],
+   "first": "A property that SwiftUI keeps for a view, and that draws the view again when it changes."
+  },
+  {
+   "id": "binding",
+   "name": "Binding",
+   "area": "ui",
+   "needs": [
+    "state"
+   ],
+   "first": "A way for a view to read and change a value that another view keeps."
+  },
+  {
+   "id": "observable",
+   "name": "Observable",
+   "area": "ui",
+   "needs": [
+    "state",
+    "class"
+   ],
+   "first": "A class whose properties SwiftUI watches, so a view that reads them is drawn again when they change."
+  },
+  {
+   "id": "task-modifier",
+   "name": "Task modifier",
+   "area": "ui",
+   "needs": [
+    "view-modifier",
+    "task"
+   ],
+   "first": "A modifier that starts a task when its view appears, and cancels the task when the view goes away."
+  }
  ]
 };

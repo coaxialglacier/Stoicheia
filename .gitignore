@@ -2,3 +2,7 @@
 node_modules/
 .claude/settings.local.json
 _site/
+# Copies of the songs in music/, which library/music.js writes. Git keeps music/ and the list of songs.
+ui-ideas/audio/*.mp3
+ui-ideas/audio/*.js
+!ui-ideas/audio/songs.js

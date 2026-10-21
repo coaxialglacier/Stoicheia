@@ -8,8 +8,10 @@ const Library = require('../ui-ideas/library.js');
 const ROOT = path.join(__dirname, '..');
 const CONCEPTS = path.join(ROOT, 'concepts');
 const KNOWN = path.join(ROOT, 'known.json');
+const PLANNED = path.join(ROOT, 'planned.json');
 
-// Returns { entries, known, problems }. entries maps each id to its entry. problems lists each thing wrong, in one sentence.
+// Returns { entries, known, planned, problems }. entries maps each id to its entry. planned is the list in planned.json, the
+// ideas that a skill tree shows before they have an entry. problems lists each thing wrong, in one sentence.
 function loadLibrary() {
   const entries = {}, problems = [];
   for (const file of fs.readdirSync(CONCEPTS).filter(f => f.endsWith('.json')).sort()) {
@@ -27,8 +29,14 @@ function loadLibrary() {
   } catch (err) {
     problems.push(`known.json: ${err.message}`);
   }
-  problems.push(...Library.checkLibrary(entries, known));
-  return { entries, known, problems };
+  let planned = [];
+  try {
+    planned = JSON.parse(fs.readFileSync(PLANNED, 'utf8'));
+  } catch (err) {
+    problems.push(`planned.json: ${err.message}`);
+  }
+  problems.push(...Library.checkLibrary(entries, known), ...Library.checkPlanned(planned, entries));
+  return { entries, known, planned, problems };
 }
 
 module.exports = { loadLibrary, ROOT };

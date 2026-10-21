@@ -10,6 +10,19 @@ const Library = (() => {
     { id: 'ui', name: 'SwiftUI' },
     { id: 'algo', name: 'Algorithms' },
   ];
+  // The three constellations of the night sky on Home, from left to right. Each is made of areas, and each area is in one.
+  // Inside a constellation, each of its areas is one branch of its skill tree, from left to right in this order. An area is
+  // next to the areas it shares the most needs with, so that few lines cross a third branch: SwiftUI needs the Swift language,
+  // the Swift language and Memory need each other, and Concurrency needs Memory. Architecture has no areas yet.
+  // about is what the night sky says about a constellation while the pointer is on it.
+  const CONSTELLATIONS = [
+    { id: 'architecture', name: 'Architecture', areas: [],
+      about: 'How an app is made of parts, such as its views and its data, and how those parts work together.' },
+    { id: 'language', name: 'Language', areas: ['ui', 'swift', 'memory', 'conc'],
+      about: 'The Swift language: the code you write, what it keeps in memory, how it runs at the same time as other code, and the views SwiftUI draws from it.' },
+    { id: 'algorithms', name: 'Algorithms', areas: ['algo'],
+      about: 'Ways to solve a problem in steps, such as searching or sorting, and how much work each way does.' },
+  ];
   const VIEW_ORDER = ['what', 'parts', 'memory'];
   const VIEW_NAMES = { what: 'What it is', parts: 'Parts and Steps', memory: 'In memory' };
   // The four questions of What it is, in the order a page answers them, with the field of the entry that answers each.
@@ -35,6 +48,9 @@ const Library = (() => {
   const KEYWORDS = new Set(['func', 'let', 'var', 'return', 'in', 'final', 'class', 'struct', 'enum', 'case', 'if', 'else', 'for',
     'while', 'guard', 'switch', 'default', 'import', 'true', 'false', 'nil', 'self', 'init', 'deinit', 'private', 'static', 'throws',
     'try', 'await', 'async', 'protocol', 'weak', 'some', 'any', 'inout']);
+  // A part that is a keyword, such as protocol, is named with the keyword alone, and its first fact starts "The keyword".
+  // The pages tag it as a keyword, so its name does not read as the concept of the same name, such as Protocol.
+  const isKeyword = e => !e.example && KEYWORDS.has(e.name);
 
   // The end of a string literal that starts at index i, just after its closing quote.
   // An interpolation, \( ... ), can hold parentheses of its own.
@@ -216,6 +232,44 @@ const Library = (() => {
 
   // ---------- Checks of the entries ----------
 
+  // planned.json lists the ideas that a skill tree shows before they have an entry, each { id, name, area, first, needs }.
+  // needs are the ideas it is expected to depend on: concepts with an entry, or other planned ideas. They are a first guess,
+  // until /build-out writes the idea's entry and checks it. An idea with an entry is no longer planned, so its id must leave
+  // planned.json when its entry is written.
+  function checkPlanned(planned, entries) {
+    const problems = [];
+    if (!Array.isArray(planned)) return ['planned.json: it must be a list of planned ideas'];
+    const say = (id, text) => problems.push(`planned.json, ${id}: ${text}`);
+    const ids = planned.map(p => p && p.id);
+    const concept = id => entries[id] && entries[id].example;
+    planned.forEach((p, i) => {
+      const id = (p && p.id) || `item ${i + 1}`;
+      if (!/^[a-z][a-z0-9-]*$/.test(p.id || '')) say(id, 'an id is lowercase words joined by hyphens');
+      if (ids.indexOf(p.id) !== i) say(id, 'the id is planned twice');
+      if (entries[p.id]) say(id, `it has an entry now, in concepts/${p.id}.json, so remove it from planned.json`);
+      if (!p.name) say(id, 'it has no name');
+      if (!p.first) say(id, 'it has no first fact');
+      if (/[`{}]/.test(p.first || '')) say(id, 'its first fact names code, but cards show it with no code beside it');
+      if (!AREAS.some(a => a.id === p.area)) say(id, `its area "${p.area}" is not one of ${AREAS.map(a => a.id).join(', ')}`);
+      if (!Array.isArray(p.needs)) { say(id, 'needs must be a list'); return; }
+      p.needs.forEach(n => { if (!concept(n) && !ids.includes(n)) say(id, `it needs "${n}", which is neither a concept with an entry nor a planned idea`); });
+    });
+    // A planned idea cannot need itself through other planned ideas.
+    const byId = Object.fromEntries(planned.filter(p => p && Array.isArray(p.needs)).map(p => [p.id, p.needs]));
+    const state = {};
+    (function visitAll() {
+      const visit = (id, trail) => {
+        if (state[id] === 'done' || !byId[id]) return;
+        if (state[id] === 'open') { say(id, `it needs itself, through ${trail.slice(trail.indexOf(id)).join(' → ')} → ${id}`); return; }
+        state[id] = 'open';
+        byId[id].forEach(n => visit(n, [...trail, id]));
+        state[id] = 'done';
+      };
+      Object.keys(byId).forEach(id => visit(id, []));
+    })();
+    return problems;
+  }
+
   // Everything about the entries that can be checked without building their code. Each problem is one sentence.
   // library/check.js builds and runs the code with swiftc.
   function checkLibrary(entries, known) {
@@ -230,6 +284,9 @@ const Library = (() => {
       if (!e.name) say(id, 'it has no name');
       if (!e.first) say(id, 'it has no first fact');
       if (/[`{}]/.test(e.first || '')) say(id, 'its first fact names code, but cards show it with no code beside it');
+      const saysKeyword = /^The keyword\b/.test(e.first || '');
+      if (saysKeyword && !KEYWORDS.has(e.name)) say(id, `its first fact says it is a keyword, but its name, "${e.name}", is not one of the keywords that KEYWORDS in library.js lists`);
+      if (!saysKeyword && !e.example && KEYWORDS.has(e.name)) say(id, `its name, "${e.name}", is a keyword, so its first fact starts "The keyword"`);
       if (!isList(e.parts)) say(id, 'parts must be a list, empty for a part that cannot be split');
       else e.parts.forEach(p => { if (!has(p)) say(id, `it is made of "${p}", which has no entry`); if (p === id) say(id, 'it is made of itself'); });
 
@@ -267,7 +324,7 @@ const Library = (() => {
         (marks || []).forEach((m, i) => {
           const at = findMark(code, m);
           if (!lineOk(m.line) || !at) return say(id, `${where}: mark ${i + 1}, "${m.text}", is not on line ${m.line}`);
-          if (m.part && !has(m.part)) say(id, `${where}: mark ${i + 1} belongs to "${m.part}", which has no entry`);
+          if (m.part && !has(m.part) && !(partsListed && partsListed.includes(m.part))) say(id, `${where}: mark ${i + 1} belongs to "${m.part}", which has no entry`);
           if (partsListed && !partsListed.includes(m.part)) say(id, `${where}: mark ${i + 1}, "${m.text}", belongs to "${m.part}", which the view does not list`);
           placed.push({ line: m.line, ...at, i });
         });
@@ -301,7 +358,7 @@ const Library = (() => {
         listed.forEach(p => { if (!e.parts.includes(p)) say(id, `Parts and Steps explains "${p}", which is not one of its parts`); });
         const inner = (P.parts || []).flatMap(p => (p.parts || []).map(q => {
           if (!has(p.part) || !(entries[p.part].parts || []).includes(q.part)) say(id, `Parts and Steps explains "${q.part}" under "${p.part}", which is not made of it`);
-          return q.part;
+          return q.id || q.part;
         }));
         checkMarks(P.marks, 'Parts and Steps', [...listed, ...inner]);
         if (!(P.steps || []).length) say(id, 'Parts and Steps has no steps');
@@ -390,7 +447,7 @@ const Library = (() => {
     // One record for every idea a page can show. An idea with an area is on the home map.
     const ideas = {};
     Object.values(entries).forEach(e => {
-      ideas[e.id] = { id: e.id, name: e.name, first: e.first, area: e.area || null, of: e.parts, deps: (e.dependsOn || []).map(d => d.id), entry: e };
+      ideas[e.id] = { id: e.id, name: e.name, first: e.first, area: e.area || null, of: e.parts, deps: (e.dependsOn || []).map(d => d.id), keyword: isKeyword(e), entry: e };
     });
     const known = new KnownIds(data.known, id => ideas[id] ? ideas[id].of : []);
 
@@ -506,7 +563,7 @@ const Library = (() => {
       const P = V.parts, outs = withOutput(P.steps);
       C.parts = {
         code: codeHTML(code, P.marks),
-        list: P.parts.map(p => ({ id: p.part, name: textHTML(p.name), html: textHTML(p.text), parts: (p.parts || []).map(q => ({ id: q.part, name: textHTML(q.name), html: textHTML(q.text) })) })),
+        list: P.parts.map(p => ({ id: p.part, name: textHTML(p.name), html: textHTML(p.text), parts: (p.parts || []).map(q => ({ id: q.id || q.part, part: q.part, name: textHTML(q.name), html: textHTML(q.text) })) })),
         steps: P.steps.map((s, i) => ({ html: textHTML(s.text), line: s.line, also: s.also, dim: s.dim, value: s.value ? [s.value.line, `${s.value.name} = ${s.value.is}`] : null, out: outs[i] })),
         end: { kind: P.end.kind, title: P.end.kind === 'question' ? 'The question for In memory' : 'So', html: textHTML(P.end.text) },
       };
@@ -563,7 +620,7 @@ const Library = (() => {
     return { sections, edges, order };
   }
 
-  return { AREAS, VIEW_ORDER, VIEW_NAMES, QUESTIONS, escapeHTML, textHTML, codeNames, tokens, findMark, findCode, codeHTML, sentencesOf, checkLibrary, KnownIds, openLibrary, layoutGraph };
+  return { AREAS, CONSTELLATIONS, VIEW_ORDER, VIEW_NAMES, QUESTIONS, escapeHTML, textHTML, codeNames, tokens, findMark, findCode, codeHTML, sentencesOf, checkLibrary, checkPlanned, KnownIds, openLibrary, layoutGraph };
 })();
 
 if (typeof module === 'object' && module.exports) module.exports = Library;

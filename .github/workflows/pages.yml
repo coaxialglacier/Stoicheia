@@ -1,6 +1,6 @@
 # Publishes the star theme to GitHub Pages, at stoicheia.jacklewissimmons.com, on each push to main.
 # library/build.js checks every entry of concepts/ and writes library-data.js. When an entry has a problem, it stops,
-# and the site keeps its last version. library/site.js then copies the pages and scripts into _site/.
+# and the site keeps its last version. library/site.js then copies the pages, the scripts, and the songs into _site/.
 name: Publish the site
 
 on:

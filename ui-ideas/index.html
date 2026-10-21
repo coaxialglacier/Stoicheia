@@ -4,58 +4,240 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Star Atlas</title>
-<!-- Home in the constellation theme. It reads the concept library, as archive/index.html does: library-data.js, library.js, and pages.js. -->
+<!-- Home in the constellation theme. It opens on the night sky, with the three constellations of the library: Architecture,
+     Language, and Algorithms. Clicking one goes into it, and shows its skill tree. It reads the concept library, as
+     archive/index.html does: library-data.js, library.js, and pages.js. heavens.js draws the night sky, skilltree.js
+     draws the skill tree, galaxy.js draws the Milky Way behind it, and aurora.js, which skilltree.js calls, draws the aurora
+     over each branch. -->
 <link rel="stylesheet" href="sky.css">
 <style>
-.nebula{background:
+/* The color of the sky behind everything: deep and plain on the night sky, so the three constellations bring their own color,
+   and the color of the open constellation inside it, darker toward the ground of its skill tree. */
+.nebula i{position:absolute;inset:0;opacity:0;transition:opacity 1.6s ease}
+body[data-sky="top"] .n-top,body[data-sky="architecture"] .n-architecture,body[data-sky="language"] .n-language,body[data-sky="algorithms"] .n-algorithms{opacity:1}
+.n-top{background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(36,52,120,.22),transparent 70%),radial-gradient(ellipse 120% 90% at 50% 45%,#0a1028,#04050b 82%)}
+.n-language{background:
   radial-gradient(ellipse 45% 40% at 78% 38%,rgba(120,72,210,.30),transparent 70%),
   radial-gradient(ellipse 40% 35% at 40% 22%,rgba(40,90,190,.20),transparent 70%),
   radial-gradient(ellipse 45% 35% at 35% 82%,rgba(20,140,150,.18),transparent 70%),
   radial-gradient(ellipse 30% 25% at 80% 85%,rgba(200,90,140,.10),transparent 70%),
   radial-gradient(ellipse 120% 90% at 55% 45%,#0e1533,#05070f 80%)}
+.n-architecture{background:
+  radial-gradient(ellipse 45% 40% at 76% 38%,rgba(36,168,160,.26),transparent 70%),
+  radial-gradient(ellipse 40% 35% at 40% 22%,rgba(46,104,210,.20),transparent 70%),
+  radial-gradient(ellipse 45% 35% at 35% 82%,rgba(30,150,110,.15),transparent 70%),
+  radial-gradient(ellipse 120% 90% at 55% 45%,#0a1a2a,#03080c 80%)}
+.n-algorithms{background:
+  radial-gradient(ellipse 45% 40% at 76% 38%,rgba(196,60,136,.26),transparent 70%),
+  radial-gradient(ellipse 40% 35% at 40% 22%,rgba(116,58,200,.20),transparent 70%),
+  radial-gradient(ellipse 45% 35% at 35% 82%,rgba(220,100,90,.11),transparent 70%),
+  radial-gradient(ellipse 120% 90% at 55% 45%,#170d24,#06040b 80%)}
 header .caps{color:var(--ink3)}
-#finder{position:fixed;top:66px;left:14px;width:404px;z-index:4;display:flex;flex-direction:column;max-height:calc(100vh - 80px)}
-.instrument{position:relative;z-index:2;display:flex;align-items:center;gap:2px;height:214px;cursor:pointer;flex:none;user-select:none}
-#astro{width:212px;height:212px;flex:none;transition:filter .3s}
-.instrument:hover #astro,#finder.open #astro{filter:drop-shadow(0 0 14px rgba(230,196,119,.35))}
-.ins-text{display:flex;flex-direction:column;gap:5px;min-width:0}
-.ins-title{font-family:Cinzel;font-size:21px;letter-spacing:.06em;color:var(--gold2);text-shadow:0 0 18px rgba(230,196,119,.3)}
-.ins-count{color:var(--ink3);letter-spacing:.12em;white-space:nowrap}
-.ins-input{position:relative;display:flex;align-items:center;gap:8px;margin-top:8px;padding:6px 2px 7px;border-bottom:1px solid rgba(230,196,119,.35);width:178px;cursor:text;transition:border-color .3s}
-.ins-input b{color:var(--gold);font-weight:400;font-size:13px;animation:tw 1.8s ease-in-out infinite}
-.ins-input input{all:unset;font-family:'EB Garamond',serif;font-style:italic;font-size:16px;color:var(--ink);width:100%;caret-color:var(--gold)}
-.ins-input input::placeholder{color:var(--ink3)}
-.ins-input .caret{position:absolute;left:23px;top:9px;width:1px;height:17px;background:var(--gold);animation:blink 1.1s steps(1) infinite}
-@keyframes blink{50%{opacity:0}}
-#finder.open .ins-input .caret,.ins-input.typing .caret{display:none}
-.instrument:hover .ins-input,#finder.open .ins-input{border-color:var(--gold)}
-#panel{min-height:0;overflow-y:auto;padding:20px 24px 18px;margin-top:4px;opacity:0;transform:translateY(-14px);clip-path:inset(0 -90px 100% -90px);pointer-events:none;position:relative;z-index:1;transition:opacity .35s,transform .5s cubic-bezier(.2,.8,.2,1),clip-path .55s cubic-bezier(.2,.8,.2,1)}
-#finder.open #panel{opacity:1;transform:none;clip-path:inset(-90px -90px -90px -90px);pointer-events:auto}
-.res{display:flex;align-items:center;gap:12px;padding:9px 4px;border-bottom:1px solid rgba(230,196,119,.08);cursor:pointer;font-family:Jost;font-size:14px;letter-spacing:.03em;color:var(--ink)}
-.res:hover{color:var(--gold2)}
-.res small{margin-left:auto;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink3)}
-.res .d{width:10px;height:10px;border-radius:50%;flex:none;background:radial-gradient(circle,#fff 0 28%,rgba(195,176,255,.5) 40%,transparent 70%)}
-.res .d.known{background:none;border:1px dashed var(--known)}
-.res .d.ready{background:radial-gradient(circle,#fff 0 28%,rgba(154,217,255,.7) 40%,transparent 70%)}
-.search{display:flex;align-items:center;gap:10px;border:1px solid rgba(230,196,119,.22);background:rgba(4,6,16,.55);padding:11px 14px;color:var(--ink3);font-size:16px;font-style:italic}
-.search b{font-style:normal;color:var(--gold);font-weight:400}
-.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
-.chip{font-family:Jost;font-size:12px;letter-spacing:.04em;color:var(--ink2);border:1px solid rgba(185,179,164,.18);padding:5px 11px;border-radius:20px;background:rgba(255,255,255,.02);cursor:pointer}
-.chip:hover{border-color:var(--goldDim);color:var(--gold2)}
-.chip.on{color:var(--gold2);border-color:var(--goldDim);background:rgba(230,196,119,.08)}
-.chip.known{border-style:dashed;border-color:rgba(141,146,168,.45);color:var(--known)}
-.study{margin-top:20px;padding:18px 18px 16px;position:relative;overflow:hidden;border:1px solid var(--goldDim);background:radial-gradient(ellipse 80% 120% at 100% 0%,rgba(230,196,119,.14),transparent 60%),rgba(6,9,22,.6)}
-.study .caps{color:var(--gold)}
-.study h2{font-family:Cinzel;font-weight:500;font-size:22px;margin:6px 0 6px;color:var(--gold2);text-shadow:0 0 18px rgba(230,196,119,.35)}
-.study p{color:var(--ink2);font-size:16px;line-height:1.45}
-.progress{display:flex;gap:16px;margin-top:12px;align-items:center}
-.progress span{width:9px;height:9px;transform:rotate(45deg);border:1px solid var(--goldDim)}
-.progress span.lit{background:var(--gold);border-color:var(--gold);box-shadow:0 0 10px var(--gold)}
+.crumbs{display:flex;align-items:center;gap:12px;white-space:nowrap}
+.crumbs a{color:inherit;text-decoration:none;transition:color .2s}
+body:not([data-sky="top"]) .crumbs a{cursor:pointer}
+body:not([data-sky="top"]) .crumbs a:hover{color:var(--gold2)}
+.crumbs span{color:var(--gold2)}
+
+/* Inside a constellation, the Milky Way, from galaxy.js, fills the sky behind the skill tree. It fades in and out with the tree. */
+#galaxy{position:fixed;left:0;top:0;pointer-events:none;opacity:0;transition:opacity 1.4s ease;will-change:transform}
+#galaxy.on{opacity:1}
+#galaxy canvas{position:absolute;left:0;top:0;display:block}
+
+/* The night sky: the nebula on a WebGL canvas, the small and bright stars on a 2D canvas over it, the figures, names, and rings
+   in SVG over both, and over everything, the places that answer the pointer. */
+#heavens{position:fixed;inset:0;z-index:1}
+#heavens.hidden,#tree.hidden,#within.hidden,.legend.hidden{display:none}
+#gas,#nebulae{position:absolute;inset:0;width:100%;height:100%}
+/* figures holds what stays still, and twinkles what moves: the stars, the rings, and the lights along the lines. A browser draws an
+   SVG again in full when anything in it moves, so only the light layer is drawn again every frame. */
+#figures,#twinkles{position:absolute;inset:0;width:100%;height:100%;display:block;will-change:transform;pointer-events:none}
+#hits{position:absolute;inset:0;width:100%;height:100%;display:block}
+/* The sky gets darker toward the edges and corners of the window. */
+#heavens::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 75% 70% at 50% 46%,transparent 55%,rgba(1,2,8,.6))}
+/* The first time Home opens, the sky comes down into place from above. */
+#heavens.rise{animation:rise 3.2s cubic-bezier(.16,.8,.24,1) both}
+@keyframes rise{from{transform:translateY(-90px) scale(1.06);opacity:0;filter:brightness(1.6)}30%{opacity:1}}
+/* Going into a constellation, the night sky grows toward it and fades. Coming back out, it shrinks back from it. */
+#heavens.into{transform:scale(2.7);opacity:0;filter:brightness(1.7) blur(2px)}
+#heavens.going{transition:transform 1s cubic-bezier(.6,0,.9,.4),opacity .75s ease-in .1s,filter .9s}
+#heavens.coming{transition:transform 1.3s cubic-bezier(.2,.7,.2,1),opacity 1s ease-out,filter 1.2s}
+/* The constellation that is pointed at grows, and the others shrink and dim. At rest, the lines between the stars are bright and
+   the emblem is faint. Pointed at, they swap: the emblem lights up and the lines fade, so the drawing is what the reader sees. The
+   user chose this on 2026-10-21. */
+.con{transition:opacity .9s,transform 1.2s cubic-bezier(.2,.7,.2,1)}
+.con.hot{transform:scale(1.07)}
+/* The other two constellations step back, but their stars stay bright enough to twinkle: their lines, drawings, and names fade
+   most, and their stars a little. The parts that fade are the children of the emblem and the name, because those two groups
+   fade in with an animation that holds their own opacity. */
+#heavens.hovering .con:not(.hot){transform:scale(.96)}
+.con .star,.con .emblem>g:not(.lit),.con .label>*{transition:opacity .9s}
+#heavens.hovering .con:not(.hot) .star{opacity:.92}
+#heavens.hovering .con:not(.hot) .emblem>g:not(.lit){opacity:.35}
+#heavens.hovering .con:not(.hot) .label>*{opacity:.38}
+#heavens.hovering .con:not(.hot) .eline{stroke-opacity:.32}
+#heavens.hovering .con:not(.hot) .eglow{stroke-opacity:.1}
+#heavens.hovering .con:not(.hot) .ebloom{stroke-opacity:.03}
+#heavens.hovering .con:not(.hot) .eshade{stroke-opacity:.2}
+.con .ring{opacity:0;transition:opacity 1s}
+.con.hot .ring{opacity:1}
+.con .travel{opacity:0;transition:opacity .6s;animation-play-state:paused}
+.con.hot .travel{opacity:.5;animation-play-state:running}
+/* The ring turns only while its constellation is pointed at, so that nothing hidden keeps moving. */
+.ringspin{animation:ringspin 240s linear infinite;animation-play-state:paused}
+.con.hot .ringspin{animation-play-state:running}
+@keyframes ringspin{to{transform:rotate(360deg)}}
+.con .emblem .lit{opacity:0;transition:opacity 1s}
+.con.hot .emblem .lit{opacity:1}
+.con .ebloom{stroke-opacity:.16;transition:stroke-opacity .9s}
+.con.hot .ebloom{stroke-opacity:.05}
+.con .eglow{stroke-opacity:.4;transition:stroke-opacity .9s}
+.con.hot .eglow{stroke-opacity:.16}
+.con .eline{stroke-opacity:.95;transition:stroke-opacity .9s}
+.con.hot .eline{stroke-opacity:.58}
+.con .eshade{stroke-opacity:.45;transition:stroke-opacity .9s}
+.con.hot .eshade{stroke-opacity:.15}
+/* The stars of the figures twinkle gently: their rays grow and shrink a little, and their halos dim to 82% and back. */
+.rays{animation:rays 6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes rays{0%,100%{transform:scale(.95);opacity:.9}50%{transform:scale(1.04);opacity:1}}
+#twinkles .halo{animation-name:glint}
+@keyframes glint{0%,100%{opacity:1}50%{opacity:.82}}
+.con-name{font-family:Cinzel;font-weight:500;letter-spacing:.34em;transition:filter .6s;filter:drop-shadow(0 2px 6px rgba(0,0,0,.9))}
+.con.hot .con-name{filter:drop-shadow(0 0 14px rgba(255,240,200,.55)) drop-shadow(0 2px 6px rgba(0,0,0,.9))}
+.con-skill{font-weight:600;letter-spacing:0;fill:#fffaf0}
+.con-sub,.con-count,.con-study{paint-order:stroke;stroke:rgba(3,5,12,.75);stroke-width:3px;stroke-linejoin:round}
+.con-sub{font-family:Jost;font-size:10.5px;letter-spacing:.26em;fill:var(--ink2)}
+.con-count{font-family:Jost;font-size:9.5px;letter-spacing:.24em;fill:var(--ink3)}
+.con-study{font-family:Jost;font-size:9.5px;letter-spacing:.24em;fill:var(--gold)}
+.ring-star{font-size:9px}
+.hitcon{cursor:pointer}
+/* What the constellation that is pointed at is about, at the bottom of the window, with a fine line under it. */
+#about{position:fixed;left:50%;bottom:22px;z-index:2;width:min(760px,calc(100vw - 32px));transform:translate(-50%,8px);text-align:center;opacity:0;pointer-events:none;transition:opacity .5s,transform .6s cubic-bezier(.2,.8,.2,1)}
+#about.on{opacity:1;transform:translate(-50%,0)}
+#about p{font-size:19.5px;line-height:1.4;color:var(--ink);text-shadow:0 1px 3px #000,0 0 18px rgba(0,0,0,.9)}
+#about::after{content:"";display:block;width:46%;height:1px;margin:10px auto 0;background:linear-gradient(90deg,transparent,rgba(236,230,214,.5),transparent)}
+body:not([data-sky="top"]) #about,body.moving #about{opacity:0}
+
+/* Inside a constellation: its name over the skill tree, with the way back to the night sky to its left, and under it how many
+   of its ideas the reader knows. */
+#within{position:fixed;top:72px;left:0;right:0;z-index:2;display:flex;flex-direction:column;align-items:center;gap:7px;pointer-events:none;transition:right .5s cubic-bezier(.2,.8,.2,1)}
+#within .row{display:flex;align-items:center;gap:22px;pointer-events:auto}
+#within h1{font-family:Cinzel;font-weight:500;font-size:25px;letter-spacing:.5em;margin-right:-.5em;color:var(--gold2);text-shadow:0 0 22px rgba(230,196,119,.35)}
+#within .spacer{width:58px}
+#conSub{color:var(--ink2);letter-spacing:.24em;text-shadow:0 1px 4px #000}
+.way{position:relative;display:block;width:58px;height:24px;cursor:pointer;opacity:.7;transition:opacity .2s}
+.way:hover{opacity:1}
+.way svg{display:block;overflow:visible}
+.way .head{transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.way:hover .head{transform:translateX(-4px);filter:drop-shadow(0 0 4px rgba(230,196,119,.75))}
+.way:hover .trail{animation:westward 1.1s ease-in-out infinite;animation-delay:calc(var(--k) * .14s)}
+@keyframes westward{0%,100%{opacity:.15}35%{opacity:1}}
+.way b{position:absolute;top:27px;left:50%;transform:translateX(-50%);white-space:nowrap;font-family:Jost;font-weight:400;font-size:9px;letter-spacing:.24em;color:var(--gold2);opacity:0;transition:opacity .12s;pointer-events:none}
+.way:hover b{opacity:1}
+/* Going into a constellation, its tree grows in from far away. Going back out, it shrinks away. */
+#tree,#within{transform-origin:50% 45%}
+#tree.far,#within.far{transform:scale(.72);opacity:0}
+#tree.coming,#within.coming{transition:transform 1.2s cubic-bezier(.2,.7,.2,1),opacity .9s ease-out}
+#tree.away,#within.away{transform:scale(.6);opacity:0;transition:transform .85s cubic-bezier(.6,0,.9,.4),opacity .65s ease-in}
+.empty{font-family:'EB Garamond',serif;font-style:italic;font-size:19px;fill:var(--ink2)}
+
+/* ---------- The skill tree ----------
+   It scrolls up and down, with the wheel or by dragging the sky, and fades out under the constellation's name at the top.
+   It moves left while the panel of the chosen idea is open, when the idea would otherwise be under the panel. */
+#tree{position:fixed;top:0;left:0;right:0;bottom:0;z-index:1;overflow:auto;cursor:grab;user-select:none;
+  -webkit-mask-image:linear-gradient(180deg,transparent 0,transparent 92px,#000 178px);mask-image:linear-gradient(180deg,transparent 0,transparent 92px,#000 178px);
+}
+#tree.dragging{cursor:grabbing}
+#treeIn{position:relative;margin:0 auto;transition:transform .7s cubic-bezier(.2,.8,.2,1)}
+.tsvg{position:absolute;left:0;top:0;display:block;overflow:visible}
+/* The aurora over each branch, from aurora.js, is still. It fades in when the tree opens. */
+.aurora-gl{position:absolute;left:0;top:0;display:block;pointer-events:none}
+.aurora-gl.fadein{animation:aurIn 2.4s ease-out .2s both}
+/* Without WebGL, the older aurora rises when the tree opens, and then sways slowly. */
+.aurora{position:absolute;pointer-events:none;mix-blend-mode:screen;transform-origin:50% 100%;animation-name:aurIn,sway;animation-timing-function:ease-out,ease-in-out;animation-iteration-count:1,infinite;animation-direction:normal,alternate;animation-fill-mode:both,none}
+@keyframes aurIn{from{opacity:0}}
+@keyframes sway{0%{transform:skewX(-2.6deg) scaleY(.94)}100%{transform:skewX(2.4deg) scaleY(1.05)}}
+.ground.rise{animation:groundRise 1.7s cubic-bezier(.2,.7,.2,1) both}
+@keyframes groundRise{from{transform:translateY(70px);opacity:0}}
+.bn{font-family:Cinzel;font-size:15px;font-weight:500;letter-spacing:.32em;fill:var(--gold2);filter:drop-shadow(0 0 10px rgba(230,196,119,.35))}
+.bcount{font-family:Jost;font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;fill:var(--ink3)}
+.tnum{font-family:Cinzel;font-size:12px;fill:rgba(185,179,164,.45)}
+.tnum.lit{fill:var(--gold2)}
+.tword{font-family:Jost;font-size:9px;letter-spacing:.32em;fill:var(--ink3)}
+/* An idea: its star, its name under it, and the socket under its name. */
+.tsvg .node{cursor:pointer;transition:opacity .5s}
+.node .body,.node .art,.node .lock,.node .lockfx,.node .shackle{transform-box:fill-box;transform-origin:center}
+.node .body{transition:transform .35s cubic-bezier(.2,.9,.3,1.3)}
+.node.hover .body,.node.chosen .body{transform:scale(1.14)}
+.node .name{font-family:Jost;font-size:13px;font-weight:500;letter-spacing:.12em;paint-order:stroke;stroke:#03050c;stroke-width:5px;stroke-linejoin:round;pointer-events:none;transition:fill .3s}
+.s-known .name{fill:#fbecc4}
+.s-ready .name{fill:#f4f9ff}
+.s-locked .name{fill:#aeabc4}
+.s-studying .name{fill:var(--gold2);font-weight:500}
+.s-planned .name{fill:#9896b4;font-size:12px;font-weight:400}
+.node.hover .name{fill:var(--gold2)}
+.node .sub{font-family:Jost;font-size:9px;letter-spacing:.2em;fill:var(--gold);paint-order:stroke;stroke:#05070f;stroke-width:3px}
+.pulse{animation:pulse 2.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes pulse{0%,100%{opacity:.5;transform:scale(.82)}50%{opacity:1;transform:scale(1.08)}}
+.spin,.turn,.spinslow{transform-box:fill-box;transform-origin:center;animation:spin 14s linear infinite}
+.turn{animation-duration:70s}
+.spinslow{animation-duration:110s}
+@keyframes spin{to{transform:rotate(360deg)}}
+.node.hover .lock path,.node.hover .lock .shackle{stroke:#e6c477}
+.lock{transform-origin:50% 0}
+.lock.rattle{animation:rattle .5s}
+@keyframes rattle{20%,60%{transform:rotate(-14deg)}40%,80%{transform:rotate(12deg)}}
+/* A lock that opens: its shackle lifts and turns, then the whole lock grows and fades, and the star that is ready lights. */
+.lockfx{animation:lockOpen 1.05s ease-in .15s both}
+.lockfx .shackle{transform-origin:100% 100%;animation:shackle .45s cubic-bezier(.3,1.6,.5,1) .2s both}
+@keyframes shackle{to{transform:translate(1.6px,-3.2px) rotate(32deg)}}
+@keyframes lockOpen{0%,55%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.9)}}
+.art.unlocking{opacity:0;animation:ignite .8s cubic-bezier(.2,.9,.3,1.3) 1s forwards}
+.art.learned{animation:learned 1.2s ease-out}
+@keyframes learned{0%{transform:scale(.3);filter:brightness(3)}45%{transform:scale(1.4)}100%{transform:scale(1);filter:none}}
+/* Lines. Light runs up a line into an idea that is ready, and up every line of the path to the chosen idea. */
+.tsvg .edge{transition:opacity .5s}
+.edge .flow{display:none}
+.edge .flow.on,.edge.onpath .flow{display:inline}
+.edge .flow.late{opacity:0;animation:flow 2.6s linear infinite,fade 1s ease-out var(--late) forwards}
+.edge.hot .line{stroke-width:2}
+.edge.k-dark.hot .line,.edge.k-plan.hot .line{stroke:rgba(205,210,245,.6)}
+.edge.onpath .line{stroke:#e6c477;stroke-opacity:.95;stroke-width:1.7}
+/* With an idea chosen, everything that is not on its path dims. */
+.tsvg.focus .node:not(.onpath):not(.start):not(.chosen){opacity:.3}
+.tsvg.focus .edge:not(.onpath){opacity:.14}
+.num text{font-family:Cinzel;font-size:10.5px;fill:#fbe7b0;letter-spacing:.06em}
+
+/* The panel of the chosen idea, at the right of the tree. */
+#skill{position:fixed;top:138px;right:22px;z-index:4;width:376px;max-height:calc(100vh - 230px);overflow-y:auto;padding:22px 26px 24px;opacity:0;transform:translateX(34px);pointer-events:none;transition:opacity .35s,transform .55s cubic-bezier(.2,.8,.2,1)}
+#skill.on{opacity:1;transform:none;pointer-events:auto}
+body.skill-open #within{right:410px}
+.sk-where{display:flex;align-items:center;gap:10px}
+.sk-where i{width:7px;height:7px;transform:rotate(45deg);background:var(--c);box-shadow:0 0 8px var(--c)}
+#skill h2{font-family:Cinzel;font-weight:500;font-size:27px;line-height:1.2;letter-spacing:.04em;color:var(--gold2);margin:9px 0 10px;text-shadow:0 0 18px rgba(230,196,119,.35)}
+.sk-state{display:inline-flex;align-items:center;gap:8px;font-family:Jost;font-size:10px;letter-spacing:.24em;text-transform:uppercase;padding:5px 13px 5px 9px;border-radius:999px;border:1px solid}
+.sk-state svg,.sk-item svg{flex:none;overflow:visible}
+.sk-state.known,.sk-state.studying{color:var(--gold2);border-color:rgba(230,196,119,.5);background:rgba(230,196,119,.08)}
+.sk-state.ready{color:#e6f4ff;border-color:rgba(154,217,255,.5);background:rgba(154,217,255,.07)}
+.sk-state.locked{color:#aaa6c0;border-color:rgba(165,161,187,.35);background:rgba(165,161,187,.05)}
+.sk-state.planned{color:var(--ink3);border-style:dashed;border-color:rgba(126,124,144,.45)}
+.sk-first{font-size:18px;line-height:1.5;color:var(--ink);margin-top:14px}
+.sk-h{margin:22px 0 4px;color:var(--gold)}
+.sk-item{display:flex;align-items:center;gap:12px;padding:8px 4px;border-bottom:1px solid rgba(230,196,119,.08);cursor:pointer;font-family:Jost;font-size:14px;letter-spacing:.03em;color:var(--ink);transition:color .2s}
+.sk-item:hover{color:var(--gold2)}
+.sk-item small{margin-left:auto;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink3);white-space:nowrap}
+.sk-acts{display:flex;align-items:center;gap:16px;margin-top:24px;flex-wrap:wrap}
+.sk-acts .iknow{margin-top:0}
+.sk-note{font-size:15px;font-style:italic;color:var(--ink3);line-height:1.45;margin-top:18px}
+#skill .lead{margin-top:20px}
+#skill .path{margin-top:16px}
+#skill .step h3{cursor:pointer}
+#skill .step h3:hover{color:var(--gold2)}
 .lead{font-size:17.5px;line-height:1.45;color:var(--ink)}
 .lead b{font-weight:500;color:var(--gold2)}
 .path{position:relative;margin-top:14px;padding-left:44px}
 .path::before{content:"";position:absolute;left:15px;top:14px;bottom:30px;width:1px;background:linear-gradient(var(--gold),rgba(230,196,119,.15))}
-.step{position:relative;padding-bottom:20px;transition:opacity .5s,max-height .6s .3s,padding .6s .3s;max-height:400px;overflow:hidden}
+.step{position:relative;padding-bottom:20px;transition:opacity .4s,max-height .5s .25s,padding .5s .25s;max-height:400px;overflow:hidden}
 .step.gone{opacity:0;max-height:0;padding-bottom:0}
 .num{position:absolute;left:-44px;top:-2px;width:31px;height:31px;display:grid;place-items:center;font-family:Cinzel;font-size:12px;color:var(--gold2);background:radial-gradient(circle,rgba(230,196,119,.30),rgba(6,9,22,.95) 70%);border:1px solid var(--goldDim);transform:rotate(45deg)}
 .num span{transform:rotate(-45deg)}
@@ -67,68 +249,82 @@ header .caps{color:var(--ink3)}
 .why .caps{color:var(--gold);font-size:9.5px;display:block;margin-bottom:2px}
 .iknow{margin-top:8px;font-family:Jost;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);border:1px solid rgba(141,146,168,.3);padding:4px 10px;display:inline-block;border-radius:20px;cursor:pointer;transition:all .2s}
 .iknow:hover{color:var(--gold2);border-color:var(--gold);box-shadow:0 0 12px rgba(230,196,119,.3)}
+.res{display:flex;align-items:center;gap:12px;padding:9px 4px;border-bottom:1px solid rgba(230,196,119,.08);cursor:pointer;font-family:Jost;font-size:14px;letter-spacing:.03em;color:var(--ink)}
+.res:hover{color:var(--gold2)}
+.res small{margin-left:auto;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink3)}
+.res .d{width:10px;height:10px;border-radius:50%;flex:none;background:radial-gradient(circle,#fff 0 28%,rgba(195,176,255,.5) 40%,transparent 70%)}
+.res .d.known{background:none;border:1px dashed var(--known)}
+.res .d.ready{background:radial-gradient(circle,#fff 0 28%,rgba(154,217,255,.7) 40%,transparent 70%)}
 
-main{position:fixed;top:58px;left:420px;right:0;bottom:0;z-index:1}
-main svg{width:100%;height:100%;display:block}
-.lbl{font-family:Jost,sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;fill:var(--ink2);paint-order:stroke;stroke:#060814;stroke-width:3px;stroke-linejoin:round;pointer-events:none;transition:fill .2s}
-.lbl.new{fill:#8f8ca8}.lbl.known{fill:#7d8197}.lbl.ready{fill:#cfe9ff}.lbl.path{fill:var(--gold2)}.lbl.now{fill:var(--gold2);font-size:12.5px;font-weight:500}
-.region{font-family:Cinzel;font-size:14px;letter-spacing:.36em;fill:var(--gold);opacity:.75}
-.rcount{font-family:Jost;font-size:9.5px;letter-spacing:.24em;fill:var(--ink3)}
-.dep{transition:opacity .25s,stroke-width .25s,stroke-opacity .25s}
-.far{stroke-opacity:.35}
-svg.focus .far.lit{stroke-opacity:1}
-svg.focus .dep{opacity:.12}
-svg.focus .dep.lit{opacity:1;stroke-width:1.8}
-svg.focus .lbl{fill:#5d5b70}
-svg.focus .lbl.lit{fill:var(--gold2)}
-.hit{cursor:pointer}
+/* When the reader learns an idea, the ideas it unlocks are named under the constellation's name for a moment. */
+#unlock{margin-top:14px;text-align:center;opacity:0;transform:translateY(-8px);pointer-events:none;transition:opacity .6s,transform .8s cubic-bezier(.2,.8,.2,1)}
+#unlock.on{opacity:1;transform:none}
+#unlock .caps{color:var(--gold);letter-spacing:.42em;display:flex;align-items:center;justify-content:center;gap:14px}
+#unlock .caps::before,#unlock .caps::after{content:"";width:70px;height:1px;background:linear-gradient(90deg,transparent,var(--gold))}
+#unlock .caps::after{transform:scaleX(-1)}
+#unlock p{font-family:Cinzel;font-size:22px;letter-spacing:.08em;color:var(--gold2);margin-top:6px;text-shadow:0 0 22px rgba(230,196,119,.5),0 1px 4px #000}
 
-.legend{position:fixed;right:22px;bottom:20px;z-index:2;display:flex;gap:22px;align-items:center;padding:12px 20px}
+/* The key to the tree's stars, on the ground under the names of its branches, so it never covers an idea. */
+.legend{position:absolute;left:50%;bottom:14px;z-index:2;transform:translateX(-50%);display:flex;gap:22px;align-items:center;padding:10px 22px;white-space:nowrap;pointer-events:none}
 .legend div{display:flex;align-items:center;gap:8px}
-.legend svg{width:22px;height:22px}
-#knownList{position:fixed;top:66px;right:22px;z-index:5;width:300px;padding:18px 20px;display:none}
-#knownList.on{display:block;animation:fade .3s}
-.krow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(230,196,119,.08);font-family:Jost;font-size:14px;color:var(--known)}
-.krow .dot{width:11px;height:11px;border-radius:50%;border:1px dashed var(--known)}
-.krow .iknow{margin:0 0 0 auto}
+.legend svg{width:22px;height:22px;overflow:visible}
+/* The top bar ends with a search field, the harp, and the user icon, which is always in the far top-right corner.
+   The search field is a rounded capsule with a fine gold line all the way round, on a pool of darker sky. */
+.skysearch{display:flex;align-items:center;gap:10px;width:min(300px,30vw);height:34px;padding:0 18px;border:1px solid rgba(230,196,119,.22);border-radius:999px;background:rgba(5,7,18,.55);cursor:text;transition:border-color .25s,background .25s,box-shadow .25s}
+.skysearch:hover{border-color:rgba(230,196,119,.4)}
+.skysearch:focus-within{border-color:rgba(230,196,119,.6);background:rgba(8,11,26,.85);box-shadow:0 0 18px rgba(230,196,119,.16)}
+.skysearch b{color:var(--gold);font-weight:400;font-size:12px;animation:tw 1.8s ease-in-out infinite}
+.skysearch input{all:unset;flex:1;min-width:0;font-family:'EB Garamond',serif;font-style:italic;font-size:15.5px;line-height:20px;color:var(--ink);caret-color:var(--gold)}
+.skysearch input::placeholder{color:var(--ink3)}
+#skyResults{position:fixed;top:70px;right:22px;width:min(400px,calc(100vw - 32px));z-index:5;padding:16px 24px;display:none}
+#skyResults.on{display:block;animation:fade .3s}
 
 </style>
 </head>
-<body>
-<div class="nebula"></div>
+<body data-sky="top">
+<div class="nebula"><i class="n-top"></i><i class="n-architecture"></i><i class="n-language"></i><i class="n-algorithms"></i></div>
+<div id="galaxy"><canvas id="mwGlow"></canvas><canvas id="mwStars"></canvas></div>
 <canvas id="sky"></canvas>
 <div id="stage">
 <header>
   <a class="brand" href="index.html"><i>✦</i>STOICHEIA</a>
-  <div class="caps">The library</div>
+  <div class="caps crumbs"><a id="crumbSky">The library</a><span id="crumbHere"></span></div>
   <div class="grow"></div>
-  <a class="hex" id="whatIKnow"><span>What I know</span></a>
+  <label class="skysearch"><b>✧</b><input id="sq" placeholder="Search" autocomplete="off" spellcheck="false"></label>
+  <a class="harp" id="harp" aria-label="Music"></a>
+  <a class="you" id="you" aria-label="You"></a>
 </header>
-<div id="knownList" class="frame"></div>
+<div id="about"></div>
+<div id="skyResults" class="frame"></div>
 
-<div id="finder">
-  <div class="instrument" id="instrument" title="Find an idea">
-    <svg id="astro" viewBox="-110 -110 220 220"></svg>
-    <div class="ins-text">
-      <div class="caps">The library</div>
-      <div class="ins-title">Find an idea</div>
-      <div class="caps ins-count" id="insCount"></div>
-      <label class="ins-input"><b>✧</b><span class="caret"></span><input id="q" placeholder="Name an idea" autocomplete="off" spellcheck="false"></label>
-    </div>
+<div id="heavens" class="hidden"><canvas id="gas"></canvas><canvas id="nebulae"></canvas><svg id="figures"></svg><svg id="twinkles"></svg><svg id="hits"></svg></div>
+
+<div id="within" class="hidden">
+  <div class="row">
+    <a class="way" id="backSky"><svg width="58" height="24" viewBox="-50 -12 58 24">
+      <g class="head"><polygon points="-12,0 2,-6 7,0" fill="#fbe7b0"/><polygon points="-12,0 2,6 7,0" fill="#a9813a"/></g>
+      <circle class="trail" style="--k:0" cx="-21" r="1.5" fill="#fbe7b0" opacity=".8"/><circle class="trail" style="--k:1" cx="-29" r="1.2" fill="#fbe7b0" opacity=".55"/>
+      <circle class="trail" style="--k:2" cx="-36" r="1" fill="#fbe7b0" opacity=".35"/><circle class="trail" style="--k:3" cx="-42" r=".8" fill="#fbe7b0" opacity=".2"/>
+    </svg><b>BACK TO THE SKY</b></a>
+    <h1 id="conName"></h1>
+    <span class="spacer"></span>
   </div>
-  <div class="frame" id="panel"></div>
+  <div class="caps" id="conSub"></div>
+  <div id="unlock"><div class="caps"></div><p></p></div>
 </div>
 
-<main><svg id="map" preserveAspectRatio="xMidYMid meet"></svg></main>
+<div id="tree" class="hidden"><div id="treeIn"></div></div>
+<div id="skill" class="frame"></div>
 
-<div class="legend frame">
-  <div><svg viewBox="-11 -11 22 22"><circle r="9" fill="url(#lg-new)"/><circle r="2.2" fill="#d8ccff"/></svg><span class="caps">New</span></div>
-  <div><svg viewBox="-11 -11 22 22"><circle r="10" fill="url(#lg-ready)"/><circle r="3" fill="#fff"/></svg><span class="caps">Ready</span></div>
-  <div><svg viewBox="-11 -11 22 22"><circle r="10" fill="url(#lg-now)"/><path d="M-10 0L0 -1L10 0L0 1ZM0 -10L1 0L0 10L-1 0Z" fill="#fff8e0"/><circle r="3" fill="#fff"/></svg><span class="caps">Studying</span></div>
-  <div><svg viewBox="-11 -11 22 22"><circle r="6" fill="none" stroke="#8d92a8" stroke-dasharray="2 2.4"/><circle r="1.8" fill="#8d92a8"/></svg><span class="caps">Known</span></div>
+<div class="legend frame hidden">
+  <div><svg viewBox="-11 -11 22 22"><circle r="10" fill="url(#lg-known)"/><circle r="6" fill="#2a200a" stroke="#e6c477" stroke-width="1"/><circle r="1.8" fill="#fff"/></svg><span class="caps">Known</span></div>
+  <div><svg viewBox="-11 -11 22 22"><circle r="10" fill="url(#lg-ready)"/><circle r="6" fill="#060916" stroke="#8ec5ff" stroke-width="1"/><circle r="2.2" fill="#fff"/></svg><span class="caps">Ready</span></div>
+  <div><svg viewBox="-11 -11 22 22"><circle r="7" fill="#080b18" stroke="rgba(170,170,205,.4)"/><g transform="scale(.62)"><path d="M-3.4 -1.6V-4.4A3.4 3.4 0 0 1 3.4 -4.4V-1.6" fill="none" stroke="#9c97b4" stroke-width="1.6"/><path d="M-5.4 -1.8H5.4V2.2C5.4 5.2 2.7 7.1 0 8.3C-2.7 7.1 -5.4 5.2 -5.4 2.2Z" fill="#1b1c2c" stroke="#9c97b4"/></g></svg><span class="caps">Locked</span></div>
+  <div><svg viewBox="-11 -11 22 22"><circle r="10" fill="url(#lg-now)"/><circle r="6.5" fill="none" stroke="#e6c477" stroke-dasharray="1 1.6"/><path d="M0 -4.5L1 -1L4.5 0L1 1L0 4.5L-1 1L-4.5 0L-1 -1Z" fill="#fbe7b0"/></svg><span class="caps">Studying</span></div>
+  <div><svg viewBox="-11 -11 22 22"><circle r="5" fill="none" stroke="rgba(200,200,235,.5)" stroke-dasharray="1.2 2"/><circle r="1" fill="rgba(225,225,255,.5)"/></svg><span class="caps">Planned</span></div>
   <svg width="0" height="0" style="position:absolute"><defs>
-    <radialGradient id="lg-new"><stop offset="0" stop-color="#c3b0ff" stop-opacity=".35"/><stop offset="1" stop-color="#c3b0ff" stop-opacity="0"/></radialGradient>
-    <radialGradient id="lg-ready"><stop offset="0" stop-color="#9ad9ff" stop-opacity=".7"/><stop offset="1" stop-color="#9ad9ff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="lg-known"><stop offset="0" stop-color="#e6c477" stop-opacity=".6"/><stop offset="1" stop-color="#e6c477" stop-opacity="0"/></radialGradient>
+    <radialGradient id="lg-ready"><stop offset="0" stop-color="#8ec5ff" stop-opacity=".6"/><stop offset="1" stop-color="#8ec5ff" stop-opacity="0"/></radialGradient>
     <radialGradient id="lg-now"><stop offset="0" stop-color="#e6c477" stop-opacity=".8"/><stop offset="1" stop-color="#e6c477" stop-opacity="0"/></radialGradient>
   </defs></svg>
 </div>
@@ -140,350 +336,298 @@ svg.focus .lbl.lit{fill:var(--gold2)}
 <script src="library-data.js"></script>
 <script src="library.js"></script>
 <script src="pages.js"></script>
+<script src="you.js"></script>
+<script src="figure-art.js"></script>
+<script src="heavens.js"></script>
+<script src="skilltree.js"></script>
+<script src="galaxy.js"></script>
+<script src="aurora.js"></script>
 <script>
-// Home in the constellation theme. Everything on it comes from the concept library, through pages.js:
-// the areas, the ideas and what they depend on, what the reader knows, the study in progress, and the path to an idea.
+// With ?place=<constellation> in the address, such as index.html?place=algorithms, Home also loads place.js, which places the
+// stars of that figure over its picture. The site does not publish place.js.
+if (new URLSearchParams(location.search).has('place')) document.body.appendChild(Object.assign(document.createElement('script'), { src: 'place.js' }));
+</script>
+<script>
+// Home in the constellation theme. Everything on it comes from the concept library, through pages.js: the constellations and
+// their areas, the ideas and what they need, what the reader knows, and the study in progress. heavens.js draws the night sky,
+// and skilltree.js draws the skill tree inside a constellation.
 const { el } = Sky;
-const svg = document.getElementById('map');
-// No idea is chosen when the page opens: the map shows the whole library, and the instrument in the corner waits to be used.
-let goal = null;
+const heavens = document.getElementById('heavens'), within = document.getElementById('within'), legend = document.querySelector('.legend');
+const tree = document.getElementById('tree'), skill = document.getElementById('skill');
+// Which view is open: null for the night sky, with all three constellations, or the id of the constellation the reader went into.
+// It is in the address, as index.html?constellation=language, so a reload, the browser's Back button, and the way back from
+// Expand to Parts and Graph and Page all open the same view. The way back from those pages also names the idea the reader
+// came from, as &skill=generics, and the tree opens with that idea chosen.
+const askedSky = () => { const c = new URLSearchParams(location.search).get('constellation'); return CONSTELLATIONS.some(k => k.id === c) ? c : null; };
+const askedSkill = () => { const s = new URLSearchParams(location.search).get('skill'); return s && (IDEAS[s] || PLANNED[s]) ? s : null; };
+let sky = askedSky(), pending = askedSkill();
 
-// A number from 0 to 1 that is always the same for the same text, so each star's small offset is the same on every load.
-function hash(text) { let h = 2166136261; for (const c of text) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return ((h >>> 0) % 10000) / 10000; }
-const ROMAN = n => ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'][n] || String(n);
-const delay = (e, ms) => { e.style.animationDelay = ms + 'ms'; return e; };
+const ROMAN = n => ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV'][n] || String(n);
+const nameOf = id => (IDEAS[id] || PLANNED[id]).name;
+const firstOf = id => (IDEAS[id] || PLANNED[id]).first;
+const skillArea = id => (IDEAS[id] || PLANNED[id]).area;
 
-// ---------- Where each star goes ----------
-// Each area is one constellation. Inside it, each idea is in a column to the right of the ideas it needs, as on the real Home.
-// Every other column is shifted down half a row, and each star moves a little, so the stars do not sit on a grid.
-const COL = 180, ROW = 96;
-function layout() {
-  const shapes = {};
-  AREAS.forEach(a => {
-    const ids = areaOrder(a.id); if (!ids.length) return;
-    const levels = [...new Set(ids.map(level))].sort((x, y) => x - y);
-    const rows = {}, at = {};
-    ids.forEach(id => { const c = levels.indexOf(level(id)); rows[c] = (rows[c] || 0) + 1; at[id] = { c, r: rows[c] - 1 }; });
-    shapes[a.id] = { ids, at, w: (levels.length - 1) * COL + 230, h: 92 + (Math.max(...Object.values(rows)) - 1) * ROW + ROW / 2 + 70 };
-  });
-  // The constellations go in the order of the areas, left to right, and start a new row when the next one would not fit the window.
-  const GAP = 46, place = {}, regions = {}, main = svg.parentElement;
-  const maxW = Math.max(700, main.clientWidth - 40);
-  let x = 30, y = 30, tallest = 0;
-  AREAS.map(a => a.id).filter(id => shapes[id]).forEach(id => {
-    const s = shapes[id];
-    if (x > 30 && x + s.w > maxW) { x = 30; y += tallest + GAP; tallest = 0; }
-    regions[id] = { x, y, w: s.w, h: s.h };
-    s.ids.forEach(i => {
-      const { c, r } = s.at[i];
-      place[i] = { x: x + 60 + c * COL + (hash(i + 'x') - .5) * 40, y: y + 92 + r * ROW + (c % 2) * ROW / 2 + (hash(i + 'y') - .5) * 26 };
-    });
-    x += s.w + GAP; tallest = Math.max(tallest, s.h);
-  });
-  // The map is never drawn larger than it is: a small library sits in the middle of the window at its own size.
-  const cw = Math.max(...Object.values(regions).map(r => r.x + r.w)) + 30, ch = y + tallest + 30;
-  const W = Math.max(cw, main.clientWidth), H = Math.max(ch, main.clientHeight);
-  return { place, regions, W, H, ox: (W - cw) / 2, oy: (H - ch) / 2 };
+// ---------- The panel of the chosen idea ----------
+// At the right of the tree: the chosen idea's branch and tier, its name, where the reader stands with it, and its first fact.
+// An idea the reader knows, or is ready to learn, lists what it needs. A locked idea shows the path to it instead, in teaching
+// order, with "I know this" on each step. Every idea lists what it leads to. Examine opens Expand to Parts on the idea, as a
+// second click on its star does. A locked idea cannot be opened: it offers the first idea on its path.
+const STATE_NAME = { known: 'Known', ready: 'Ready to learn', locked: 'Locked', studying: 'Studying', planned: 'Planned' };
+function stateIcon(st, color) {
+  const lock = '<path d="M-3.4 -1.6V-4.4A3.4 3.4 0 0 1 3.4 -4.4V-1.6" fill="none" stroke="#9c97b4" stroke-width="1.5"/><path d="M-5.4 -1.8H5.4V2.2C5.4 5.2 2.7 7.1 0 8.3C-2.7 7.1 -5.4 5.2 -5.4 2.2Z" fill="#1b1c2c" stroke="#9c97b4" stroke-width=".9"/><circle cy="1.3" r="1.1" fill="#04050b"/>';
+  const inner = {
+    known: '<circle r="6" fill="#2a200a" stroke="#e6c477" stroke-width="1.2"/><path d="M0 -4L1 -1L4 0L1 1L0 4L-1 1L-4 0L-1 -1Z" fill="#fff3cf"/>',
+    ready: `<circle r="6" fill="#060916" stroke="${color}" stroke-width="1.3"/><circle r="2.2" fill="#fff"/>`,
+    locked: `<g transform="scale(.85)">${lock}</g>`,
+    studying: '<circle r="6.5" fill="none" stroke="#e6c477" stroke-dasharray="1 1.5"/><path d="M0 -4.5L1 -1L4.5 0L1 1L0 4.5L-1 1L-4.5 0L-1 -1Z" fill="#fbe7b0"/>',
+    planned: '<circle r="4.5" fill="none" stroke="rgba(200,200,235,.55)" stroke-dasharray="1.2 2"/>',
+  }[st];
+  return `<svg width="16" height="16" viewBox="-8 -8 16 16">${inner}</svg>`;
 }
-// A border with a few jogs in it, like the borders between constellations on a star atlas.
-function border(r, id) {
-  const j = k => (hash(id + k) - .5) * 16, x2 = r.x + r.w, y2 = r.y + r.h, mx = r.x + r.w * (.45 + hash(id + 'm') * .2), my = r.y + r.h * (.4 + hash(id + 'n') * .2);
-  return [[r.x + j(1), r.y], [mx, r.y + j(2)], [mx, r.y - 10], [x2, r.y + j(3)], [x2 + j(4), my], [x2 - 14, my + 14], [x2 + j(5), y2], [r.x + r.w * .4, y2 + j(6)], [r.x + r.w * .4, y2 + 10], [r.x, y2 + j(7)], [r.x + j(8), r.y + r.h * .55]]
-    .map(p => p.map(v => v.toFixed(1)).join(',')).join(' ');
-}
-
-// ---------- The emblem of each area, drawn large and faint inside its constellation: what the area is about, as a picture ----------
-function emblem(g, area, r) {
-  const st = { fill: 'none', stroke: 'rgba(230,196,119,.11)', 'stroke-width': 1.3 };
-  const cx = r.x + r.w / 2, cy = r.y + r.h / 2 + 20;
-  if (area === 'swift') {
-    // A pair of braces.
-    const brace = (x, y0, y1, s) => { const m = (y0 + y1) / 2;
-      return `M${x + 22 * s} ${y0}C${x} ${y0} ${x} ${y0 + 12} ${x} ${y0 + 40}L${x} ${m - 34}C${x} ${m - 10} ${x - 18 * s} ${m} ${x - 24 * s} ${m}C${x - 18 * s} ${m} ${x} ${m + 10} ${x} ${m + 34}L${x} ${y1 - 40}C${x} ${y1 - 12} ${x} ${y1} ${x + 22 * s} ${y1}`; };
-    el('path', { d: brace(r.x + 34, r.y + 60, r.y + r.h - 24, 1), ...st, 'stroke-width': 2 }, g);
-    el('path', { d: brace(r.x + r.w - 34, r.y + 60, r.y + r.h - 24, -1), ...st, 'stroke-width': 2 }, g);
-  } else if (area === 'memory') {
-    // A stack of frames on one side, and blocks on the heap on the other.
-    for (let i = 0; i < 5; i++) el('rect', { x: r.x + 30, y: r.y + r.h - 140 + i * 22, width: 110, height: 18, rx: 2, ...st }, g);
-    [[.55, -120, 54, 34], [.68, -96, 40, 26], [.78, -128, 64, 40], [.62, -70, 30, 18]].forEach(([fx, dy, w, h]) => el('rect', { x: r.x + r.w * fx, y: r.y + r.h + dy, width: w, height: h, rx: 6, ...st }, g));
-  } else if (area === 'conc') {
-    // Two lanes of work that run at the same time.
-    [cy - 12, cy + 12].forEach((y, i) => el('line', { x1: r.x + 24, y1: y, x2: r.x + r.w - 24, y2: y, ...st, 'stroke-dasharray': i ? '40 14 24 14' : '22 12 50 12' }, g));
-  } else if (area === 'ui') {
-    // Views inside each other.
-    [[170, 150], [126, 110], [82, 70]].forEach(([w, h]) => el('rect', { x: cx - w / 2, y: cy - h / 2, width: w, height: h, rx: 10, ...st }, g));
-  } else if (area === 'algo') {
-    // A binary tree.
-    const T = [[0, -70], [-72, 0], [72, 0], [-114, 74], [-36, 74], [36, 74], [114, 74]].map(([x, y]) => [cx + x, cy + y]);
-    [[0, 1], [0, 2], [1, 3], [1, 4], [2, 5], [2, 6]].forEach(([a, b]) => el('line', { x1: T[a][0], y1: T[a][1], x2: T[b][0], y2: T[b][1], ...st }, g));
-    T.forEach(([x, y]) => el('circle', { cx: x, cy: y, r: 7, ...st }, g));
-  }
-}
-
-// ---------- The path to the chosen idea ----------
-function pathOf(id) {
-  const steps = id ? studyPath(id) : [];
-  const nums = {};
-  steps.forEach((s, i) => { (nums[s.id] = nums[s.id] || []).push(ROMAN(i + 1)); });
-  return { steps, nums, ids: new Set(steps.map(s => s.id)) };
-}
-function starState(id, P) {
-  if (KNOWN.has(id)) return 'known';
-  if (id === goal) return 'now';
-  if (P.ids.has(id)) return 'path';
-  return isReady(id) ? 'ready' : 'new';
-}
-const RADIUS = { known: 5, new: 4, ready: 5, path: 6.5, now: 9 };
-// A bowed curve from p to q, trimmed so that it starts and ends a little outside each star.
-function bow(p, q, bend, gapP, gapQ) {
-  const mx = (p.x + q.x) / 2, my = (p.y + q.y) / 2, dx = q.x - p.x, dy = q.y - p.y;
-  const cx = mx - dy * bend, cy = my + dx * bend;
-  const a = Math.hypot(cx - p.x, cy - p.y) || 1, b = Math.hypot(q.x - cx, q.y - cy) || 1;
-  return `M${(p.x + (cx - p.x) / a * gapP).toFixed(1)} ${(p.y + (cy - p.y) / a * gapP).toFixed(1)}Q${cx.toFixed(1)} ${cy.toFixed(1)} ${(q.x - (q.x - cx) / b * gapQ).toFixed(1)} ${(q.y - (q.y - cy) / b * gapQ).toFixed(1)}`;
-}
-
-// ---------- The map ----------
-function render(animate) {
-  const L = layout(), P = pathOf(goal), A = animate ? 1 : 0;
-  svg.innerHTML = '';
-  svg.setAttribute('viewBox', `${-L.ox} ${-L.oy} ${L.W} ${L.H}`);
-  const d = Sky.defsFor(svg);
-
-  // A faint grid of the sky, like the lines of a star atlas.
-  const grid = el('g', { class: A ? 'fade' : '' }, svg), gx = L.W / 2 - L.ox, gy = L.H - L.oy + 600;
-  [1, 2, 3, 4].forEach(k => el('circle', { cx: gx, cy: gy, r: 600 + k * 170, fill: 'none', stroke: 'rgba(150,170,255,.07)', 'stroke-dasharray': '1 7' }, grid));
-  [-0.5, -0.2, 0.1, 0.4].forEach(a => el('line', { x1: gx, y1: gy, x2: gx + Math.sin(a) * 2000, y2: gy - Math.cos(a) * 2000, stroke: 'rgba(150,170,255,.06)', 'stroke-dasharray': '1 7' }, grid));
-
-  // The constellations: a dotted border, the emblem, the name, and how many ideas each has.
-  Object.entries(L.regions).forEach(([id, r], i) => {
-    const g = delay(el('g', { class: A ? 'fade' : '' }, svg), 150 + i * 120);
-    emblem(g, id, r);
-    el('polygon', { points: border(r, id), fill: 'none', stroke: 'rgba(230,196,119,.5)', 'stroke-width': 1.6, 'stroke-dasharray': '0.1 6', 'stroke-linecap': 'round' }, g);
-    el('text', { x: r.x + 26, y: r.y + 36, class: 'region' }, g).textContent = areaName(id).toUpperCase();
-    const n = areaOrder(id).length;
-    el('text', { x: r.x + 26, y: r.y + 53, class: 'rcount' }, g).textContent = n + (n === 1 ? ' IDEA' : ' IDEAS');
-  });
-
-  // The rings that turn slowly behind the chosen idea.
-  const sel = goal && L.place[goal];
-  if (sel) {
-    const turn = delay(el('g', { class: A ? 'fade' : '' }, svg), 2200), spin = el('g', {}, turn);
-    el('animateTransform', { attributeName: 'transform', type: 'rotate', from: `0 ${sel.x} ${sel.y}`, to: `360 ${sel.x} ${sel.y}`, dur: '160s', repeatCount: 'indefinite' }, spin);
-    el('circle', { cx: sel.x, cy: sel.y, r: 64, fill: 'none', stroke: 'rgba(230,196,119,.16)' }, spin);
-    el('circle', { cx: sel.x, cy: sel.y, r: 96, fill: 'none', stroke: 'rgba(230,196,119,.10)', 'stroke-dasharray': '2 5' }, spin);
-    for (let i = 0; i < 72; i++) {
-      const a = i / 72 * Math.PI * 2, r2 = i % 6 ? 69 : 76;
-      el('line', { x1: sel.x + Math.cos(a) * 64, y1: sel.y + Math.sin(a) * 64, x2: sel.x + Math.cos(a) * r2, y2: sel.y + Math.sin(a) * r2, stroke: 'rgba(230,196,119,.28)', 'stroke-width': .7 }, spin);
-    }
-  }
-
-  // Every "depends on", from the idea it needs to the idea that needs it. A line on the path is gold, and light moves along it toward the chosen idea.
-  // A line from a known idea to the path is gold and dashed. A line between two areas is fainter until one of its stars is pointed at.
-  const onPath = id => P.ids.has(id);
-  let i = 0, k = 0;
-  for (const a in IDEAS) IDEAS[a].deps.forEach(b => {
-    const p = L.place[b], q = L.place[a]; if (!p || !q) return;
-    const sa = starState(a, P), sb = starState(b, P), bend = (i++ % 2 ? .14 : -.14);
-    const dd = bow(p, q, bend, RADIUS[sb] * 2.2, RADIUS[sa] * 2.2);
-    if (onPath(a) && onPath(b)) {
-      const at = 1600 + (k++) * 260;
-      delay(el('path', { d: dd, pathLength: 1, fill: 'none', stroke: '#e6c477', 'stroke-width': 5, opacity: .35, filter: 'url(#glow)', class: 'dep' + (A ? ' draw' : ''), 'data-a': a, 'data-b': b }, svg), at);
-      delay(el('path', { d: dd, pathLength: 1, fill: 'none', stroke: d.line(p.x, p.y, q.x, q.y, 'rgba(230,196,119,.55)', '#fbe7b0'), 'stroke-width': 1.4, class: 'dep' + (A ? ' draw' : ''), 'data-a': a, 'data-b': b }, svg), at);
-      const g = delay(el('g', { class: A ? 'fade' : '' }, svg), 2800);
-      el('path', { d: dd, fill: 'none', stroke: '#fffbe8', 'stroke-width': 2.2, class: 'travel dep', 'stroke-linecap': 'round', 'data-a': a, 'data-b': b }, g);
-    } else {
-      const fromKnown = KNOWN.has(b) && onPath(a);
-      const path = el('path', { d: dd, pathLength: 1, fill: 'none', 'data-a': a, 'data-b': b, class: 'dep' + (A ? ' draw' : ''), 'stroke-width': 1,
-        stroke: fromKnown ? 'rgba(230,196,119,.5)' : d.line(p.x, p.y, q.x, q.y, 'rgba(154,217,255,.30)', 'rgba(195,176,255,.45)') }, svg);
-      if (IDEAS[a].area !== IDEAS[b].area && !fromKnown) path.classList.add('far');
-      delay(path, 700 + i * 35);
-    }
-  });
-
-  // The stars light up from left to right, then their names and the numbers of the path appear.
-  for (const id in L.place) {
-    const s = L.place[id], st = starState(id, P), r = RADIUS[st];
-    const g = el('g', { transform: `translate(${s.x},${s.y})`, class: 'hit', 'data-id': id }, svg);
-    const col = { new: '#c3b0ff', ready: '#9ad9ff', path: '#e6c477', now: '#e6c477' }[st];
-    const o = Sky.star(g, d, { r, known: st === 'known', color: col, strength: { new: .5, ready: 1, path: 1, now: 1.3 }[st], dim: st === 'new',
-      flare: st === 'new' ? 0 : st === 'now' ? 6 : 3.6, flareOpacity: st === 'now' ? .8 : .45 });
-    if (A) { o.classList.add('ignite'); delay(o, 350 + s.x * .7); }
-    el('circle', { r: 18, fill: 'transparent' }, g);
-    const lbl = el('text', { x: s.x, y: s.y + r + (st === 'now' ? 26 : 18), 'text-anchor': 'middle', class: 'lbl ' + st + (A ? ' fade' : ''), 'data-id': id }, svg);
-    lbl.textContent = IDEAS[id].name; if (A) delay(lbl, 600 + s.x * .7);
-    if (P.nums[id] && st !== 'known') {
-      const text = P.nums[id].join(' · '), w = text.length > 3 ? text.length * 8 + 10 : 22;
-      const b = el('g', { transform: `translate(${s.x - r - 8 - w / 2},${s.y - r - 10})` }, svg);
-      const inner = delay(el('g', { class: A ? 'fade' : '' }, b), 2000);
-      el('rect', { x: -w / 2, y: -9, width: w, height: 18, fill: 'rgba(8,10,24,.9)', stroke: 'rgba(230,196,119,.6)', 'stroke-width': .8 }, inner);
-      el('text', { y: 4, 'text-anchor': 'middle', style: 'font-family:Cinzel;font-size:10.5px;fill:#fbe7b0;letter-spacing:.06em' }, inner).textContent = text;
-    }
-  }
-
-  panel(P);
-  astrolabe(L, P);
-}
-
-// ---------- The finder: the instrument in the corner, and the panel that unfolds from it ----------
-// The panel lists ideas to go to: suggestions, or the ideas that match what is typed. Once an idea is chosen, it shows the path to it.
-const finder = document.getElementById('finder'), q = document.getElementById('q');
-function panel(P) {
-  const S = STUDYING.id, text = q.value.trim().toLowerCase();
-  const chip = (id, label) => `<span class="chip ${id === goal ? 'on' : ''}" data-goal="${id}">${label}</span>`;
-  const dot = id => KNOWN.has(id) ? 'known' : isReady(id) ? 'ready' : '';
-  let html = '';
-  if (text) {
-    const hits = Object.keys(IDEAS).filter(id => IDEAS[id].name.toLowerCase().includes(text) || IDEAS[id].first.toLowerCase().includes(text));
-    html += `<div class="caps" style="margin-bottom:4px">${hits.length ? 'Ideas that match' : 'No idea matches yet'}</div>` +
-      hits.map(id => `<div class="res" data-goal="${id}"><span class="d ${dot(id)}"></span>${IDEAS[id].name}<small>${areaName(IDEAS[id].area)}</small></div>`).join('');
+function skillPanel(id, P) {
+  document.body.classList.toggle('skill-open', !!id);
+  skill.classList.toggle('on', !!id);
+  aside(id);
+  if (!id) return;
+  const N = SkillTree.node(id), st = SkillTree.stateOf(id), color = a => SkillTree.COLOR[a];
+  const item = i => `<div class="sk-item" data-pick="${i}">${stateIcon(SkillTree.stateOf(i), color(skillArea(i)))}<span>${nameOf(i)}</span>` +
+    (skillArea(i) !== N.area ? `<small>${areaName(skillArea(i))}</small>` : '') + `</div>`;
+  let html = `<div class="caps sk-where" style="--c:${color(N.area)}"><i></i>${areaName(N.area)} · Tier ${N.tier + 1}</div>
+    <h2>${N.name}</h2><span class="sk-state ${st}">${stateIcon(st, color(N.area))}${st === 'studying' ? stateText(id) : STATE_NAME[st]}</span>
+    <p class="sk-first">${Library.escapeHTML(N.first)}</p>`;
+  const needs = needsOf(id);
+  if (st === 'known' || st === 'ready') {
+    html += needs.length ? `<div class="caps sk-h">It needs</div>${needs.map(item).join('')}` : `<p class="sk-note">It needs no other idea, so it stands on the ground.</p>`;
   } else {
-    const others = TEACHING_ORDER.filter(id => id !== S && !KNOWN.has(id)).slice(-5);
-    html += `<div class="caps" style="margin-bottom:10px">Where do you want to get to?</div>
-      <div class="chips" style="margin-top:0">${chip(S, 'Your study: ' + IDEAS[S].name)}${others.map(id => chip(id, IDEAS[id].name)).join('')}</div>`;
+    const before = P.steps.filter(s => s.id !== id);
+    const count = new Set(before.map(s => s.id)).size;
+    html += `<p class="lead">${count ? `To ${st === 'studying' ? 'finish' : 'unlock'} <b>${N.name}</b>, you learn <b>${count === 1 ? '1 idea' : count + ' ideas'}</b> on the way, in this order.` : `You know everything <b>${N.name}</b> needs.`}</p>`;
+    html += `<div class="path">` + P.steps.map((s, i) => {
+      // The reason for a step: the first later step that needs it, and why.
+      const later = P.steps.slice(i + 1).find(t => t.id !== s.id && needsOf(t.id).includes(s.id));
+      const reason = later && IDEAS[later.id] ? why(later.id, s.id) : '';
+      return `<div class="step ${i === 0 ? 'now' : ''}"><div class="num"><span>${ROMAN(i + 1)}</span></div><h3 data-pick="${s.id}">${nameOf(s.id)}</h3>` +
+        (VIEW_LABEL[s.view] ? `<div class="view">${VIEW_LABEL[s.view]}</div>` : '') +
+        `<p>${Library.escapeHTML(firstOf(s.id))}</p>` +
+        (reason ? `<div class="why"><span class="caps">Needed for ${nameOf(later.id).toLowerCase()}</span>${Library.textHTML(reason)}</div>` : '') +
+        (s.id !== id && !PLANNED[s.id] ? `<span class="iknow" data-know="${s.id}">I know this</span>` : '') + `</div>`;
+    }).join('') + `</div>`;
   }
-  if (goal) {
-    html += `<div class="rule">✦</div>`;
-    if (KNOWN.has(goal)) html += `<p class="lead">You know <b>${IDEAS[goal].name}</b>.</p>`;
-    else {
-      const on = [...P.ids].filter(id => id !== goal).length;
-      const start = [...new Set(P.steps.flatMap(s => IDEAS[s.id].deps).filter(d => KNOWN.has(d)))];
-      html += `<p class="lead">${on ? `To get to <b>${IDEAS[goal].name}</b>, you learn <b>${on === 1 ? '1 idea' : on + ' ideas'}</b> on the way, in this order.` : `You know everything <b>${IDEAS[goal].name}</b> needs.`}</p>`;
-      if (start.length) html += `<div class="caps" style="margin:16px 0 8px">You start from what you know</div><div class="chips" style="margin-top:0">${start.map(id => `<span class="chip known">${IDEAS[id].name}</span>`).join('')}</div>`;
-      html += `<div class="caps" style="margin:22px 0 4px">The path</div><div class="path">` + P.steps.map((s, i) => {
-        // The reason for a step: the first later step that needs it, and why.
-        const later = P.steps.slice(i + 1).find(t => IDEAS[t.id].deps.includes(s.id) && t.id !== s.id);
-        return `<div class="step ${i === 0 ? 'now' : ''}" data-id="${s.id}"><div class="num"><span>${ROMAN(i + 1)}</span></div><h3>${IDEAS[s.id].name}</h3>` +
-          (VIEW_LABEL[s.view] ? `<div class="view">${VIEW_LABEL[s.view]}</div>` : '') +
-          `<p>${Library.escapeHTML(IDEAS[s.id].first)}</p>` +
-          (later ? `<div class="why"><span class="caps">Needed for ${IDEAS[later.id].name.toLowerCase()}</span>${Library.textHTML(why(later.id, s.id))}</div>` : '') +
-          (s.id !== goal ? `<span class="iknow" data-know="${s.id}">I know this</span>` : '') + `</div>`;
-      }).join('') + `</div>`;
-    }
+  const leads = [...Object.keys(IDEAS), ...Object.keys(PLANNED)].filter(k => needsOf(k).includes(id));
+  if (leads.length) html += `<div class="caps sk-h">It leads to</div>${leads.map(item).join('')}`;
+  const star = text => `<i>✦</i>${text}<i>✦</i>`;
+  if (st === 'known') html += `<div class="sk-acts"><button class="ybtn" data-act="examine">${star('Examine')}</button></div>`;
+  if (st === 'ready') html += `<div class="sk-acts"><button class="ybtn" data-act="examine">${star('Examine')}</button><span class="iknow" data-know="${id}">I know this</span></div>`;
+  if (st === 'studying') html += `<div class="sk-acts"><button class="ybtn" data-act="examine">${star('Continue')}</button></div>`;
+  if (st === 'locked' && P.steps.length) html += `<div class="sk-acts"><button class="ybtn" data-pick="${P.steps[0].id}">${star('Start with ' + nameOf(P.steps[0].id))}</button></div>`;
+  if (st === 'planned') html += `<p class="sk-note">This idea has no entry in the library yet. What it needs is a first guess, until its entry is written and checked.</p>`;
+  skill.innerHTML = html;
+  skill.scrollTop = 0;
+}
+// While the panel is open, the tree moves left when the chosen idea would be under the panel, and moves back when it closes.
+let shifted = 0;
+function aside(id) {
+  const inner = document.getElementById('treeIn'), p = id && SkillTree.where(id), room = innerWidth - 520;
+  const next = p && p.x - shifted > room ? Math.round(room - (p.x - shifted)) : 0;
+  if (next === shifted) return;
+  shifted = next;
+  inner.style.transform = shifted ? `translateX(${shifted}px)` : '';
+}
+SkillTree.onSelect = skillPanel;
+// After the tree is drawn, the key goes under it, and the Milky Way behind it is sized for how far the tree can scroll.
+SkillTree.afterDraw = () => { document.getElementById('treeIn').appendChild(legend); fitGalaxy(); };
+const fitGalaxy = () => { Galaxy.size(tree.scrollWidth - tree.clientWidth, tree.scrollHeight - tree.clientHeight); tilt(); };
+// As the tree scrolls up, the Milky Way moves down a quarter as far, as the sky does when a person tilts their head up.
+const tilt = () => Galaxy.view(tree.scrollLeft, tree.scrollTop, tree.scrollHeight - tree.clientHeight);
+tree.addEventListener('scroll', tilt, { passive: true });
+SkillTree.onExamine = (id, x, y) => Sky.go(`expand.html?root=${id}`, x, y);
+skill.addEventListener('click', e => {
+  const pick = e.target.closest('[data-pick]'), know = e.target.closest('[data-know]'), act = e.target.closest('[data-act]');
+  if (know) {
+    const step = know.closest('.step');
+    if (step) step.classList.add('gone');
+    setTimeout(() => announce(know.dataset.know, SkillTree.learn(know.dataset.know)), step ? 380 : 0);
+  } else if (pick) choose(pick.dataset.pick);
+  else if (act && act.dataset.act === 'examine') {
+    const id = SkillTree.selected(), p = SkillTree.where(id);
+    Sky.go(`expand.html?root=${id}`, p ? p.x : innerWidth / 2, p ? p.y : innerHeight / 2);
   }
-  const box = document.getElementById('panel');
-  box.innerHTML = html;
-  box.querySelectorAll('[data-goal]').forEach(c => c.onclick = () => { q.value = ''; choose(c.dataset.goal); });
-  // "I know this" on a step: the step leaves the path, and its star flares and becomes a known star.
-  // saveKnown writes the change to known.json when library/server.js serves the page, the same as the real Home.
-  box.querySelectorAll('[data-know]').forEach(b => b.onclick = () => {
-    const id = b.dataset.know, s = layout().place[id];
-    b.closest('.step').classList.add('gone');
-    if (s) Sky.burst(svg, s.x, s.y, '#fbe7b0', 14);
-    setTimeout(() => { KNOWN.add(id); saveKnown({ add: id }); render(false); if (s) Sky.burst(svg, s.x, s.y, '#8d92a8', 9); }, 450);
-  });
-}
-function openFinder(focus) {
-  finder.classList.add('open');
-  if (focus) q.focus();
-}
-// Closing the finder takes everything away: the panel, what was typed, and the chosen idea with its path.
-function closeFinder() {
-  finder.classList.remove('open'); q.blur(); q.value = '';
-  document.querySelector('.ins-input').classList.remove('typing');
-  if (goal) { goal = null; render(false); } else panel(pathOf(null));
-}
-document.getElementById('instrument').addEventListener('click', () => openFinder(true));
-q.addEventListener('input', () => { document.querySelector('.ins-input').classList.toggle('typing', !!q.value); openFinder(); panel(pathOf(goal)); });
-q.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeFinder();
-  if (e.key === 'Enter') { const first = document.querySelector('#panel .res'); if (first) { q.value = ''; choose(first.dataset.goal); } }
 });
-addEventListener('keydown', e => { if (e.key === 'Escape') closeFinder(); });
-
-// ---------- The instrument: an astrolabe with a small copy of the library's stars in the middle ----------
-// Its rings turn, and its sighting arm sweeps across the stars. The chosen idea, and the ideas on its path, are gold in it too.
-function astrolabe(L, P) {
-  const A = document.getElementById('astro'); A.innerHTML = '';
-  const g = el('g', {}, A);
-  const ring = el('g', {}, g);
-  el('animateTransform', { attributeName: 'transform', type: 'rotate', from: '0', to: '360', dur: '200s', repeatCount: 'indefinite' }, ring);
-  el('circle', { r: 100, fill: 'none', stroke: 'rgba(230,196,119,.45)' }, ring);
-  el('circle', { r: 104, fill: 'none', stroke: 'rgba(230,196,119,.15)', 'stroke-dasharray': '1 4' }, ring);
-  for (let i = 0; i < 120; i++) {
-    const a = i / 120 * Math.PI * 2, r1 = i % 10 ? 96 : 91;
-    el('line', { x1: Math.cos(a) * r1, y1: Math.sin(a) * r1, x2: Math.cos(a) * 100, y2: Math.sin(a) * 100, stroke: 'rgba(230,196,119,.45)', 'stroke-width': .7 }, ring);
-  }
-  const marks = el('g', {}, g);
-  el('animateTransform', { attributeName: 'transform', type: 'rotate', from: '360', to: '0', dur: '260s', repeatCount: 'indefinite' }, marks);
-  for (let i = 0; i < 12; i++) {
-    const a = i / 12 * Math.PI * 2;
-    el('text', { x: Math.cos(a) * 84, y: Math.sin(a) * 84 + 2.6, 'text-anchor': 'middle', style: `font-size:${i % 3 ? 6 : 8.5}px;fill:rgba(251,231,176,${i % 3 ? .45 : .8})` }, marks).textContent = '✦';
-  }
-  el('circle', { r: 76, fill: 'rgba(8,11,28,.55)', stroke: 'rgba(230,196,119,.3)', 'stroke-dasharray': '2 3' }, g);
-  // The library in small: every star, and every "depends on" between them.
-  const pts = Object.values(L.place), xs = pts.map(p => p.x), ys = pts.map(p => p.y);
-  const w = Math.max(...xs) - Math.min(...xs) || 1, h = Math.max(...ys) - Math.min(...ys) || 1, k = 104 / Math.max(w, h);
-  const at = id => [(L.place[id].x - (Math.min(...xs) + w / 2)) * k, (L.place[id].y - (Math.min(...ys) + h / 2)) * k];
-  for (const a in IDEAS) IDEAS[a].deps.forEach(b => { if (!L.place[a] || !L.place[b]) return; const [x1, y1] = at(b), [x2, y2] = at(a);
-    const lit = P.ids.has(a) && P.ids.has(b);
-    el('line', { x1, y1, x2, y2, stroke: lit ? 'rgba(251,231,176,.75)' : 'rgba(195,176,255,.22)', 'stroke-width': lit ? .9 : .6 }, g); });
-  for (const id in L.place) {
-    const [x, y] = at(id), gold = id === goal || P.ids.has(id);
-    el('circle', { cx: x, cy: y, r: id === goal ? 3.2 : 1.9, fill: KNOWN.has(id) ? 'rgba(141,146,168,.8)' : gold ? '#fbe7b0' : '#e8e4ff', class: 'halo', style: `animation-delay:${(-hashOf(id) * 4).toFixed(2)}s` }, g);
-  }
-  // The sighting arm: a gold rule through the middle, with a lens at one end.
-  const arm = el('g', {}, g);
-  el('animateTransform', { attributeName: 'transform', type: 'rotate', from: '0', to: '360', dur: '48s', repeatCount: 'indefinite' }, arm);
-  el('line', { x1: -72, y1: 0, x2: 72, y2: 0, stroke: 'rgba(230,196,119,.75)', 'stroke-width': 1.2 }, arm);
-  el('polygon', { points: '72,0 62,-3.5 62,3.5', fill: '#e6c477' }, arm);
-  el('circle', { cx: -62, cy: 0, r: 7, fill: 'rgba(230,196,119,.08)', stroke: '#e6c477', 'stroke-width': 1 }, arm);
-  el('circle', { cx: -62, cy: 0, r: 2, fill: '#fbe7b0' }, arm);
-  el('circle', { r: 3.5, fill: '#fff3cf' }, g);
-  document.getElementById('insCount').textContent = `${Object.keys(IDEAS).length} ideas · ${Object.keys(L.regions).length} constellations`;
+// After "I know this", the ideas it unlocked are named under the constellation's name, or the idea is said to be known.
+let unlockTimer = 0;
+function announce(id, unlocked) {
+  const box = document.getElementById('unlock');
+  box.querySelector('.caps').textContent = unlocked.length ? 'Unlocked' : 'Known';
+  box.querySelector('p').textContent = unlocked.length ? unlocked.map(nameOf).join(' · ') : nameOf(id);
+  clearTimeout(unlockTimer);
+  box.classList.remove('on'); void box.offsetWidth;
+  setTimeout(() => box.classList.add('on'), unlocked.length ? 700 : 200);
+  unlockTimer = setTimeout(() => box.classList.remove('on'), 3600);
+  progress();
 }
-function hashOf(text) { let h = 2166136261; for (const c of text) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return ((h >>> 0) % 10000) / 10000; }
+// Under the constellation's name: how many of its ideas the reader knows, and how many more are planned.
+function progress() {
+  const ids = constellationIdeas(sky), planned = Object.keys(PLANNED).filter(id => constellationOf(PLANNED[id].area) === sky).length;
+  document.getElementById('conSub').textContent = ids.length || planned
+    ? `${ids.filter(id => KNOWN.has(id)).length} of ${ids.length} ideas known` + (planned ? ` · ${planned} planned` : '') : '';
+}
 
+// The ideas whose name or first fact has the typed text in it.
+function matching(text) { return Object.keys(IDEAS).filter(id => IDEAS[id].name.toLowerCase().includes(text) || IDEAS[id].first.toLowerCase().includes(text)); }
+// Escape lets go of the chosen idea. With nothing chosen, Escape inside a constellation goes back out to the night sky.
+addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  // An open panel under the harp or the user icon closes first. sky.js closes it, and it is still fading out here.
+  if (Sky.panelShown()) return;
+  if (sky && SkillTree.selected()) SkillTree.focus(null);
+  else if (sky) travelTo(null);
+});
+
+// ---------- The search field in the top bar ----------
+// Typing lists the ideas that match under the field, each with the constellation it is in. Choosing one goes into that
+// constellation, where its tree opens with the idea chosen.
+const sq = document.getElementById('sq'), skyResults = document.getElementById('skyResults');
+function skySearch() {
+  const text = sq.value.trim().toLowerCase();
+  if (!text) { skyResults.classList.remove('on'); return; }
+  const hits = matching(text);
+  const dot = id => KNOWN.has(id) ? 'known' : isReady(id) ? 'ready' : '';
+  skyResults.innerHTML = `<div class="caps" style="margin-bottom:4px">${hits.length ? 'Ideas that match' : 'No idea matches yet'}</div>` +
+    hits.map(id => `<div class="res" data-goal="${id}"><span class="d ${dot(id)}"></span>${IDEAS[id].name}<small>${constellationName(constellationOf(IDEAS[id].area))}</small></div>`).join('');
+  skyResults.querySelectorAll('[data-goal]').forEach(r => r.onclick = () => pickFromSky(r.dataset.goal));
+  // The list's right edge is under the search field's right edge.
+  skyResults.style.right = Math.max(16, innerWidth - document.querySelector('.skysearch').getBoundingClientRect().right) + 'px';
+  skyResults.classList.add('on');
+}
+function clearSkySearch() { sq.value = ''; skyResults.classList.remove('on'); }
+function pickFromSky(id) { clearSkySearch(); sq.blur(); choose(id); }
+sq.addEventListener('input', skySearch);
+sq.addEventListener('focus', skySearch);
+sq.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { const first = skyResults.querySelector('.res'); if (first) pickFromSky(first.dataset.goal); }
+  if (e.key === 'Escape') { clearSkySearch(); sq.blur(); e.stopPropagation(); }
+});
+// A click anywhere outside the field and its list closes the list, and keeps what was typed.
+document.addEventListener('pointerdown', e => { if (!e.target.closest('.skysearch, #skyResults')) skyResults.classList.remove('on'); });
+
+// Choosing an idea: on the tree of its constellation, it is chosen at once. An idea in another constellation, or chosen on the
+// night sky, first goes into the constellation it is in.
 function choose(id) {
-  goal = id; openFinder(); render(false);
-  const s = layout().place[id]; if (s) Sky.burst(svg, s.x, s.y, '#e6c477', 8);
+  const c = constellationOf(skillArea(id));
+  if (c !== sky) { pending = id; travelTo(c); return; }
+  SkillTree.select(id);
 }
 
-// ---------- Pointing at a star lights its lines and shows its card. Clicking it chooses it. ----------
-svg.addEventListener('mouseover', e => {
-  const g = e.target.closest('g.hit'); if (!g) return;
-  const id = g.dataset.id, I = IDEAS[id];
-  svg.classList.add('focus');
-  svg.querySelectorAll('.dep').forEach(p => p.classList.toggle('lit', p.dataset.a === id || p.dataset.b === id));
-  const near = new Set([id, ...I.deps, ...Object.keys(IDEAS).filter(k => IDEAS[k].deps.includes(id))]);
-  svg.querySelectorAll('.lbl').forEach(l => l.classList.toggle('lit', near.has(l.dataset.id)));
-  const needs = unknownNeeds(id).map(n => IDEAS[n].name);
-  const note = KNOWN.has(id) ? 'Known' : id === STUDYING.id ? stateText(id) : needs.length ? `Needs ${needs.length} first: ${needs.join(', ')}` : 'Ready · you know everything it needs';
-  const b = g.getBoundingClientRect();
-  Sky.show({ name: I.name, first: Library.escapeHTML(I.first), note, tone: KNOWN.has(id) ? 'known' : isReady(id) ? 'ready' : '' }, b.x + b.width / 2, b.y + b.height / 2);
-});
-svg.addEventListener('mouseout', e => {
-  const from = e.target.closest('g.hit');
-  if (!from || (e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('g.hit') === from)) return;
-  svg.classList.remove('focus'); Sky.hide();
-});
-// The first click on a star chooses it. A second click on the chosen star examines it: Expand to Parts opens on that idea, from that star.
-svg.addEventListener('click', e => {
-  const g = e.target.closest('g.hit'); if (!g) { closeFinder(); return; }
-  Sky.hint.cancel(); armed = null;
-  if (g.dataset.id !== goal) { choose(g.dataset.id); return; }
-  const b = g.getBoundingClientRect();
-  Sky.go(`expand.html?root=${goal}`, b.x + b.width / 2, b.y + b.height / 2);
-});
-// Resting the pointer on the chosen star brings out the Examine tag, which follows the pointer while it stays on that star.
-let armed = null;
-svg.addEventListener('mousemove', e => {
-  const g = e.target.closest('g.hit'), on = g && g.dataset.id === goal;
-  if (on && armed !== goal) { armed = goal; Sky.hint.arm(e.clientX, e.clientY); }
-  else if (on) Sky.hint.move(e.clientX, e.clientY);
-  else if (armed) { armed = null; Sky.hint.cancel(); }
-});
-svg.addEventListener('mouseleave', () => { armed = null; Sky.hint.cancel(); });
-
-// ---------- What I know: every id in known.json, each of which can be taken off the list ----------
-function knownPanel() {
-  const box = document.getElementById('knownList');
-  box.innerHTML = `<div class="caps" style="color:var(--gold)">What I know</div>` +
-    ([...KNOWN].map(id => `<div class="krow"><span class="dot"></span>${NAMES[id] || id}<span class="iknow" data-forget="${id}">Remove</span></div>`).join('') || '<p class="lead" style="font-size:15px">Nothing yet.</p>');
-  box.querySelectorAll('[data-forget]').forEach(b => b.onclick = () => { KNOWN.delete(b.dataset.forget); saveKnown({ remove: b.dataset.forget }); knownPanel(); render(false); });
+// ---------- Going into a constellation, and back out to the night sky ----------
+// A move to another view, from the middle of the constellation on the night sky, or from the middle of the tree inside one:
+// the view that is open moves away, the stars stretch, and the new view arrives. push is false when the browser's Back or
+// Forward button made the move, because the address has already changed.
+let moving = false;
+function travelTo(next, push = true) {
+  if (moving || next === sky) return;
+  moving = true; Sky.hide(); Sky.hint.cancel();
+  document.body.classList.add('moving');
+  const prev = sky;
+  let x = innerWidth / 2, y = innerHeight * .45;
+  if (!prev) {
+    ({ x, y } = Heavens.centerOf(next));
+    heavens.style.transformOrigin = `${x}px ${y}px`;
+    heavens.classList.add('going', 'into');
+  } else { tree.classList.add('away'); within.classList.add('away'); skillPanel(null); }
+  Sky.travel(x, y, () => {
+    sky = next;
+    if (push) history.pushState(null, '', sky ? `?constellation=${sky}` : location.pathname);
+    showView(prev);
+    document.body.classList.remove('moving');
+    moving = false;
+  }, next ? 1 : -1);
 }
-document.getElementById('whatIKnow').onclick = () => { const box = document.getElementById('knownList'); box.classList.toggle('on'); if (box.classList.contains('on')) knownPanel(); };
+addEventListener('popstate', () => { pending = askedSkill(); travelTo(askedSky(), false); });
+document.getElementById('backSky').onclick = () => travelTo(null);
+document.getElementById('crumbSky').onclick = () => { if (sky) travelTo(null); };
+Heavens.onEnter = id => travelTo(id);
+// A skill in the user icon's panel goes into its constellation, as clicking the constellation does.
+You.onSkill = id => travelTo(id);
 
-render(true);
+// Shows the open view. prev is the view the reader came from: the night sky pulls back from the constellation they left, and a
+// constellation's tree grows in from far away, lighting up from the ground to the top. Only one of the two is drawn at a time,
+// so their SVG filters never share a page.
+function showView(prev, first) {
+  document.body.dataset.sky = sky || 'top';
+  const here = sky && CONSTELLATIONS.find(c => c.id === sky);
+  document.getElementById('crumbHere').textContent = here ? '✦  ' + here.name : '';
+  // Inside a constellation, the Milky Way replaces the sky's small stars, which show only while they stretch in a move.
+  Galaxy.show(!!sky); Sky.quiet(!!sky && Galaxy.ok);
+  if (!sky) {
+    skillPanel(null);
+    tree.classList.add('hidden'); within.classList.add('hidden'); legend.classList.add('hidden');
+    heavens.classList.remove('hidden', 'going');
+    Heavens.draw(constellationInfo(), first);
+    Heavens.start();
+    if (prev) {
+      const c = Heavens.centerOf(prev);
+      heavens.style.transformOrigin = `${c.x}px ${c.y}px`;
+      heavens.classList.add('into'); void heavens.offsetWidth;
+      heavens.classList.add('coming'); heavens.classList.remove('into');
+      setTimeout(() => heavens.classList.remove('coming'), 1400);
+    } else heavens.classList.remove('into');
+    return;
+  }
+  Heavens.stop(); heavens.classList.add('hidden'); heavens.classList.remove('into', 'going', 'coming');
+  document.getElementById('conName').textContent = here.name.toUpperCase();
+  progress();
+  [tree, within].forEach(e => {
+    e.classList.remove('hidden', 'away', 'coming');
+    if (first) return;
+    e.classList.add('far'); void e.offsetWidth;
+    e.classList.add('coming'); e.classList.remove('far');
+    setTimeout(() => e.classList.remove('coming'), 1300);
+  });
+  SkillTree.draw(sky, { intro: true });
+  legend.classList.toggle('hidden', !SkillTree.model().ids.length);
+  const id = pending; pending = null;
+  tree.scrollTop = tree.scrollHeight;
+  fitGalaxy();
+  // In a window narrower than the tree, the tree opens across from the chosen idea, or from the highest idea that is ready.
+  const across = id && SkillTree.has(id) ? id : frontier();
+  tree.scrollLeft = across ? SkillTree.where(across).x + tree.scrollLeft - tree.clientWidth / 2 : (tree.scrollWidth - tree.clientWidth) / 2;
+  if (id && SkillTree.has(id)) setTimeout(() => SkillTree.select(id), 900);
+  else tour();
+}
+// The highest idea on the open tree that the reader can learn now.
+function frontier() {
+  const ready = SkillTree.model().ids.filter(id => SkillTree.stateOf(id) === 'ready');
+  return ready.sort((a, b) => SkillTree.where(a).y - SkillTree.where(b).y)[0] || null;
+}
+
+// ---------- The first look at a tree ----------
+// When a tree is taller than the window, the view starts on the ground, rises with the stars as they light up, to the top of
+// the tree, and comes back down to the highest idea the reader can learn now. Scrolling, dragging, or a key stops it.
+let touring = 0;
+function tour() {
+  cancelAnimationFrame(touring);
+  const max = tree.scrollHeight - tree.clientHeight;
+  if (max < 120) return;
+  const next = frontier(), top = next && SkillTree.where(next).y + tree.scrollTop;
+  const rest = next ? Math.max(0, Math.min(max, top - tree.clientHeight * .55)) : max;
+  const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const legs = [[0, 350, max, max], [350, 2700, max, 0], [2700, 3300, 0, 0], [3300, 4800, 0, rest]];
+  const t0 = performance.now();
+  const step = now => {
+    const t = now - t0, leg = legs.find(l => t < l[1]);
+    if (!leg) { tree.scrollTop = rest; return; }
+    tree.scrollTop = leg[2] + (leg[3] - leg[2]) * ease((t - leg[0]) / (leg[1] - leg[0]));
+    touring = requestAnimationFrame(step);
+  };
+  touring = requestAnimationFrame(step);
+}
+['wheel', 'pointerdown', 'keydown', 'touchstart'].forEach(ev => addEventListener(ev, () => cancelAnimationFrame(touring), { passive: true }));
+// A new size of window draws the tree again for it, where the reader was.
+let resizing = 0;
+addEventListener('resize', () => { clearTimeout(resizing); resizing = setTimeout(() => { if (sky) SkillTree.redraw(); }, 150); });
+
+
+showView(null, true);
 </script>
 </body>
 </html>

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stoicheia</title>
+<!-- The sound of the star theme. This page stays open and shows Home, Expand to Parts, and Graph and Page in an iframe, so
+     its sound keeps playing when the iframe loads the next page. A full page load would stop every sound. Each of those pages,
+     opened on its own, moves into this page, as sky.js says. sound.js makes the sounds. The songs in audio/songs.js play in a shuffled order, starting with a new one each time this
+     page opens.
+     The page in the iframe asks for each sound with a message: the sound of a move when it calls Sky.go or Sky.travel, and
+     the sound of arriving when the next page or view comes in, with the direction of the move: forward to a deeper page, or
+     back. This page has no controls of its own. The harp in each page's header turns all sound on or off, and Settings, in the
+     panel of the user icon on Home, sets the volumes. Both send each change here as a message. -->
+<link rel="stylesheet" href="sky.css">
+<style>
+#view{position:fixed;inset:0;width:100%;height:100%;border:0;display:block}
+</style>
+</head>
+<body>
+<iframe id="view" title="Stoicheia"></iframe>
+<script src="audio/songs.js"></script>
+<script src="sound.js"></script>
+<script>
+const view = document.getElementById('view');
+
+// The page the iframe shows is in this page's address, as ?page=expand.html%3Froot%3Dgenerics, so a reload keeps it.
+// Only the three pages of the star theme are allowed.
+const PAGE = /^(index|expand|page)\.html(\?[^#]*)?$/;
+const asked = new URLSearchParams(location.search).get('page');
+view.src = asked && PAGE.test(asked) ? asked : 'index.html';
+
+// How deep each page is. A move to a deeper page goes forward, and a move to a shallower page goes back. A move between two
+// pages of the same depth, such as from one study to another, goes forward.
+const DEPTH = { 'index.html': 0, 'expand.html': 1, 'page.html': 2 };
+const depthOf = path => DEPTH[path.split('?')[0].split('/').pop() || 'index.html'] ?? 0;
+
+// This page's address and title follow the page in the iframe.
+function show(page, title) {
+  if (PAGE.test(page)) history.replaceState(null, '', '?page=' + encodeURIComponent(page));
+  if (title) document.title = title;
+}
+
+// The messages that the page in the iframe sends, from sky.js. The first page plays no arrival, and each later one does.
+// A page reached by Sky.go arrives in that move's direction. A page reached any other way, such as a plain link or the
+// browser's Back button, arrives in the direction its depth gives. A move inside one page, such as into a constellation on
+// Home and back out, plays the leaving sound at the click and the arriving sound when the new view comes in.
+let first = true, fromX = .5, goingDir = null, depth = 0;
+const HEAR = {
+  start() { Sound.start(); },
+  here({ page, title }) {
+    const d = depthOf(page);
+    if (!first) Sound.arrive(fromX, goingDir || (d < depth ? -1 : 1));
+    first = false; fromX = .5; goingDir = null; depth = d; watching = false;
+    show(page, title);
+  },
+  // While the music panel under the harp is open, the page watches the song.
+  watch({ on }) { if (on && !watching) requestAnimationFrame(report); watching = on; },
+  go({ url, x }) {
+    Sound.start();
+    fromX = x; goingDir = depthOf(url) < depth ? -1 : 1;
+    Sound.leave(fromX, goingDir);
+  },
+  travel({ x, dir }) { Sound.start(); Sound.leave(x, dir); },
+  traveled({ x, dir, page }) { Sound.arrive(x, dir); show(page); },
+  choose({ k, v }) { Sound.choose(k, v); },
+  reload() { location.reload(); },
+  hear({ x }) { Sound.start(); Sound.arrive(x, 1); },
+};
+addEventListener('message', ev => {
+  const m = ev.data;
+  if (ev.source === view.contentWindow && m && Object.hasOwn(HEAR, m.sound)) HEAR[m.sound](m);
+});
+// While the page watches the song, this page sends it, once a frame, the song's title, where it is, whether it plays, and how
+// loud it is in 48 bands of frequencies, as { song }.
+let watching = false;
+function report() {
+  if (!watching) return;
+  view.contentWindow.postMessage({ song: Sound.listen(48) }, '*');
+  requestAnimationFrame(report);
+}
+
+// The sound starts as soon as this page opens, when the browser lets it, so after a reload a new song starts at once. sound.js
+// says when. This page reloads itself for Command-R, Control-R, and F5, as the page in the iframe does, for the reason sky.js
+// gives.
+Sound.start();
+addEventListener('keydown', e => {
+  if (e.key === 'F5' || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'r')) { e.preventDefault(); location.reload(); }
+});
+</script>
+</body>
+</html>

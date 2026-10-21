@@ -1,6 +1,6 @@
 {
   "id": "type-parameter",
   "name": "Type parameter",
-  "first": "A parameter of generic code that gets a type, not a value: each call or use of that code gives it one type.",
+  "first": "A placeholder for a type in generic code: each call or use of that code fills it in with a concrete type.",
   "parts": []
 }

@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tree ideas</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Jost:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#e9e1cf;--ink2:#a59fb6;--gold:#e6c477}
+html,body{margin:0;background:#03040b;color:var(--ink);font-family:Jost,sans-serif}
+header{padding:26px 16px 0;text-align:center}
+header h1{font-family:Cinzel;font-weight:500;font-size:19px;letter-spacing:.42em;margin:0 0 6px;color:var(--gold)}
+header p{margin:0;font-size:13.5px;color:var(--ink2)}
+.grid{display:flex;flex-wrap:wrap;gap:30px 26px;justify-content:center;padding:24px 16px 40px}
+figure{margin:0;width:440px;max-width:100%}
+figure svg{display:block;width:100%;height:auto;border-radius:4px}
+figcaption{padding:12px 4px 0}
+figcaption b{font-family:Cinzel;font-weight:500;letter-spacing:.2em;font-size:14px;color:var(--gold)}
+figcaption p{margin:6px 0 0;font-size:13.5px;line-height:1.6;color:var(--ink2)}
+.rays{animation:rays 6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes rays{0%,100%{transform:scale(.86);opacity:.8}50%{transform:scale(1.1);opacity:1}}
+.halo{animation:tw 4.5s ease-in-out infinite}
+@keyframes tw{0%,100%{opacity:1}50%{opacity:.55}}
+.con-name{font-family:Cinzel;font-weight:500;letter-spacing:.34em}
+.con-count{font-family:Jost;font-size:9.5px;letter-spacing:.24em;fill:#8f88a3}
+</style>
+</head>
+<body>
+<header><h1>Algorithms</h1><p>Ideas for the tree. Each one keeps the same stars: the binary tree in the roots, and six stars near the spruce.</p></header>
+<div class="grid" id="grid"></div>
+<script>
+// Each panel is drawn at the size a constellation has on Home in a window about 1440 pixels wide. A figure is drawn in a box from
+// -1 to 1 around its middle, as in heavens.js, and X and Y turn its numbers into pixels of the panel.
+const NS = 'http://www.w3.org/2000/svg';
+const PW = 440, PH = 680, S = 196, CX = 220, CY = 318;
+const STAR = '#ffadd2', LINE = '#f6dde8', INK = '#0a0614';
+function el(tag, a, parent) { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); if (parent) parent.appendChild(e); return e; }
+function rnd(seed) { seed = seed % 2147483647 || 1; return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+function hash(text) { let h = 2166136261; for (const ch of text) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return ((h >>> 0) % 10000) / 10000; }
+const X = x => +(CX + x * S).toFixed(2), Y = y => +(CY + y * S).toFixed(2);
+const D = (pts, closed) => 'M' + pts.map(p => X(p[0]) + ' ' + Y(p[1])).join('L') + (closed ? 'Z' : '');
+
+// ---------- Curves ----------
+const quad = (a, c, b, n = 24) => Array.from({ length: n + 1 }, (_, i) => { const t = i / n, s = 1 - t; return [s * s * a[0] + 2 * s * t * c[0] + t * t * b[0], s * s * a[1] + 2 * s * t * c[1] + t * t * b[1]]; });
+// The curve from a to b that bows to one side by bend, as the lines of a figure do.
+const bow = (a, b, bend, n) => quad(a, [(a[0] + b[0]) / 2 - (b[1] - a[1]) * bend, (a[1] + b[1]) / 2 + (b[0] - a[0]) * bend], b, n);
+// A smooth curve through every point of pts.
+function spline(pts, n = 14) {
+  const out = [];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+    for (let k = 0; k < n; k++) {
+      const t = k / n, t2 = t * t, t3 = t2 * t;
+      out.push([0, 1].map(j => .5 * (2 * p1[j] + (p2[j] - p0[j]) * t + (2 * p0[j] - 5 * p1[j] + 4 * p2[j] - p3[j]) * t2 + (3 * p1[j] - p0[j] - 3 * p2[j] + p3[j]) * t3)));
+    }
+  }
+  out.push(pts[pts.length - 1]);
+  return out;
+}
+// The same line, with its points step apart along it.
+function resample(P, step) {
+  const out = [P[0]]; let need = step;
+  for (let i = 1; i < P.length; i++) {
+    const a = P[i - 1], b = P[i], seg = Math.hypot(b[0] - a[0], b[1] - a[1]); let pos = 0;
+    while (seg - pos >= need) { pos += need; const t = pos / seg; out.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]); need = step; }
+    need -= seg - pos;
+  }
+  const last = P[P.length - 1], end = out[out.length - 1];
+  if (Math.hypot(last[0] - end[0], last[1] - end[1]) > step * .25) out.push(last);
+  return out;
+}
+// The unit normal at each point, a quarter turn to the left of the direction of travel, and the line moved along it by w.
+function normals(P) { return P.map((p, i) => { const a = P[Math.max(0, i - 1)], b = P[Math.min(P.length - 1, i + 1)], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1; return [-dy / L, dx / L]; }); }
+function offset(P, w) { const N = normals(P); return P.map((p, i) => { const k = typeof w === 'function' ? w(i / (P.length - 1), i) : w; return [p[0] + N[i][0] * k, p[1] + N[i][1] * k]; }); }
+const part = (P, a, b) => P.slice(Math.round(a * (P.length - 1)), Math.round(b * (P.length - 1)) + 1);
+// A curl that goes on from the end of P and winds inward about one and a quarter turns. turn is 1 or -1.
+function spiral(P, len, turn, n = 46) {
+  const a = P[P.length - 2], b = P[P.length - 1], out = [], ds = len / n;
+  let ang = Math.atan2(b[1] - a[1], b[0] - a[0]), [x, y] = b;
+  for (let i = 1; i <= n; i++) { const u = i / n; ang += turn * ds * (3.3 / len) / (1 - .86 * u); x += Math.cos(ang) * ds * (1 - .5 * u); y += Math.sin(ang) * ds * (1 - .5 * u); out.push([x, y]); }
+  return out;
+}
+const smooth = t => { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); };
+
+// Many thin lines with the same look, kept as one path.
+function pen(g, a) { let d = ''; return { add(P) { if (P.length > 1) d += D(P); }, done() { if (d) el('path', { d, fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', ...a }, g); } }; }
+const stroke = (g, P, a) => el('path', { d: D(P), fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', ...a }, g);
+
+// ---------- The spruce ----------
+// A narrow Norway spruce. Its boughs come from the trunk in whorls, at other heights on the left and the right. A bough near the
+// top rises a little; a lower one droops, and its tip turns up again. o.width is how far the lowest boughs reach.
+function spruce(o) {
+  const R = rnd(o.seed), [ax, ay] = o.apex, H = o.bottom - ay;
+  const tx = y => ax + (y - ay) / (o.ground - ay) * o.lean;
+  const tw = y => .004 + o.trunk * Math.pow(Math.max(0, (y - ay) / (o.ground - ay)), 1.1);
+  const boughs = [];
+  [-1, 1].forEach(m => {
+    const n = m < 0 ? o.n : o.n + 1, shift = m < 0 ? 0 : .45;
+    for (let k = 0; k < n; k++) {
+      const t = Math.min(1, Math.pow((k + .55 + shift + (R() - .5) * .3) / (n + .2), 1.06)), y0 = ay + H * (.035 + .965 * t);
+      boughs.push({ m, t, y0, x0: tx(y0), L: Math.max(.03, o.width * Math.pow(t, .92) * (.84 + R() * .3) * (m < 0 ? 1 : o.right)), r: R() });
+    }
+  });
+  boughs.sort((a, b) => b.y0 - a.y0);
+  // The trunk, wider toward the ground, where it flares out into the roots.
+  const ys = Array.from({ length: 48 }, (_, i) => ay + .04 + (o.ground - ay - .04) * i / 47);
+  const flare = y => o.flare * Math.pow(smooth((y - o.ground + .12) / .12), 2);
+  const left = ys.map(y => [tx(y) - tw(y) - flare(y), y]), right = ys.map(y => [tx(y) + tw(y) + flare(y), y]);
+  return { o, R, tx, tw, boughs, left, right, trunk: [...left, ...right.slice().reverse()], base: { left: left[47], right: right[47] } };
+}
+function bough(b) {
+  const { m, t, y0, x0, L } = b, N = 28, ax = [];
+  const k1 = -.24 + .36 * t, k2 = .14 + .18 * t;
+  for (let i = 0; i <= N; i++) {
+    const u = i / N, up = Math.pow(Math.max(0, (u - .74) / .26), 2) * .11;
+    ax.push([x0 + m * L * u, y0 + L * (k1 * u + k2 * u * u - up)]);
+  }
+  // How thick the needles are under the branch at u, from the trunk at 0 to the tip at 1. The tip is a point.
+  const th = u => L * (.1 + .07 * t) * Math.pow(Math.sin(Math.PI * Math.min(1, .1 + u * .93)), .55) + .003;
+  const down = f => offset(ax, u => m * th(u) * f);
+  return { ax, th, down, top: down(-.32), bot: down(1), tip: ax[N] };
+}
+// The point of the bough nearest to the height t on side m, for the stars that come near the tree.
+function tipNear(sp, m, t) {
+  const b = sp.boughs.filter(b => b.m === m).reduce((best, b) => Math.abs(b.t - t) < Math.abs(best.t - t) ? b : best);
+  return bough(b).tip;
+}
+
+// Draws the spruce in one of two looks. In the engraved look, each bough is a dark layer with a fine edge, lines inside it that
+// follow its curve, and short strands of needles hanging under it; the upper boughs cover the lower ones. In the glowing look,
+// each bough is a faint fill of the star color, so the tree is brightest where boughs overlap, with a soft lit edge.
+function drawSpruce(g, sp, look) {
+  const R = rnd(sp.o.seed + 7), glow = look === 'glow', col = glow ? '#ffd8ea' : LINE;
+  // The trunk, with lines of bark under the crown.
+  el('path', { d: D(sp.trunk, true), fill: glow ? STAR : INK, 'fill-opacity': glow ? .05 : .7 }, g);
+  const tl = pen(g, { stroke: col, 'stroke-opacity': glow ? .3 : .45, 'stroke-width': .7 });
+  tl.add(sp.left); tl.add(sp.right); tl.done();
+  const bark = pen(g, { stroke: col, 'stroke-opacity': .2, 'stroke-width': .55 });
+  [-.45, .05, .5].forEach((f, i) => {
+    const y1 = sp.o.bottom - .2 + i * .04, pts = [];
+    for (let k = 0; k <= 12; k++) { const y = y1 + (sp.o.ground - .02 - y1) * k / 12; pts.push([sp.tx(y) + sp.tw(y) * (f + .12 * Math.sin(k * 1.7 + i)), y]); }
+    bark.add(pts);
+  });
+  bark.done();
+  if (glow) stroke(g, sp.left, { stroke: STAR, 'stroke-opacity': .12, 'stroke-width': 3, filter: 'url(#glow)' });
+
+  sp.boughs.forEach(b => {
+    const B = bough(b), { m, L } = b, shape = [...B.top, ...B.bot.slice().reverse()];
+    el('path', { d: D(shape, true), fill: glow ? STAR : INK, 'fill-opacity': glow ? .07 : .62 }, g);
+    if (glow) stroke(g, B.top, { stroke: STAR, 'stroke-opacity': .16, 'stroke-width': 2.6, filter: 'url(#glow)' });
+    stroke(g, B.top, { stroke: col, 'stroke-opacity': glow ? .42 : .55, 'stroke-width': .75 });
+    // Lines inside the bough that follow its curve, more of them toward its shaded underside.
+    const inner = pen(g, { stroke: col, 'stroke-opacity': glow ? .16 : .26, 'stroke-width': .55 });
+    if (L > .07) [.3, .58, .84].forEach(f => inner.add(part(B.down(f), .06 + f * .12, .97 - f * .3)));
+    else inner.add(part(B.down(.5), .1, .8));
+    inner.done();
+    // Strands of needles hanging under the bough.
+    const hang = pen(g, { stroke: col, 'stroke-opacity': glow ? .2 : .3, 'stroke-width': .5 });
+    const count = Math.max(3, Math.round(L / .011));
+    for (let j = 0; j < count; j++) {
+      const u = .12 + .84 * (j + R() * .6) / count, i = Math.round(u * (B.bot.length - 1)), p = B.bot[i];
+      const len = B.th(u) * (.28 + .5 * R()) + .004;
+      hang.add([p, [p[0] + m * len * .22, p[1] + len]]);
+    }
+    hang.done();
+    // The tip turns up.
+    stroke(g, [B.tip, [B.tip[0] + m * .018, B.tip[1] - .016]], { stroke: col, 'stroke-opacity': .4, 'stroke-width': .6 });
+  });
+  // The leader at the top: a thin shoot, with two short twigs.
+  const [ax, ay] = sp.o.apex;
+  stroke(g, [[ax, ay], [ax, ay + .09]], { stroke: col, 'stroke-opacity': .55, 'stroke-width': .8 });
+  stroke(g, [[ax, ay + .05], [ax - .02, ay + .03]], { stroke: col, 'stroke-opacity': .4, 'stroke-width': .6 });
+  stroke(g, [[ax, ay + .065], [ax + .018, ay + .05]], { stroke: col, 'stroke-opacity': .4, 'stroke-width': .6 });
+}
+
+// The six stars that come near the spruce, and the lines between them, as on Home: its top, two bough tips on the left and two on
+// the right at other heights, and one on the trunk. root is the index of the root star, which joins the trunk star.
+function treeStars(sp, at) {
+  const [ax, ay] = sp.o.apex, near = (m, t, dx, dy) => { const p = tipNear(sp, m, t); return [p[0] + dx, p[1] + dy]; };
+  const top = [ax + .01, ay - .03, 2];
+  const l1 = [...near(-1, at.l[0], -.03, .02), 3], l2 = [...near(-1, at.l[1], -.04, .03), 3];
+  const r1 = [...near(1, at.r[0], .035, -.01), 3], r2 = [...near(1, at.r[1], .03, .04), 4];
+  const trunk = [sp.tx(at.trunk) - .02, at.trunk, 4];
+  return [top, l1, l2, r1, r2, trunk];
+}
+
+// ---------- Roots ----------
+// A root of a binary tree of roots, along each edge of the tree. Its width swells and narrows unevenly as it goes down. Where a
+// root splits, its outer side goes on as the outer side of one root under it, and the inner sides of the two roots meet just under
+// the star. A root with nothing under it ends a little past its star in fine rootlets. In the engraved look, its shaded side has
+// short lines across it; in the glowing look, it is a faint fill that fades as it goes down.
+function treeRoots(g, N, sp, look, seed) {
+  const R = rnd(seed), P = N.map(n => n.p), kids = {}, glow = look === 'glow', col = glow ? '#ffd8ea' : LINE;
+  N.forEach((n, i) => { if (i) (kids[n.parent] = kids[n.parent] || []).push(i); });
+  const unit = (a, b) => { const dx = P[b][0] - P[a][0], dy = P[b][1] - P[a][1], L = Math.hypot(dx, dy); return [dx / L, dy / L]; };
+  const crotch = (a, b, c, by) => { const d1 = unit(a, b), d2 = unit(a, c), dx = d1[0] + d2[0], dy = d1[1] + d2[1], L = Math.hypot(dx, dy); return [P[a][0] + dx / L * by, P[a][1] + dy / L * by]; };
+  const side = (q, wa, wb, s, from, phase) => q.map((p, i, all) => {
+    const t = i / (all.length - 1), n = normals(all)[i], w = (wa + (wb - wa) * Math.pow(t, .8)) * (1 + .26 * Math.sin(t * 9 + phase) * Math.sin(t * Math.PI));
+    let o = [p[0] + n[0] * w * s, p[1] + n[1] * w * s];
+    if (from && t < .3) { const e = smooth(t / .3); o = [from[0] + (o[0] - from[0]) * e, from[1] + (o[1] - from[1]) * e]; }
+    return o;
+  });
+  const rootlet = (pn, x, y, ang, len, more) => {
+    const to = ang + (R() - .5) * .9, cx = x + Math.cos(ang) * len * .5, cy = y + Math.sin(ang) * len * .5;
+    const pts = quad([x, y], [cx, cy], [cx + Math.cos(to) * len * .5, cy + Math.sin(to) * len * .5], 8);
+    pn.add(pts);
+    if (more) { const p = pts[4 + Math.round(R() * 3)]; rootlet(pn, p[0], p[1], to + (R() < .5 ? -1 : 1) * (.5 + R() * .4), len * .45, false); }
+  };
+  const depth = i => i ? 1 + depth(N[i].parent) : 0;
+  const fade = glow ? el('linearGradient', { id: 'rootfade-' + seed, gradientUnits: 'userSpaceOnUse', x1: 0, y1: Y(.3), x2: 0, y2: Y(1.06) }, g.ownerSVGElement.querySelector('defs')) : null;
+  if (fade) [[0, .13], [1, .015]].forEach(([o, a]) => el('stop', { offset: o, 'stop-color': STAR, 'stop-opacity': a }, fade));
+  // The deepest roots first, so that a root covers the start of the roots under it.
+  N.map((n, i) => i).filter(i => i).sort((a, b) => depth(b) - depth(a)).forEach(b => {
+    const a = N[b].parent, sib = kids[a].find(c => c !== b), leaf = !kids[b], d = unit(a, b);
+    const end = leaf ? [P[b][0] + d[0] * .07, P[b][1] + d[1] * .07] : P[b];
+    const q = bow(P[a], end, N[b].bend, 40), wa = N[a].w, wb = leaf ? .005 : N[b].w;
+    const mid = normals(q)[20], out = mid[0] * (P[sib][0] - P[b][0]) + mid[1] * (P[sib][1] - P[b][1]) > 0 ? -1 : 1;
+    const from = a === 0 ? (P[b][0] < P[0][0] ? sp.base.left : sp.base.right) : null, phase = R() * 6.3;
+    const outer = side(q, wa, wb, out, from, phase), inner = side(q, wa, wb, -out, crotch(a, b, sib, .04), phase + 1.7);
+    el('path', { d: D([...outer, ...inner.slice().reverse()], true), fill: glow ? `url(#rootfade-${seed})` : INK, 'fill-opacity': glow ? 1 : .66 }, g);
+    if (glow) { stroke(g, outer, { stroke: STAR, 'stroke-opacity': .13, 'stroke-width': 2.6, filter: 'url(#glow)' }); }
+    const edge = pen(g, { stroke: col, 'stroke-opacity': glow ? .36 : .5, 'stroke-width': .75 });
+    edge.add(outer); edge.add(inner); edge.done();
+    // The shaded side is the one that faces down.
+    const shade = normals(q)[20][1] * out > 0 ? outer : inner, marks = pen(g, { stroke: col, 'stroke-opacity': glow ? .14 : .26, 'stroke-width': .5 });
+    const count = Math.round(Math.hypot(end[0] - P[a][0], end[1] - P[a][1]) / .02 * (wa > .02 ? 1 : .5));
+    for (let k = 0; k < count; k++) {
+      const i = Math.round((.1 + .8 * (k + R() * .5) / count) * 40), p = shade[i], c = q[i];
+      marks.add([p, [p[0] + (c[0] - p[0]) * (.45 + R() * .25), p[1] + (c[1] - p[1]) * (.45 + R() * .25)]]);
+    }
+    if (!glow && wa > .03) marks.add(part(side(q, wa * .3, wb * .3, -out, null, phase), .12, .8));
+    marks.done();
+    const fine = pen(g, { stroke: col, 'stroke-opacity': glow ? .26 : .36, 'stroke-width': .55 });
+    const n = wa >= .04 ? 2 : wa >= .02 ? 1 : 0, tl = Math.hypot(q[40][0] - q[30][0], q[40][1] - q[30][1]), tx = (q[40][0] - q[30][0]) / tl, ty = (q[40][1] - q[30][1]) / tl;
+    for (let k = 0; k < n; k++) {
+      const t = .3 + k * .32 + R() * .12, [px, py] = outer[Math.round(t * 40)], [mx, my] = normals(q)[Math.round(t * 40)];
+      rootlet(fine, px, py, Math.atan2(my * out * .8 + ty * .6, mx * out * .8 + tx * .6), .08 + R() * .06, true);
+    }
+    if (leaf) for (let k = 0; k < 3; k++) rootlet(fine, end[0], end[1], Math.atan2(ty, tx) + (k - 1) * (.5 + R() * .3), .05 + R() * .05, k === 1);
+    fine.done();
+  });
+}
+
+// Bands that go over and under each other, for knotwork and for roots that hold stones. A band is { name, pts, w0, w1 }, its width
+// going from w0 to w1. under lists where it goes under another band: { over, at, r }, or { poly } for a shape it goes under. Where
+// a band goes under, it is cut a little wider than the band over it, so that a thin gap shows on each side.
+function bands(g, list, look, id) {
+  const defs = g.ownerSVGElement.querySelector('defs');
+  list.forEach(s => { s.pts = resample(s.pts, .006); s.wid = u => s.w0 + (s.w1 - s.w0) * Math.pow(u, s.ease || 1); s.a = offset(s.pts, u => s.wid(u) / 2); s.b = offset(s.pts, u => -s.wid(u) / 2); });
+  list.forEach((s, i) => {
+    let parent = g;
+    if (s.under) {
+      const m = el('mask', { id: id + i, maskUnits: 'userSpaceOnUse', x: 0, y: 0, width: PW, height: PH }, defs);
+      el('rect', { width: PW, height: PH, fill: '#fff' }, m);
+      s.under.forEach(u => {
+        if (u.poly) return el('path', { d: D(u.poly, true), fill: '#000' }, m);
+        const o = list.find(x => x.name === u.over), near = o.pts.map((p, k) => [p, k]).filter(([p]) => Math.hypot(p[0] - u.at[0], p[1] - u.at[1]) < (u.r || .09));
+        const w = Math.max(...near.map(([, k]) => o.wid(k / (o.pts.length - 1))));
+        el('path', { d: D(near.map(([p]) => p)), fill: 'none', stroke: '#000', 'stroke-width': w * S + 5, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, m);
+      });
+      parent = el('g', { mask: `url(#${id + i})` }, g);
+    }
+    el('path', { d: D([...s.a, ...s.b.slice().reverse()], true), fill: look.fill, 'fill-opacity': look.fillOp }, parent);
+    const e = pen(parent, { stroke: LINE, 'stroke-opacity': look.edge, 'stroke-width': .75 });
+    e.add(s.a); e.add(s.b);
+    // The two sides meet at the tip.
+    e.add([s.a[s.a.length - 1], s.pts[s.pts.length - 1], s.b[s.b.length - 1]]);
+    e.done();
+    if (look.groove) stroke(parent, part(s.pts, .04, .9), { stroke: LINE, 'stroke-opacity': look.groove, 'stroke-width': .5 });
+    if (look.hatch) {
+      // Short lines across the side that faces down.
+      const N = normals(s.pts), h = pen(parent, { stroke: LINE, 'stroke-opacity': look.hatch, 'stroke-width': .5 });
+      for (let k = 2; k < s.pts.length - 6; k += 3) {
+        const w = s.wid(k / (s.pts.length - 1)); if (w < .012) continue;
+        const sgn = N[k][1] > 0 ? 1 : -1, p = s.pts[k], e1 = [p[0] + N[k][0] * w / 2 * sgn, p[1] + N[k][1] * w / 2 * sgn];
+        h.add([e1, [p[0] + N[k][0] * w * .05 * sgn, p[1] + N[k][1] * w * .05 * sgn]]);
+      }
+      h.done();
+    }
+  });
+}
+
+// ---------- The sky of a panel ----------
+function sky(svg) {
+  const defs = el('defs', {}, svg);
+  const blur = (id, s, ext) => { const f = el('filter', { id, x: `-${ext}%`, y: `-${ext}%`, width: `${100 + 2 * ext}%`, height: `${100 + 2 * ext}%` }, defs); el('feGaussianBlur', { stdDeviation: s }, f); };
+  if (!document.getElementById('glow')) {
+    blur('soft', 1.2, 50); blur('glow', 3.2, 20); blur('bloom', 7, 30);
+    const neb = (id, seed, rgb, k, cut, freq) => {
+      const f = el('filter', { id, filterUnits: 'userSpaceOnUse', x: 0, y: 0, width: PW, height: PH, 'color-interpolation-filters': 'sRGB' }, defs);
+      el('feTurbulence', { type: 'fractalNoise', baseFrequency: freq, numOctaves: 5, seed }, f);
+      el('feColorMatrix', { type: 'matrix', values: `0 0 0 0 ${rgb[0] / 255} 0 0 0 0 ${rgb[1] / 255} 0 0 0 0 ${rgb[2] / 255} ${k} 0 0 0 ${-k * cut}` }, f);
+    };
+    neb('neb1', 19, [140, 70, 240], 2.6, .4, '.0042 .0058');
+    neb('neb2', 7, [255, 84, 150], 2.8, .47, '.0062 .0078');
+    neb('rim', 7, [255, 204, 222], 5, .6, '.0062 .0078');
+    neb('dust', 31, [4, 2, 12], 3.4, .4, '.009 .013');
+    const rg = el('radialGradient', { id: 'nebfade', cx: .5, cy: .45, r: .6 }, defs);
+    [[0, 1], [.55, .65], [1, 0]].forEach(([o, a]) => el('stop', { offset: o, 'stop-color': '#fff', 'stop-opacity': a }, rg));
+    const m = el('mask', { id: 'nebmask', maskUnits: 'userSpaceOnUse', x: 0, y: 0, width: PW, height: PH }, defs);
+    el('rect', { width: PW, height: PH, fill: 'url(#nebfade)' }, m);
+    const vg = el('radialGradient', { id: 'vignette', cx: .5, cy: .47, r: .78 }, defs);
+    [[0, 0], [.62, 0], [1, .8]].forEach(([o, a]) => el('stop', { offset: o, 'stop-color': '#000', 'stop-opacity': a }, vg));
+    const gl = el('linearGradient', { id: 'groundfade', gradientUnits: 'userSpaceOnUse', x1: X(-1.1), y1: 0, x2: X(1.1), y2: 0 }, defs);
+    [[0, 0], [.25, .5], [.5, .6], [.75, .5], [1, 0]].forEach(([o, a]) => el('stop', { offset: o, 'stop-color': LINE, 'stop-opacity': a }, gl));
+    [['h1', STAR, 1.3], ['h2', STAR, 1.1], ['h3', STAR, .9], ['h4', STAR, .65], ['hw1', '#ffffff', 1.3], ['hw2', '#ffffff', .9]].forEach(([id, c, s]) => {
+      const h = el('radialGradient', { id }, defs);
+      el('stop', { offset: 0, 'stop-color': c, 'stop-opacity': Math.min(1, .7 * s) }, h);
+      el('stop', { offset: .3, 'stop-color': c, 'stop-opacity': .22 * s }, h);
+      el('stop', { offset: 1, 'stop-color': c, 'stop-opacity': 0 }, h);
+    });
+  }
+  el('rect', { width: PW, height: PH, fill: '#06061a' }, svg);
+  const neb = el('g', { mask: 'url(#nebmask)' }, svg);
+  el('rect', { width: PW, height: PH, fill: '#000', filter: 'url(#neb1)', opacity: .55 }, neb);
+  el('rect', { width: PW, height: PH, fill: '#000', filter: 'url(#neb2)', opacity: .42 }, neb);
+  el('rect', { width: PW, height: PH, fill: '#000', filter: 'url(#rim)', opacity: .12 }, neb);
+  el('rect', { width: PW, height: PH, fill: '#000', filter: 'url(#dust)', opacity: .7 }, svg);
+  const R = rnd(977), dots = el('g', {}, svg);
+  for (let i = 0; i < 260; i++) el('circle', { cx: (R() * PW).toFixed(1), cy: (R() * PH).toFixed(1), r: (.35 + R() * R() * 1.1).toFixed(2), fill: R() < .4 ? '#e4c8f0' : '#ecebff', opacity: (.2 + R() * .6).toFixed(2) }, dots);
+  el('rect', { width: PW, height: PH, fill: 'url(#vignette)' }, svg);
+  return defs;
+}
+
+// ---------- The stars of a figure, and the lines between them, as heavens.js draws them ----------
+function figureStars(g, stars, edges, key) {
+  const k = Math.max(.7, S / 240), pts = stars.map(([x, y, m]) => ({ p: [X(x), Y(y)], m, r: [0, 7.2, 5.2, 4, 3][m] * k }));
+  edges.forEach(([a, b, o = {}]) => {
+    const A = pts[a], B = pts[b], [x1, y1] = A.p, [x2, y2] = B.p, bd = o.bend ?? .05;
+    const cx = (x1 + x2) / 2 - (y2 - y1) * bd, cy = (y1 + y2) / 2 + (x2 - x1) * bd;
+    const trim = (px, py, by) => { const L = Math.hypot(cx - px, cy - py) || 1; return [px + (cx - px) / L * by, py + (cy - py) / L * by]; };
+    const [sx, sy] = trim(x1, y1, A.r * 2.1), [ex, ey] = trim(x2, y2, B.r * 2.1), d = `M${sx} ${sy}Q${cx} ${cy} ${ex} ${ey}`;
+    el('path', { d, fill: 'none', stroke: '#02030a', 'stroke-opacity': .45, 'stroke-width': 6 * k, filter: 'url(#glow)' }, g);
+    el('path', { d, fill: 'none', stroke: STAR, 'stroke-opacity': .16, 'stroke-width': 9 * k, filter: 'url(#bloom)' }, g);
+    el('path', { d, fill: 'none', stroke: STAR, 'stroke-opacity': .4, 'stroke-width': 4.5 * k, filter: 'url(#glow)' }, g);
+    el('path', { d, fill: 'none', stroke: STAR, 'stroke-opacity': .95, 'stroke-width': 1.5 }, g);
+  });
+  pts.forEach((st, j) => {
+    const sg = el('g', { transform: `translate(${st.p[0]},${st.p[1]})` }, g), { r, m } = st, when = -hash(key + j) * 6;
+    el('circle', { r: r * [0, 8.5, 6.5, 5.2, 4.2][m], fill: `url(#h${m})`, class: 'halo', style: `animation-delay:${when.toFixed(2)}s` }, sg);
+    const L = Math.min(r * [0, 15, 9.5, 6, 3.2][m], S * [0, .45, .28, .18, .1][m]);
+    const rays = el('g', { class: 'rays', style: `animation-delay:${when.toFixed(2)}s;animation-duration:${(4 + hash(key + j + 'd') * 4).toFixed(2)}s` }, sg);
+    const ray = (len, w, a, turn, soft) => el('path', { d: `M${-len} 0L0 ${-w}L${len} 0L0 ${w}Z`, fill: soft ? STAR : '#fffdf4', opacity: a, transform: `rotate(${turn})`, ...(soft ? { filter: 'url(#soft)' } : {}) }, rays);
+    [0, 90].forEach(turn => { ray(L * .8, r * .45, .35, turn, true); ray(L, r * .11, m < 4 ? .95 : .6, turn); });
+    if (m === 1) [45, 135].forEach(turn => ray(L * .38, r * .08, .6, turn));
+    el('circle', { r: r * 1.9, fill: m < 3 ? 'url(#hw1)' : 'url(#hw2)' }, sg);
+    el('circle', { r, fill: 'none', stroke: STAR, 'stroke-width': .8, opacity: .8 }, sg);
+    el('circle', { r: r * .55, fill: '#fff' }, sg);
+  });
+}
+function label(svg) {
+  const size = 27, y = CY + S * 1.4 + size - 6;
+  const t = el('text', { x: CX, y, 'text-anchor': 'middle', class: 'con-name', style: `font-size:${size}px`, fill: '#f6dce6' }, svg);
+  t.textContent = 'ALGORITHMS 0';
+  const w = 190, by = y + 16;
+  el('path', { d: `M${CX - w} ${by}L${CX - w + 6} ${by - 5}L${CX + w - 6} ${by - 5}L${CX + w} ${by}L${CX + w - 6} ${by + 5}L${CX - w + 6} ${by + 5}Z`, fill: '#000', 'fill-opacity': .35, stroke: STAR, 'stroke-opacity': .35, 'stroke-width': .8 }, svg);
+  [-1, 1].forEach(m => el('path', { d: `M${CX + m * (w + 14)} ${by - 5}l5 5l-5 5l-5 -5Z`, fill: 'none', stroke: STAR, 'stroke-opacity': .5, 'stroke-width': .8 }, svg));
+  const c = el('text', { x: CX, y: by + 22, 'text-anchor': 'middle', class: 'con-count' }, svg); c.textContent = 'NO IDEAS YET';
+}
+
+// ---------- The variants ----------
+const BASE = { seed: 41, apex: [.02, -1.36], bottom: .14, ground: .31, width: .36, right: .93, n: 17, lean: 0, trunk: .034, flare: .045 };
+// The binary tree of roots that most variants use: the root star on the ground at the foot of the trunk, 2 roots under it, then 4,
+// then 4 more at the bottom, under one root on each side. w is the half width of the root where it reaches this star.
+const ROOTS = [
+  { p: [.02, .31], w: .068 },
+  { p: [-.38, .49], parent: 0, w: .04, bend: .07 }, { p: [.42, .52], parent: 0, w: .038, bend: -.06 },
+  { p: [-.7, .69], parent: 1, w: .024, bend: .08 }, { p: [-.2, .76], parent: 1, w: .022, bend: -.05 },
+  { p: [.25, .79], parent: 2, w: .022, bend: .06 }, { p: [.72, .66], parent: 2, w: .018, bend: -.07 },
+  { p: [-.86, .94], parent: 3, w: 0, bend: .05 }, { p: [-.56, .99], parent: 3, w: 0, bend: -.08 },
+  { p: [.1, 1.02], parent: 5, w: 0, bend: .07 }, { p: [.46, 1.0], parent: 5, w: 0, bend: -.04 },
+];
+const ROOT_SIZES = [1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4];
+// The lines of the figure. The first stars are the roots; after them come the six stars of the tree: top, left upper, left lower,
+// right upper, right lower, trunk.
+function figureOf(roots, sizes, tree, bends = {}) {
+  const stars = roots.map((n, i) => [n.p[0] + (n.dx || 0), n.p[1] + (n.dy || 0), sizes[i]]), base = stars.length;
+  const edges = roots.map((n, i) => i ? [n.parent, i, { bend: n.bend }] : null).filter(Boolean);
+  stars.push(...tree);
+  edges.push([0, base + 5, { bend: .02 }], [base + 5, base, { bend: -.01 }], [base, base + 1, { bend: .06 }], [base + 1, base + 2, { bend: .04 }], [base, base + 3, { bend: -.05 }], [base + 3, base + 4, { bend: -.04 }]);
+  return { stars, edges };
+}
+const ground = (g, y) => el('path', { d: `M${X(-1.12)} ${Y(y + .04)}C${X(-.6)} ${Y(y + .008)} ${X(-.3)} ${Y(y - .02)} ${X(.02)} ${Y(y)}C${X(.4)} ${Y(y + .02)} ${X(.7)} ${Y(y - .012)} ${X(1.08)} ${Y(y + .036)}`, fill: 'none', stroke: 'url(#groundfade)', 'stroke-width': .8 }, g);
+
+const VARIANTS = [
+  {
+    name: 'Engraved spruce',
+    text: 'A narrow Norway spruce, drawn as an engraving. Each bough is a dark layer with a fine edge, lines inside it that follow its curve, and short strands of needles hanging under it. The upper boughs cover the lower ones. The roots are the binary tree, with shaded sides and fine rootlets.',
+    draw(g) {
+      const sp = spruce(BASE);
+      ground(g, .31);
+      treeRoots(g, ROOTS, sp, 'engraved', 5);
+      drawSpruce(g, sp, 'engraved');
+      return figureOf(ROOTS, ROOT_SIZES, treeStars(sp, { l: [.36, .8], r: [.56, .97], trunk: -.2 }));
+    },
+  },
+  {
+    name: 'Moonlit spruce',
+    text: 'The same spruce and roots, drawn in the style of the second picture. Each bough is a faint fill of the constellation’s color with a soft lit edge, so the tree is brightest where boughs overlap. The roots fade as they go down.',
+    draw(g) {
+      const sp = spruce({ ...BASE, seed: 43 });
+      ground(g, .31);
+      treeRoots(g, ROOTS, sp, 'glow', 6);
+      drawSpruce(g, sp, 'glow');
+      return figureOf(ROOTS, ROOT_SIZES, treeStars(sp, { l: [.36, .8], r: [.56, .97], trunk: -.2 }));
+    },
+  },
+  {
+    name: 'Knotwork roots',
+    text: 'The roots are Norse knotwork: bands with a groove down the middle. The two inner roots cross over and under each other twice below the trunk, and every root ends in a curl. The stars of the binary tree are near the places where the roots split and end.',
+    draw(g, id) {
+      const sp = spruce({ ...BASE, seed: 47, width: .34 });
+      ground(g, .31);
+      const gy = .31, A0 = [sp.tx(gy) - .03, gy + .005], C0 = [sp.tx(gy) + .035, gy + .005];
+      const A = spline([A0, [-.15, .39], [-.36, .47], [-.55, .55], [-.7, .66], [-.8, .77], [-.83, .86]]);
+      const A2 = spline([[-.7, .66], [-.64, .76], [-.56, .86]]), B = spline([[-.36, .47], [-.18, .53], [.02, .635], [.17, .745], [.14, .83], [.03, .87], [-.12, .91], [-.2, .95]]);
+      const C = spline([C0, [.22, .41], [.4, .5], [.58, .55], [.72, .62]]), Dd = spline([[.4, .5], [.22, .565], [.02, .635], [-.14, .735], [-.12, .82], [.03, .87], [.16, .92], [.24, .97]]);
+      const look = { fill: INK, fillOp: .62, edge: .5, groove: .22 };
+      bands(g, [
+        { name: 'A', pts: [...A, ...spiral(A, .16, -1)], w0: .052, w1: .008, ease: .7, under: [{ poly: sp.trunk }] },
+        { name: 'A2', pts: [...A2, ...spiral(A2, .12, 1)], w0: .02, w1: .006, under: [{ over: 'A', at: [-.7, .66], r: .07 }] },
+        { name: 'B', pts: [...B, ...spiral(B, .13, 1)], w0: .028, w1: .007, under: [{ over: 'A', at: [-.36, .47], r: .07 }, { over: 'D', at: [.03, .87] }] },
+        { name: 'C', pts: [...C, ...spiral(C, .2, 1)], w0: .05, w1: .008, ease: .7, under: [{ poly: sp.trunk }] },
+        { name: 'D', pts: [...Dd, ...spiral(Dd, .13, -1)], w0: .026, w1: .007, under: [{ over: 'C', at: [.4, .5], r: .07 }, { over: 'B', at: [.02, .635] }] },
+      ], look, id + 'k');
+      drawSpruce(g, sp, 'engraved');
+      const roots = [
+        { p: [.02, .31] }, { p: [-.39, .44], parent: 0, bend: .07 }, { p: [.42, .47], parent: 0, bend: -.06 },
+        { p: [-.74, .63], parent: 1, bend: .08 }, { p: [-.25, .99], parent: 1, bend: -.03 }, { p: [.29, 1.01], parent: 2, bend: .04 }, { p: [.8, .62], parent: 2, bend: -.07 },
+        { p: [-.9, .86], parent: 3, bend: .05 }, { p: [-.6, .94], parent: 3, bend: -.08 },
+      ];
+      return figureOf(roots, [1, 2, 2, 3, 3, 3, 3, 4, 4], treeStars(sp, { l: [.38, .82], r: [.55, .97], trunk: -.2 }));
+    },
+  },
+  {
+    name: 'Roots over a well',
+    text: 'The spruce stands on stones. Its roots hold the stones and reach down into a well, where they touch the water. In Norse myth, a root of the world tree reaches down to a well. The binary tree has seven stars here, and its last four are where the roots reach the water.',
+    draw(g, id) {
+      const sp = spruce({ ...BASE, seed: 53, ground: .3 });
+      const W = [.02, .97], rx = .54, ry = .1;
+      // The well: its rim of stones, drawn in two halves so that the roots go in behind its front edge, and its water.
+      const ell = (a0, a1, kx, ky, n = 40) => Array.from({ length: n + 1 }, (_, i) => { const a = a0 + (a1 - a0) * i / n; return [W[0] + Math.cos(a) * rx * kx, W[1] + Math.sin(a) * ry * ky]; });
+      const rim = (a0, a1) => {
+        const inner = ell(a0, a1, 1, 1), outer = ell(a0, a1, 1.13, 1.4);
+        el('path', { d: D([...inner, ...outer.slice().reverse()], true), fill: INK, 'fill-opacity': .8 }, g);
+        const e = pen(g, { stroke: LINE, 'stroke-opacity': .5, 'stroke-width': .75 }); e.add(inner); e.add(outer);
+        const R = rnd(a0 * 100 + 3);
+        for (let a = a0 + .1; a < a1 - .05; a += .2 + R() * .12) e.add([ell(a, a, 1, 1, 1)[0], ell(a, a, 1.13, 1.4, 1)[0]]);
+        e.done();
+        const h = pen(g, { stroke: LINE, 'stroke-opacity': .22, 'stroke-width': .5 }); h.add(ell(a0 + .05, a1 - .05, 1.065, 1.2)); h.done();
+      };
+      rim(Math.PI, 2 * Math.PI);
+      el('path', { d: D(ell(0, 2 * Math.PI, 1, 1, 80), true), fill: '#120a26', 'fill-opacity': .85 }, g);
+      const water = pen(g, { stroke: LINE, 'stroke-opacity': .2, 'stroke-width': .5 });
+      [[-.3, .985, .14], [.28, .96, .1], [-.05, 1.01, .2]].forEach(([x, y, l]) => water.add([[x - l / 2, y], [x + l / 2, y]]));
+      water.done();
+      const ripples = pen(g, { stroke: LINE, 'stroke-opacity': .32, 'stroke-width': .55 });
+      [[-.44, .945], [-.15, .955], [.2, .955], [.43, .935]].forEach(([x, y], i) => [.03, .06, .095].forEach((r, k) => {
+        if (k === 2 && i % 2) return;
+        ripples.add(Array.from({ length: 31 }, (_, j) => { const a = j / 30 * 2 * Math.PI; return [x + Math.cos(a) * r * 1.3, y + Math.sin(a) * r * .28]; }));
+      }));
+      ripples.done();
+      // The stones under the tree, each shaded on its lower right with lines that follow its edge.
+      const stone = (c, sx, sy, seed) => {
+        const R = rnd(seed), ph = R() * 6.3, at = (a, k = 1) => { const cs = Math.cos(a), sn = Math.sin(a), f = 1 + .07 * Math.sin(3 * a + ph) + .04 * Math.sin(5 * a + 2 * ph);
+          return [c[0] + Math.sign(cs) * Math.pow(Math.abs(cs), .72) * sx * f * k, c[1] + Math.sign(sn) * Math.pow(Math.abs(sn), .8) * sy * f * k * (sn > 0 ? .9 : 1)]; };
+        const outline = Array.from({ length: 64 }, (_, i) => at(i / 64 * 2 * Math.PI));
+        el('path', { d: D(outline, true), fill: INK, 'fill-opacity': .78 }, g);
+        stroke(g, [...outline, outline[0]], { stroke: LINE, 'stroke-opacity': .5, 'stroke-width': .75 });
+        const h = pen(g, { stroke: LINE, 'stroke-opacity': .24, 'stroke-width': .5 });
+        [.86, .72, .58].forEach((k, j) => h.add(Array.from({ length: 22 }, (_, i) => at(-.25 + j * .15 + (2.1 - j * .35) * i / 21, k))));
+        h.done();
+      };
+      stone([-.3, .45], .21, .14, 11); stone([.36, .48], .18, .13, 12); stone([.04, .43], .1, .08, 13); stone([-.06, .6], .09, .07, 14);
+      const gy = .3, L0 = [sp.tx(gy) - .025, gy + .005], R0 = [sp.tx(gy) + .03, gy + .005];
+      const look = { fill: INK, fillOp: .66, edge: .5, hatch: .26 };
+      bands(g, [
+        { name: 'L', pts: spline([L0, [-.18, .3], [-.37, .32], [-.5, .4], [-.53, .54], [-.5, .7], [-.46, .84], [-.44, .95]]), w0: .046, w1: .01, ease: .8, under: [{ poly: sp.trunk }] },
+        { name: 'Lb', pts: spline([[-.37, .32], [-.24, .44], [-.18, .58], [-.17, .76], [-.15, .95]]), w0: .026, w1: .008, under: [{ over: 'L', at: [-.37, .32], r: .07 }] },
+        { name: 'R', pts: spline([R0, [.2, .33], [.38, .35], [.52, .44], [.55, .58], [.5, .74], [.44, .87], [.43, .94]]), w0: .044, w1: .01, ease: .8, under: [{ poly: sp.trunk }] },
+        { name: 'Rb', pts: spline([[.38, .35], [.27, .47], [.22, .62], [.2, .8], [.2, .95]]), w0: .024, w1: .008, under: [{ over: 'R', at: [.38, .35], r: .07 }] },
+      ], look, id + 'w');
+      // Fine roots that hold the stones.
+      const fine = pen(g, { stroke: LINE, 'stroke-opacity': .34, 'stroke-width': .55 });
+      [[[-.45, .36], [-.38, .45], [-.34, .56]], [[-.5, .52], [-.42, .58], [-.3, .6]], [[.5, .42], [.43, .5], [.4, .6]], [[.24, .5], [.3, .58], [.36, .62]], [[-.18, .55], [-.1, .58], [-.04, .67]], [[.06, .32], [.07, .4], [.1, .5]]].forEach(p => fine.add(spline(p, 10)));
+      fine.done();
+      rim(0, Math.PI);
+      drawSpruce(g, sp, 'engraved');
+      const roots = [
+        { p: [.02, .3] }, { p: [-.4, .3], parent: 0, bend: -.06 }, { p: [.42, .34], parent: 0, bend: .05 },
+        { p: [-.47, .93], parent: 1, bend: .06 }, { p: [-.13, .95], parent: 1, bend: -.05 }, { p: [.21, .93], parent: 2, bend: .05 }, { p: [.47, .91], parent: 2, bend: -.07 },
+      ];
+      return figureOf(roots, [1, 2, 2, 3, 3, 4, 3], treeStars(sp, { l: [.36, .8], r: [.56, .97], trunk: -.2 }));
+    },
+  },
+  {
+    name: 'Roots as deep as the tree',
+    text: 'The roots go down almost as far as the tree goes up: a taproot, with side roots that slope down and get shorter as they go deeper. The whole figure is tall and narrow, and the stars of the binary tree are near the ends of the side roots.',
+    draw(g, id) {
+      const sp = spruce({ ...BASE, seed: 59, apex: [.02, -1.3], bottom: .12, ground: .26 });
+      ground(g, .26);
+      const R = rnd(71), tap = spline([[.02, .26], [.035, .45], [0, .66], [.04, .86], [.02, 1.06], [.03, 1.18]]);
+      const laterals = [], fine = [];
+      [-1, 1].forEach(m => {
+        const ys = m < 0 ? [.34, .43, .53, .64, .75, .86, .97, 1.06] : [.38, .48, .59, .7, .81, .92, 1.01];
+        ys.forEach((y, i) => {
+          const L = (m < 0 ? .66 : .6) * Math.pow(1 - (y - .26) / .9, 1.05) * (.86 + R() * .26), x = .02 + .02 * Math.sin(y * 9);
+          const end = [x + m * L, y + L * (.5 + R() * .2)];
+          const pts = spline([[x, y], [x + m * L * .45, y + L * .1], [x + m * L * .8, y + L * .3], end], 10);
+          laterals.push({ name: 'l' + m + i, pts, w0: .024 * (1 - i * .08), w1: .003, under: [{ poly: null }] });
+          for (let k = 0; k < 2; k++) {
+            const p = pts[8 + k * 9 + Math.round(R() * 4)], a = Math.PI / 2 + m * (.2 + R() * .5), l = L * (.18 + R() * .15);
+            fine.push(quad(p, [p[0] + Math.cos(a) * l * .5, p[1] + Math.sin(a) * l * .5], [p[0] + Math.cos(a + m * .4) * l, p[1] + Math.sin(a + m * .4) * l], 8));
+          }
+        });
+      });
+      const look = { fill: INK, fillOp: .62, edge: .46, hatch: .22 };
+      const tapBand = { name: 'tap', pts: tap, w0: .062, w1: .004, ease: .8, under: [{ poly: sp.trunk }] };
+      bands(g, [tapBand], look, id + 't');
+      const f = pen(g, { stroke: LINE, 'stroke-opacity': .3, 'stroke-width': .5 }); fine.forEach(p => f.add(p)); f.done();
+      laterals.forEach(l => { l.under = [{ poly: [...tapBand.a, ...tapBand.b.slice().reverse()] }]; });
+      bands(g, laterals, look, id + 'l');
+      drawSpruce(g, sp, 'engraved');
+      const roots = [
+        { p: [.02, .26] }, { p: [-.42, .5], parent: 0, bend: .05 }, { p: [.4, .55], parent: 0, bend: -.05 },
+        { p: [-.37, .82], parent: 1, bend: .06 }, { p: [-.12, .9], parent: 1, bend: -.04 }, { p: [.16, .95], parent: 2, bend: .05 }, { p: [.33, .8], parent: 2, bend: -.06 },
+        { p: [-.25, 1.1], parent: 3, bend: .05 }, { p: [.1, 1.2], parent: 5, bend: -.05 },
+      ];
+      return figureOf(roots, [1, 2, 2, 3, 3, 3, 4, 4, 4], treeStars(sp, { l: [.36, .8], r: [.56, .97], trunk: -.22 }));
+    },
+  },
+];
+
+const grid = document.getElementById('grid');
+VARIANTS.forEach((v, i) => {
+  const fig = document.createElement('figure'); grid.appendChild(fig);
+  const svg = el('svg', { viewBox: `0 0 ${PW} ${PH}`, role: 'img', 'aria-label': v.name }, fig);
+  sky(svg);
+  const art = el('g', {}, svg), front = el('g', {}, svg);
+  const { stars, edges } = v.draw(art, 'v' + i);
+  figureStars(front, stars, edges, v.name);
+  label(svg);
+  const cap = document.createElement('figcaption');
+  cap.innerHTML = `<b>${i + 1}. ${v.name}</b><p>${v.text}</p>`;
+  fig.appendChild(cap);
+});
+</script>
+</body>
+</html>
