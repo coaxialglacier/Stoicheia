@@ -646,6 +646,10 @@ const Sound = (() => {
   // so the music's volume applies to every song. current is the number of the song that plays, from 0, and place is where it is
   // in its round of the shuffle, from 1.
   let players = [], playing = 0, current = 0, place = 1, turning = false;
+  // played is every song that has started since this page opened, in order, as { i, n }: the song's number, and its place in
+  // its round of the shuffle. pos is the place in played of the song that plays. Previous goes back in played, and Next goes
+  // forward in it, and past its end to the next song of the shuffle, as in any music player.
+  let played = [], pos = -1;
   // Each time sound.html opens, on a first visit or a reload, it starts with a song chosen at random that is not the song that
   // started last time, which localStorage keeps under stoicheiaLastSong. Then every other song plays once, in a random order,
   // and then all the songs again, in a new random order, which never starts with the song that just ended. order is the songs
@@ -669,20 +673,99 @@ const Sound = (() => {
     let last = null;
     try { last = localStorage.getItem(LAST); } catch (err) {}
     order = shuffled(SONGS_.findIndex(s => s.file === last));
-    const first = order.shift(), url = await songUrl(first, true);
+    const first = fromOrder(), url = await songUrl(first.i, true);
     opening.part = 1; opening.done = true;
     if (held) await held;
+    played.push(first); pos = 0;
     begin(players[0], first, url, .5);
-    setInterval(async () => {
+    session();
+    setInterval(() => {
       const p = players[playing];
       if (turning || p.a.paused || !p.a.duration || p.a.currentTime < p.a.duration - FADE) return;
-      turning = true;
-      const next = order.shift(), url = await songUrl(next);
-      p.g.gain.cancelScheduledValues(ctx.currentTime); p.g.gain.setTargetAtTime(0, ctx.currentTime, FADE / 4);
-      setTimeout(() => p.a.pause(), FADE * 1000 + 300);
-      playing = 1 - playing; begin(players[playing], next, url, FADE / 4);
-      turning = false;
+      next(FADE / 4);
     }, 250);
+  }
+  // The next song of the shuffle, as { i, n }. When this round has no songs left, the next round is shuffled now, so the next
+  // song's bytes can load while this one plays.
+  function fromOrder() {
+    const i = order.shift(), n = SONGS_.length - order.length;
+    if (!order.length) order = shuffled(i);
+    return { i, n };
+  }
+  // Starts the song s, from played, on the other player, and fades out the song that plays, over about tc * 4 seconds. A later
+  // change, made while this one waits for the song's bytes, replaces it.
+  let changes = 0;
+  async function change(s, tc) {
+    const mine = ++changes;
+    turning = true;
+    const url = await songUrl(s.i);
+    if (mine !== changes) return;
+    turning = false;
+    fade(players[playing], tc);
+    playing = 1 - playing; begin(players[playing], s, url, tc);
+  }
+  function fade(p, tc) {
+    p.g.gain.cancelScheduledValues(ctx.currentTime); p.g.gain.setTargetAtTime(0, ctx.currentTime, tc);
+    clearTimeout(p.stop); p.stop = setTimeout(() => p.a.pause(), tc * 4000 + 300);
+  }
+
+  // ---------- The controls of the music ----------
+  // The music panel under the harp, and the media keys of the keyboard, have Previous, Play or Pause, and Next, which work as
+  // they do in any music player. A song changed by the reader fades out in about half a second, and the next one starts at once.
+  // Next plays the next song, and so does the end of a song. Previous starts the song again when it has played for more than 3
+  // seconds, or when it is the first song played, and otherwise plays the song before it. Changing the song also ends a pause.
+  // stopped is true while the reader has paused the music, and then a click on the page does not play it again, as start()
+  // says. A hidden tab plays nothing, so the controls do nothing while the tab is hidden, except Pause.
+  const SKIP = .12;
+  let stopped = false;
+  function next(tc = SKIP) {
+    if (pos < 0 || document.hidden) return;
+    if (pos === played.length - 1) played.push(fromOrder());
+    pos++; stopped = false;
+    change(played[pos], tc);
+  }
+  function previous() {
+    if (pos < 0 || document.hidden) return;
+    const p = players[playing];
+    stopped = false;
+    if (p.a.currentTime > 3 || pos === 0) { p.a.currentTime = 0; play(); return; }
+    pos--;
+    change(played[pos], SKIP);
+  }
+  // Pause fades the song out over about 0.15 seconds, so it does not click, and then pauses it. A song still fading out after
+  // the one before it stops at once.
+  function pause() {
+    if (!ctx) return;
+    stopped = true;
+    players.forEach((p, k) => {
+      clearTimeout(p.stop); p.g.gain.cancelScheduledValues(ctx.currentTime);
+      if (k !== playing) { p.g.gain.value = 0; p.a.pause(); return; }
+      p.g.gain.setTargetAtTime(0, ctx.currentTime, .04);
+      p.stop = setTimeout(() => p.a.pause(), 160);
+    });
+    tellSession();
+  }
+  function play() {
+    stopped = false;
+    const p = players[playing];
+    if (p) { clearTimeout(p.stop); p.g.gain.cancelScheduledValues(ctx.currentTime); p.g.gain.setTargetAtTime(SONGS_[current].gain, ctx.currentTime, .08); }
+    start();
+    tellSession();
+  }
+  const CONTROLS = { previous, next: () => next(), play, pause };
+  // The Media Session API gives the same controls to the media keys of the keyboard, to Chrome's media controls, and to the
+  // system's, and shows them the song's title.
+  function session() {
+    if (!('mediaSession' in navigator)) return;
+    for (const act in CONTROLS) try { navigator.mediaSession.setActionHandler(act === 'next' ? 'nexttrack' : act === 'previous' ? 'previoustrack' : act, CONTROLS[act]); } catch (err) {}
+    tellSession();
+  }
+  function tellSession() {
+    if (!('mediaSession' in navigator) || pos < 0) return;
+    const song = SONGS_[current];
+    if (!navigator.mediaSession.metadata || navigator.mediaSession.metadata.title !== song.title)
+      navigator.mediaSession.metadata = new MediaMetadata({ title: song.title, artist: 'Wardens of the Swift' });
+    navigator.mediaSession.playbackState = stopped ? 'paused' : 'playing';
   }
   // The music's volume now, from 0 to 1. It is the reader's music volume, set.musicVol, except that a song with a volume preset
   // in music/volumes.json starts no louder than its preset. Heaventree, at 80, starts at 80 when the reader's volume is higher,
@@ -696,16 +779,17 @@ const Sound = (() => {
     if (e) { const g = e.music.vol.gain; g.cancelScheduledValues(ctx.currentTime); g.setTargetAtTime(gainOf.music(v), ctx.currentTime, tc); }
     if (api.onVolume) api.onVolume(v);
   }
-  // Starts song i on the player p. When this round has no songs left, the next round is shuffled now, so the next song's bytes
-  // can load while this one plays.
-  function begin(p, i, url, tc) {
-    current = i; place = SONGS_.length - order.length; e.setChord(SONGS_[i].notes);
+  // Starts the song s, from played, on the player p, and loads the bytes of the song that Next would play.
+  function begin(p, s, url, tc) {
+    const i = s.i;
+    current = i; place = s.n; e.setChord(SONGS_[i].notes);
     try { localStorage.setItem(LAST, SONGS_[i].file); } catch (err) {}
+    clearTimeout(p.stop);
     p.a.src = url; p.a.currentTime = 0; p.a.play().catch(() => {});
     p.g.gain.cancelScheduledValues(ctx.currentTime); p.g.gain.setTargetAtTime(SONGS_[i].gain, ctx.currentTime, tc);
     setVolume(Math.min(set.musicVol, SONGS_[i].volume ?? 1), 2);
-    if (!order.length) order = shuffled(i);
-    songUrl(order[0]);
+    songUrl(pos < played.length - 1 ? played[pos + 1].i : order[0]);
+    tellSession();
   }
 
   // The loading view of sound.html starts the first song when it has found the stars, so that the song starts with the title.
@@ -716,7 +800,7 @@ const Sound = (() => {
   // sound.html calls start() as soon as it opens. Chrome lets it start the sound then only after a reload that the page itself
   // started, from a click or a key press, as sound.html does for Command-R. After any other reload, and on a first visit, the
   // audio context waits, and the song does not play, until the reader clicks or presses a key, which calls start() again.
-  // The music fades in over a few seconds.
+  // The music fades in over a few seconds. While the reader has paused the music, start() does not play it.
   let meter = null, bins = null;
   function start() {
     if (!ctx) {
@@ -731,15 +815,16 @@ const Sound = (() => {
     if (document.hidden) return;
     if (ctx.state === 'suspended') ctx.resume();
     const p = players[playing];
-    if (p && p.a.paused) p.a.play().catch(() => {});
+    if (p && p.a.paused && !stopped) p.a.play().catch(() => {});
   }
   // For the music panel: the song's title, where it is in its round of the shuffle and how many songs there are, where it is in
   // seconds, how long it is, whether it plays, and how loud the music is now in each of n bands of frequencies, from 60 Hz to 12000 Hz, each from 0 to
-  // 1. The bands are measured before the music's volume, so they show the songs themselves.
+  // 1. The bands are measured before the music's volume, so they show the songs themselves. A song that the reader has paused
+  // does not play, even while it fades out.
   function listen(n) {
     const p = players[playing], song = SONGS_[current] || { title: '', seconds: 0 };
     const now = { title: song.title, number: place, of: SONGS_.length, at: p ? p.a.currentTime : 0, length: (p && p.a.duration) || song.seconds,
-      playing: !!p && !p.a.paused && !!ctx && ctx.state === 'running', levels: [] };
+      playing: !!p && !p.a.paused && !stopped && !!ctx && ctx.state === 'running', levels: [] };
     if (!meter) return now;
     meter.getByteFrequencyData(bins);
     const hz = ctx.sampleRate / meter.fftSize, edge = i => Math.round(60 * Math.pow(200, i / n) / hz);
@@ -764,7 +849,7 @@ const Sound = (() => {
   // Plays the move once, without moving: the arrival comes 1.05 seconds after the click, about when a page arrives.
   function preview(dir = 1, x = .5) { start(); e.leave(x, dir); setTimeout(() => e.arrive(x, dir), 1050); }
   // A hidden tab plays nothing: the music fades out, the song pauses, and the audio context stops until the tab is shown again.
-  // Then the song goes on from where it paused.
+  // Then the song goes on from where it paused, unless the reader paused it while the tab was hidden.
   let paused = [];
   document.addEventListener('visibilitychange', () => {
     if (!ctx) return;
@@ -773,7 +858,8 @@ const Sound = (() => {
       g.cancelScheduledValues(t); g.setTargetAtTime(0, t, .15);
       setTimeout(() => { if (!document.hidden) return; paused = players.filter(p => !p.a.paused); paused.forEach(p => p.a.pause()); ctx.suspend(); }, 700);
     } else ctx.resume().then(() => {
-      paused.forEach(p => p.a.play().catch(() => {})); paused = [];
+      if (!stopped) paused.forEach(p => p.a.play().catch(() => {}));
+      paused = [];
       g.cancelScheduledValues(ctx.currentTime); g.setTargetAtTime(gainOf.music(volume), ctx.currentTime, .6);
     });
   });
@@ -788,6 +874,8 @@ const Sound = (() => {
 
   return Object.assign(api, {
     start, choose, preview, render, listen, hold, settings: set,
+    // The controls of the music, from the music panel: 'previous', 'play', 'pause', or 'next'.
+    control: act => { if (Object.hasOwn(CONTROLS, act)) CONTROLS[act](); },
     // How much of the first song has loaded: { part, done }.
     loading: () => ({ ...opening }),
     // The music's volume now, which a song's preset can make lower than set.musicVol.

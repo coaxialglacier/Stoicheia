@@ -444,10 +444,19 @@ const Sky = (() => {
 
   // ---------- The music panel ----------
   // Clicking the harp opens a panel under it. It shows the song that plays, with a picture of the music in the emblem's disc,
-  // the song's name and its number, a bar of where the song is with its time and its length, and the music's volume, from 0 to
-  // 100, which a song's volume preset can lower while that song plays. At its bottom, a capsule turns all sound on or off,
-  // music and sound effects together. While the panel is open, the page watches the song: sound.html sends it, once a frame,
-  // what plays, as { song }.
+  // the song's name and its number, a bar of where the song is with its time and its length, the controls of the music, and the
+  // music's volume, from 0 to 100, which a song's volume preset can lower while that song plays. At its bottom, a capsule turns
+  // all sound on or off, music and sound effects together. While the panel is open, the page watches the song: sound.html
+  // sends it, once a frame, what plays, as { song }.
+  // The controls are the ones every music player has, with the usual symbols: Previous, a bar and a triangle that points left;
+  // Play, a triangle that points right, or Pause, two bars, in a gold ring; and Next, a triangle that points right and a bar.
+  // Each sends sound.html what to do, as { sound: 'music', act }. The middle button sends Play or Pause from what it shows, not a
+  // switch, because the press that starts the click can itself start the music, as the top of this file says.
+  const CONTROL = {
+    previous: '<path d="M6 6h2v12H6zM9.5 12L18 18V6z"/>',
+    next: '<path d="M6 18l8.5-6L6 6zM16 6v12h2V6z"/>',
+    play: '<path class="pl" d="M8.5 5.5v13l10.5-6.5z"/><path class="pa" d="M7 5.5h3.6v13H7zM13.4 5.5H17v13h-3.6z"/>',
+  };
   const music = harp && panel('musicPanel', harp);
   let song = null;
   addEventListener('message', e => {
@@ -473,6 +482,10 @@ const Sky = (() => {
       body.innerHTML = `<div class="yemblem ymusic"></div><div class="ynow"><i></i><span>Now playing</span></div>
         <div class="ysong">${song ? song.title : '&nbsp;'}</div>
         <div class="yprog"><div class="ybar"><i></i></div><div class="ytimes"><span class="yat">0:00</span><span class="ylen">0:00</span></div></div>
+        <div class="ycontrols">
+          <button class="yskip" data-act="previous" aria-label="Previous" title="Previous"><svg viewBox="0 0 24 24" width="22" height="22">${CONTROL.previous}</svg></button>
+          <button class="yplay" data-act="pause" aria-label="Pause" title="Pause"><svg viewBox="0 0 24 24" width="22" height="22">${CONTROL.play}</svg></button>
+          <button class="yskip" data-act="next" aria-label="Next" title="Next"><svg viewBox="0 0 24 24" width="22" height="22">${CONTROL.next}</svg></button></div>
         <label class="yvol"><div class="ytop"><span>MUSIC</span><b>${Math.round(v * 100)}</b></div>
           <span class="yrange"><input type="range" data-vol="musicVol" min="0" max="1" step="0.01" value="${v}" style="--p:${v}" aria-label="Music volume"></span></label>
         <div class="ytools"><a class="ysettings ysound" role="switch"><i>✦</i><span></span></a></div>`;
@@ -485,6 +498,7 @@ const Sky = (() => {
         range.closest('.yvol').querySelector('b').textContent = Math.round(range.value * 100);
         sound.choose('musicVol', +range.value);
       });
+      body.querySelectorAll('.ycontrols button').forEach(b => { b.onclick = () => tell('music', { act: b.dataset.act }); });
       // Turning sound on strums the harp's strings, one after another.
       body.querySelector('.ysound').onclick = () => {
         const on = !settings.on;
@@ -504,7 +518,6 @@ const Sky = (() => {
   // is loud, and grows quickly and shrinks slowly. The small star grows with the low notes. The picture follows the music's
   // volume. With the song stopped, the rays lie short and still, and with all sound off they are also grey.
   const RAYS = 72, rays = new Float32Array(RAYS);
-  let shown = -1;
   function drawMusic(now) {
     if (!music.shown) return;
     requestAnimationFrame(drawMusic);
@@ -535,23 +548,28 @@ const Sky = (() => {
     g.beginPath(); g.arc(0, 0, 9.5, 0, Math.PI * 2); g.stroke();
     g.fillStyle = on ? '#fbe7b0' : '#8d8b9e'; g.fill(new Path2D(sparkle(0, 0, 4.5 + low * 5)));
     g.fillStyle = '#fff'; g.beginPath(); g.arc(0, 0, 1.2, 0, Math.PI * 2); g.fill();
-    // The song's name, its number, where it is, and its length. Text changes only when it is different.
+    // The song's name, its number, where it is, its length, and whether the middle control is Play or Pause. Text changes
+    // only when it is different. A song that does not play, because the reader paused it or the browser has not let it start
+    // yet, is Paused, and the middle control is Play.
     if (!song) return;
     const write = (el, text) => { if (el.textContent !== text) el.textContent = text; };
     write(body.querySelector('.ysong'), song.title);
-    write(body.querySelector('.ynow span'), song.of > 1 ? `Now playing · ${song.number} of ${song.of}` : 'Now playing');
+    const state = song.playing ? 'Now playing' : 'Paused';
+    write(body.querySelector('.ynow span'), song.of > 1 ? `${state} · ${song.number} of ${song.of}` : state);
     body.querySelector('.ynow').classList.toggle('live', live);
     body.querySelector('.yprog i').style.width = (song.length ? song.at / song.length * 100 : 0).toFixed(2) + '%';
-    const second = Math.floor(song.at);
-    if (second !== shown) {
-      shown = second;
-      write(body.querySelector('.yat'), clock(song.at)); write(body.querySelector('.ylen'), clock(song.length));
+    write(body.querySelector('.yat'), clock(song.at)); write(body.querySelector('.ylen'), clock(song.length));
+    const middle = body.querySelector('.yplay'), act = song.playing ? 'pause' : 'play';
+    if (middle.dataset.act !== act) {
+      const name = act === 'play' ? 'Play' : 'Pause';
+      middle.dataset.act = act; middle.classList.toggle('paused', act === 'play');
+      middle.setAttribute('aria-label', name); middle.title = name;
     }
   }
   if (harp) {
     harp.innerHTML = HARP;
     harp.setAttribute('role', 'button'); harp.setAttribute('aria-label', 'Music'); harp.setAttribute('aria-expanded', 'false');
-    harp.onclick = () => { if (music.shown) music.hide(); else { shown = -1; showMusic(); } };
+    harp.onclick = () => { if (music.shown) music.hide(); else showMusic(); };
   }
   showSound();
 

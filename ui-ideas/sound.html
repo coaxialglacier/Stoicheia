@@ -10,8 +10,9 @@
      page opens.
      The page in the iframe asks for each sound with a message: the sound of a move when it calls Sky.go or Sky.travel, and
      the sound of arriving when the next page or view comes in, with the direction of the move: forward to a deeper page, or
-     back. This page has no controls of its own. The harp in each page's header turns all sound on or off, and Settings, in the
-     panel of the user icon on Home, sets the volumes. Both send each change here as a message.
+     back. This page has no controls of its own. The music panel under the harp in each page's header turns all sound on or
+     off, sets the music's volume, and has Previous, Play or Pause, and Next, and Settings, in the panel of the user icon, sets
+     the volumes. Both send each change here as a message. The media keys of the keyboard work here too, as sound.js says.
      When this page opens, loading.js shows a loading view over the iframe until the first song has loaded and played for 5
      seconds, and the page in the iframe waits to arrive until then.
      On a phone, on a tablet, and in a browser that is not Google Chrome, blocker.js shows its own view instead, which says that
@@ -191,6 +192,8 @@ const HEAR = {
   },
   // While the music panel under the harp is open, the page watches the song.
   watch({ on }) { if (on && !watching) requestAnimationFrame(report); watching = on; },
+  // The controls of the music in that panel: Previous, Play, Pause, and Next.
+  music({ act }) { Sound.control(act); },
   go({ url, x }) {
     Sound.start();
     fromX = x; goingDir = depthOf(url) < depth ? -1 : 1;

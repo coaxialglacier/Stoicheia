@@ -248,8 +248,22 @@ header>.caps{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellips
 .yprog{transition:opacity .3s}
 .yprog .ybar i{transition:width .3s linear}
 .ytimes{display:flex;justify-content:space-between;margin:9px 0 0;font-family:Jost;font-size:10px;letter-spacing:.16em;color:var(--ink3)}
+/* The controls of the music: Previous and Next in gold, and Play or Pause in a gold ring between them. The ring's button shows
+   Play, a triangle, when it has the class paused, and Pause, two bars, otherwise. */
+.ycontrols{display:flex;align-items:center;justify-content:center;gap:26px;margin-top:12px;transition:opacity .3s}
+.ycontrols button{all:unset;box-sizing:border-box;display:grid;place-items:center;border-radius:50%;cursor:pointer;transition:color .2s,border-color .25s,box-shadow .25s,filter .25s,transform .1s}
+.ycontrols svg{display:block;fill:currentColor}
+.ycontrols button:active{transform:scale(.93)}
+.ycontrols button:focus-visible{outline:1px solid var(--gold);outline-offset:3px}
+.ycontrols .yskip{width:36px;height:36px;color:var(--gold)}
+.ycontrols .yskip:hover{color:var(--gold2);filter:drop-shadow(0 0 6px rgba(230,196,119,.55))}
+.ycontrols .yplay{width:48px;height:48px;color:var(--gold2);border:1px solid rgba(230,196,119,.55);background:linear-gradient(180deg,#0c0f24,#04050d);box-shadow:0 0 0 4px rgba(230,196,119,.05),0 0 16px rgba(230,196,119,.12),inset 0 1px 0 rgba(255,240,200,.14)}
+.yplay svg{filter:drop-shadow(0 0 5px rgba(230,196,119,.5))}
+.ycontrols .yplay:hover{border-color:var(--gold);box-shadow:0 0 0 4px rgba(230,196,119,.1),0 0 24px rgba(230,196,119,.32),inset 0 1px 0 rgba(255,240,200,.2)}
+.yplay .pl,.yplay.paused .pa{display:none}
+.yplay.paused .pl{display:inline}
 .yv-music .yvol{margin-top:12px}
-.sound-off .yv-music .ysong,.sound-off .yv-music .yprog,.sound-off .yv-music .yvol{opacity:.45}
+.sound-off .yv-music .ysong,.sound-off .yv-music .yprog,.sound-off .yv-music .ycontrols,.sound-off .yv-music .yvol{opacity:.45}
 .ysound.off{color:var(--ink3);border-color:rgba(126,124,144,.35)}
 .ysound.off i{color:var(--ink3)}
 
