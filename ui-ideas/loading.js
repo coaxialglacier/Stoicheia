@@ -184,7 +184,7 @@ const Loading = (() => {
         box.classList.add('opened'); titleEl.classList.add('on');
       }
     }
-    // The song plays for 5 seconds, measured on the song, so a pause, such as in a hidden tab, does not count. With no song, the
+    // The song plays for 5 seconds, measured on the song, so a pause, such as one from the media keys, does not count. With no song, the
     // title shows for 3.5 seconds. Either way it shows for at least 3.5 seconds, and the page in the iframe must have loaded.
     if (state === 'titled') {
       const heard = Sound.listen(0), t = now - since;

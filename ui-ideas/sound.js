@@ -670,6 +670,12 @@ const Sound = (() => {
       ctx.createMediaElementSource(a).connect(g); g.connect(e.music.dry);
       return { a, g };
     });
+    // The music plays on while the tab is hidden, the window is minimized, or another window is in front, until the reader
+    // pauses it. Chrome runs the timers of a page that plays sound at full speed, even while it is hidden, so the next song
+    // still starts FADE seconds before the end. A page whose sound is silent, because all sound is off or the music's volume is
+    // 0, gets its timers run as rarely as once a minute after 5 minutes hidden. So a song that ends before the next one has
+    // started starts the next one then.
+    players.forEach(p => p.a.addEventListener('ended', () => { if (p === players[playing] && !turning) next(); }));
     let last = null;
     try { last = localStorage.getItem(LAST); } catch (err) {}
     order = shuffled(SONGS_.findIndex(s => s.file === last));
@@ -715,17 +721,18 @@ const Sound = (() => {
   // Next plays the next song, and so does the end of a song. Previous starts the song again when it has played for more than 3
   // seconds, or when it is the first song played, and otherwise plays the song before it. Changing the song also ends a pause.
   // stopped is true while the reader has paused the music, and then a click on the page does not play it again, as start()
-  // says. A hidden tab plays nothing, so the controls do nothing while the tab is hidden, except Pause.
+  // says. The music plays on while the tab is hidden, so every control works then too, from the media keys and from Chrome's
+  // and the system's media controls.
   const SKIP = .12;
   let stopped = false;
   function next(tc = SKIP) {
-    if (pos < 0 || document.hidden) return;
+    if (pos < 0) return;
     if (pos === played.length - 1) played.push(fromOrder());
     pos++; stopped = false;
     change(played[pos], tc);
   }
   function previous() {
-    if (pos < 0 || document.hidden) return;
+    if (pos < 0) return;
     const p = players[playing];
     stopped = false;
     if (p.a.currentTime > 3 || pos === 0) { p.a.currentTime = 0; play(); return; }
@@ -812,7 +819,6 @@ const Sound = (() => {
       e.music.dry.connect(meter); bins = new Uint8Array(meter.frequencyBinCount);
       playSong();
     }
-    if (document.hidden) return;
     if (ctx.state === 'suspended') ctx.resume();
     const p = players[playing];
     if (p && p.a.paused && !stopped) p.a.play().catch(() => {});
@@ -848,21 +854,6 @@ const Sound = (() => {
   }
   // Plays the move once, without moving: the arrival comes 1.05 seconds after the click, about when a page arrives.
   function preview(dir = 1, x = .5) { start(); e.leave(x, dir); setTimeout(() => e.arrive(x, dir), 1050); }
-  // A hidden tab plays nothing: the music fades out, the song pauses, and the audio context stops until the tab is shown again.
-  // Then the song goes on from where it paused, unless the reader paused it while the tab was hidden.
-  let paused = [];
-  document.addEventListener('visibilitychange', () => {
-    if (!ctx) return;
-    const g = e.music.vol.gain, t = ctx.currentTime;
-    if (document.hidden) {
-      g.cancelScheduledValues(t); g.setTargetAtTime(0, t, .15);
-      setTimeout(() => { if (!document.hidden) return; paused = players.filter(p => !p.a.paused); paused.forEach(p => p.a.pause()); ctx.suspend(); }, 700);
-    } else ctx.resume().then(() => {
-      if (!stopped) paused.forEach(p => p.a.play().catch(() => {}));
-      paused = [];
-      g.cancelScheduledValues(ctx.currentTime); g.setTargetAtTime(gainOf.music(volume), ctx.currentTime, .6);
-    });
-  });
 
   // For testing: renders `seconds` of sound into a buffer, faster than real time, with whatever setup(e) schedules.
   function render(seconds, setup, sampleRate = 44100) {
