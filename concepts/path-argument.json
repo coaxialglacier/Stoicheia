@@ -1,0 +1,6 @@
+{
+  "id": "path-argument",
+  "name": "Path argument",
+  "first": "The argument of a navigation stack that gives it a binding to its path, so that code can read and change which screens are pushed.",
+  "parts": []
+}

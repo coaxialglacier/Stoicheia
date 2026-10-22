@@ -1,0 +1,84 @@
+{
+  "id": "representable-view",
+  "name": "Representable view",
+  "area": "ui",
+  "first": "A SwiftUI view that makes and updates a UIKit view, so that a UIKit view can be used among SwiftUI views.",
+  "parts": ["conformance", "make-ui-view", "update-ui-view"],
+  "dependsOn": [
+    { "id": "hosting-controller", "views": ["parts"],
+      "why": "The example shows its view in a hosting controller, which lays it out without a window.",
+      "whyInExample": "The constant `host` is a hosting controller, as `host` is on the page of Hosting controller." },
+    { "id": "view", "views": ["what", "parts"],
+      "why": "A representable view is a SwiftUI view, which is placed among other views as any view is.",
+      "whyInExample": "The view `CityLabel` can be placed among views, as `Greeting` can." },
+    { "id": "class", "views": ["what"],
+      "why": "A UIKit view is an instance of a class, which SwiftUI keeps and changes by reference.",
+      "whyInExample": "The call `UILabel()` makes an instance of a class, as `Counter()` does on the page of Class." }
+  ],
+  "example": {
+    "ios": true,
+    "code": [
+      "import SwiftUI",
+      "import UIKit",
+      "",
+      "struct CityLabel: UIViewRepresentable {",
+      "    let city: String",
+      "    func makeUIView(context: Context) -> UILabel {",
+      "        print(\"makeUIView\")",
+      "        return UILabel()",
+      "    }",
+      "    func updateUIView(",
+      "        _ label: UILabel, context: Context",
+      "    ) {",
+      "        print(\"updateUIView:\", city)",
+      "        label.text = city",
+      "    }",
+      "}",
+      "",
+      "let host = UIHostingController(",
+      "    rootView: CityLabel(city: \"Lima\")",
+      ")",
+      "let room = CGSize(width: 300, height: 300)",
+      "print(host.sizeThatFits(in: room).width > 0)"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A representable view is a type that conforms to `UIViewRepresentable`. It is a SwiftUI view that shows a UIKit view: its method `makeUIView` makes the UIKit view once, and its method `updateUIView` changes it to match the SwiftUI view's values, each time they change.",
+      "marks": [
+        { "line": 4, "text": "UIViewRepresentable", "part": "conformance", "label": "a representable view" },
+        { "line": 6, "text": "makeUIView", "part": "make-ui-view", "label": "makes the UIKit view" },
+        { "line": 10, "text": "updateUIView", "part": "update-ui-view", "label": "keeps it up to date" }
+      ],
+      "afterExample": "The view `CityLabel` shows a city in a UIKit label. SwiftUI makes the label once, and then sets its text from `city`. The program runs on an iPhone in the simulator, because UIKit is a framework of iOS.",
+      "problem": "Some views exist only in UIKit, or in a library written for UIKit, such as a map with features that SwiftUI lacks. Writing them again in SwiftUI can be a lot of work. A representable view puts the UIKit view among SwiftUI views as it is.",
+      "how": "Apple's documentation says that SwiftUI calls the methods of a representable view at the right times to make and update its view, and that the UIKit view does not tell SwiftUI about its own changes: for that, a coordinator, an object of the representable view's own, forwards its messages.",
+      "when": [
+        { "text": "Use it for a UIKit view that SwiftUI has no match for, such as a view from a library written for UIKit." },
+        { "text": "Don't use it for a view that SwiftUI already has, such as a label or a button. The SwiftUI view is simpler, and updates with no code of yours." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "conformance", "name": "The conformance to `UIViewRepresentable`, line 4",
+          "text": "The colon and the name `UIViewRepresentable` after `CityLabel` say that it conforms to the protocol, which requires the methods `makeUIView` and `updateUIView`. With them, a `CityLabel` is a SwiftUI view." },
+        { "part": "make-ui-view", "name": "The method `makeUIView`, lines 6 to 9",
+          "text": "The method makes the UIKit view, a `UILabel`, and returns it. SwiftUI calls it once, when the view first appears, and keeps the label it returns." },
+        { "part": "update-ui-view", "name": "The method `updateUIView`, lines 10 to 15",
+          "text": "The method gets the label that SwiftUI kept, and changes it to match the values of `CityLabel`: line 14 sets its text to `city`. SwiftUI calls it after `makeUIView`, and again each time the values change." }
+      ],
+      "marks": [
+        { "line": 4, "text": "UIViewRepresentable", "part": "conformance", "label": "conformance" },
+        { "line": 6, "text": "makeUIView", "part": "make-ui-view", "label": "make" },
+        { "line": 10, "text": "updateUIView", "part": "update-ui-view", "label": "update" }
+      ],
+      "steps": [
+        { "text": "Lines 18 to 20 make a hosting controller whose root view is a `CityLabel` for Lima.", "line": 18, "also": [19] },
+        { "text": "Line 22 asks the controller what size it needs inside 300 by 300 points. To lay out `CityLabel`, SwiftUI first calls `makeUIView`, and line 7 prints {{makeUIView}}.", "line": 7, "also": [22, 6], "prints": ["makeUIView"] },
+        { "text": "SwiftUI then calls `updateUIView` with the label, and line 13 prints {{updateUIView: Lima}}. Line 14 sets the label's text to Lima.", "line": 13, "also": [10, 14], "prints": ["updateUIView: Lima"] },
+        { "text": "The label has its text, so it has a size, and line 22 prints whether its width is more than zero: {{true}}.", "line": 22, "prints": ["true"] }
+      ],
+      "end": { "kind": "answer", "text": "SwiftUI made the UIKit label once, and then set it from the values of `CityLabel`, so the label showed among SwiftUI views." }
+    }
+  }
+}

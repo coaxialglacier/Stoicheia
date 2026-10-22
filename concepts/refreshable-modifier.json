@@ -1,0 +1,6 @@
+{
+  "id": "refreshable-modifier",
+  "name": "Refreshable modifier",
+  "first": "The modifier that puts a refresh action, which runs its async closure, in the environment of a view and every view inside it.",
+  "parts": []
+}

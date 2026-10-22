@@ -1,0 +1,54 @@
+{
+  "id": "gesture-state",
+  "name": "Gesture state",
+  "area": "ui",
+  "first": "A property wrapper that holds a value only while a gesture is in progress, and goes back to its first value on its own when the gesture ends.",
+  "parts": ["gesture-state-property", "updating-callback"],
+  "dependsOn": [
+    { "id": "gesture", "views": ["what"],
+      "why": "Gesture state is changed by a gesture while it is in progress.",
+      "whyInExample": "The property `follow` is a drag gesture, as `drag` is on the page of Gesture." },
+    { "id": "state", "views": ["what"],
+      "why": "Gesture state is kept for a view as state is, and its changes run the view's body again.",
+      "whyInExample": "The attribute `@GestureState` holds `drag` for `Card`, as `@State` holds `taps` for `Counter`." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct Card: View {",
+      "    @GestureState private var drag = CGSize.zero",
+      "    var body: some View {",
+      "        let _ = print(\"offset is\", drag)",
+      "        Text(\"Lima\")",
+      "            .offset(drag)",
+      "            .gesture(follow)",
+      "    }",
+      "    var follow: some Gesture {",
+      "        DragGesture()",
+      "            .updating($drag) { value, state, _ in",
+      "                state = value.translation",
+      "            }",
+      "    }",
+      "}",
+      "_ = ImageRenderer(content: Card()).cgImage"
+    ],
+    "output": ["offset is (0.0, 0.0)"]
+  },
+  "views": {
+    "what": {
+      "is": "A property marked `@GestureState` holds a value while a gesture is in progress. The gesture's method `updating` is given a binding to it, and a closure that sets the value from the gesture's value. Apple's documentation says that the property goes back to its first value when the gesture ends.",
+      "marks": [
+        { "line": 4, "text": "@GestureState private var drag = CGSize.zero", "part": "gesture-state-property", "label": "only while dragging" },
+        { "line": 13, "text": "updating($drag)", "part": "updating-callback", "label": "sets it from the drag" }
+      ],
+      "afterExample": "While the user drags the card, `drag` holds how far the finger moved, so the card follows the finger. When the finger lifts, `drag` goes back to zero, and the card goes back. No one drags here, so the `body` runs once, with `drag` at its first value, and line 6 prints {{offset is (0.0, 0.0)}}.",
+      "problem": "Some values matter only during a touch, such as how far a card is dragged before it is let go. With plain state, code must remember to set it back when the gesture ends, or is cancelled. Gesture state goes back to its first value on its own.",
+      "how": "Apple's documentation says to pass a binding to the property to a gesture's `updating` closure, which is called as the gesture changes, and that the property resets when the gesture becomes inactive. In the closure, `state` is the value to set, and `value` is the gesture's value, such as its `translation`.",
+      "when": [
+        { "text": "Use it for a value that shows a touch in progress, such as how far a card is dragged, or whether a button is held down." },
+        { "text": "Don't use it for a result that must stay after the gesture, such as where a card was dropped. Gesture state goes back on its own, so keep that result in state, set in the gesture's closure for its end." }
+      ]
+    }
+  }
+}

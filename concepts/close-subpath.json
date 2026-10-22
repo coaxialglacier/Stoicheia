@@ -1,0 +1,6 @@
+{
+  "id": "close-subpath",
+  "name": "Closing an outline",
+  "first": "A line that a path adds from its current point back to where its outline started, so that the outline has an inside.",
+  "parts": []
+}

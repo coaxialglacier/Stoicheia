@@ -1,0 +1,6 @@
+{
+  "id": "observable-macro",
+  "name": "Observable macro",
+  "first": "The attached macro written before a class that makes it observable, by adding the code that reports each read and each change of its stored properties.",
+  "parts": []
+}

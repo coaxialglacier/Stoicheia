@@ -1,0 +1,69 @@
+{
+  "id": "color-scheme",
+  "name": "Color scheme",
+  "area": "ui",
+  "first": "Whether views are shown in light mode or dark mode, which a view reads from the environment, and which the system's colors follow on their own.",
+  "parts": ["color-scheme-property", "adaptive-color"],
+  "dependsOn": [
+    { "id": "environment", "views": ["what", "parts"],
+      "why": "SwiftUI sets the color scheme in the environment, where a view reads it, and where a color is resolved.",
+      "whyInExample": "The property `@Environment(\\.colorScheme)` reads the scheme, as `@Environment(\\.isEnabled)` reads whether views are enabled." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct Badge: View {",
+      "    @Environment(\\.colorScheme) var scheme",
+      "    var body: some View {",
+      "        let _ = print(\"scheme:\", scheme)",
+      "        Text(\"Lima\")",
+      "    }",
+      "}",
+      "",
+      "for scheme in [ColorScheme.light, .dark] {",
+      "    let badge = Badge()",
+      "        .environment(\\.colorScheme, scheme)",
+      "    _ = ImageRenderer(content: badge).cgImage",
+      "    var values = EnvironmentValues()",
+      "    values.colorScheme = scheme",
+      "    print(Color.primary.resolve(in: values))",
+      "}"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "The color scheme says whether views are shown in light mode or in dark mode. SwiftUI sets it in the environment from the user's choice in Settings, and a view reads it with `@Environment(\\.colorScheme)`. The system's colors, such as `Color.primary`, follow it on their own: they are a different color in each mode.",
+      "marks": [
+        { "line": 4, "text": "@Environment(\\.colorScheme) var scheme", "part": "color-scheme-property", "label": "light or dark" },
+        { "line": 17, "text": "Color.primary", "part": "adaptive-color", "label": "follows the mode" }
+      ],
+      "afterExample": "The view `Badge` reads the scheme, and the loop draws it once in light mode and once in dark mode. The primary color is black, nearly opaque, in light mode, and white in dark mode.",
+      "problem": "Users choose light or dark mode, and an app must be readable in both: dark text on a dark background disappears. System colors change with the mode by themselves, and a view can read the mode for anything else, such as a picture that has a dark version.",
+      "how": "Apple's documentation says that the value a view reads depends on whether the user turned on Dark Mode, and on the presentation it is in. A system color, or a color from the asset catalog with a dark version, is a color for each mode: SwiftUI resolves it to one value with the environment it is drawn in.",
+      "when": [
+        { "text": "Use system colors and colors with a dark version for text and backgrounds, so that they follow the mode with no code. Read the scheme only for what colors cannot do, such as a different picture." },
+        { "text": "Don't set the color scheme in the environment to force a mode. Apple's documentation says that this changes the views below, but not the presentation around them, and suggests a modifier for the preferred color scheme in its place." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "color-scheme-property", "name": "The color scheme `scheme`, line 4",
+          "text": "The property reads the color scheme from the environment, which is `.light` or `.dark`. Here lines 12 and 13 set it for each `Badge`, as the system would from the user's setting." },
+        { "part": "adaptive-color", "name": "The color `Color.primary`, line 17",
+          "text": "The primary color is the color of the main text. It has one value for each mode, and `resolve(in:)` gives its value in the environment it is given, here `values`, whose color scheme lines 15 and 16 set." }
+      ],
+      "marks": [
+        { "line": 4, "text": "@Environment(\\.colorScheme) var scheme", "part": "color-scheme-property", "label": "color scheme" },
+        { "line": 17, "text": "Color.primary", "part": "adaptive-color", "label": "system color" }
+      ],
+      "steps": [
+        { "text": "The loop on line 11 runs first with `.light`. Lines 12 to 14 draw a `Badge` whose color scheme is light, and line 6 prints {{scheme: light}}.", "line": 6, "also": [11, 12, 13, 14], "prints": ["scheme: light"] },
+        { "text": "Lines 15 and 16 make environment values whose color scheme is light, and line 17 resolves the primary color in them: black, with an opacity of D8 out of FF: {{#000000D8}}.", "line": 17, "also": [15, 16], "prints": ["#000000D8"] },
+        { "text": "The loop runs again with `.dark`. The `Badge` reads the dark scheme, and line 6 prints {{scheme: dark}}.", "line": 6, "also": [11, 13], "prints": ["scheme: dark"] },
+        { "text": "In dark mode, the primary color resolves to white: {{#FFFFFFD8}}.", "line": 17, "prints": ["#FFFFFFD8"] }
+      ],
+      "end": { "kind": "answer", "text": "The view read light or dark from its environment, and the same system color became black in light mode and white in dark mode." }
+    }
+  }
+}

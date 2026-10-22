@@ -1,0 +1,45 @@
+{
+  "id": "toolbar",
+  "name": "Toolbar",
+  "area": "ui",
+  "first": "The buttons and menus in a screen's navigation bar or bottom bar, which a view inside the screen lists with a modifier.",
+  "parts": ["toolbar-item", "toolbar-placement"],
+  "dependsOn": [
+    { "id": "view-modifier", "views": ["what"],
+      "why": "A view lists its screen's toolbar items with a modifier.",
+      "whyInExample": "The call `toolbar` is a modifier of the `Text`, as `padding(8)` is a modifier of `city`." },
+    { "id": "navigation-stack", "views": ["what"],
+      "why": "On iOS, toolbar items usually go in the navigation bar of a navigation stack.",
+      "whyInExample": "In an app, the `Text` would be inside a navigation stack, as `list` is on the page of Navigation stack, and its Add button would go in that stack's navigation bar." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "let trips = Text(\"Trips\")",
+      "    .toolbar {",
+      "        ToolbarItem(placement: .primaryAction) {",
+      "            Button(\"Add\") {}",
+      "        }",
+      "    }",
+      "print(type(of: trips))"
+    ],
+    "output": ["ModifiedContent<Text, ToolbarModifier<(), TupleToolbarContent<ToolbarItem<(), Button<Text>>>>>"]
+  },
+  "views": {
+    "what": {
+      "is": "A toolbar is the row of buttons and menus in a screen's navigation bar, or in a bar at the bottom of the screen. A view lists the items of its screen's toolbar with the modifier `toolbar`, and each `ToolbarItem` says where its item goes, with a placement.",
+      "marks": [
+        { "line": 5, "text": "ToolbarItem", "part": "toolbar-item", "label": "an item" },
+        { "line": 5, "text": ".primaryAction", "part": "toolbar-placement", "label": "where it goes" }
+      ],
+      "afterExample": "In an app inside a navigation stack, the Add button would go where a screen's main action goes. A program with no window shows no toolbar, so line 9 prints the type: the `Text`, with a modifier that holds a toolbar item with the button.",
+      "problem": "Actions of a whole screen, such as adding a trip, need a place that is the same on every screen, where users look for them. A toolbar puts them in the bars that the system draws, in the places each platform uses.",
+      "how": "Apple's documentation says that the modifier fills the toolbar or the navigation bar with the views it is given, each in a `ToolbarItem` or in a group of items. It also says that on iOS the placement `.primaryAction` is the trailing edge of the navigation bar, and on the Mac the leading edge of the toolbar.",
+      "when": [
+        { "text": "Use it for actions of the whole screen, such as Add, Edit, or Share." },
+        { "text": "Don't put the actions of one item there, such as deleting one trip. They belong with that item, such as in its row." }
+      ]
+    }
+  }
+}

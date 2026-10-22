@@ -1,0 +1,6 @@
+{
+  "id": "transition-modifier",
+  "name": "Transition modifier",
+  "first": "The modifier that gives a view the transition that SwiftUI uses when the view is inserted or removed.",
+  "parts": []
+}

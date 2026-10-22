@@ -1,0 +1,69 @@
+{
+  "id": "task",
+  "name": "Task",
+  "area": "conc",
+  "first": "A unit of work that runs an async closure, at the same time as the code that made it, which that code can wait for or cancel.",
+  "parts": ["task-closure", "task-value"],
+  "dependsOn": [
+    { "id": "async-function", "views": ["what", "parts"],
+      "why": "A task runs async code, which can suspend while it waits, from code that may not be able to wait.",
+      "whyInExample": "The function `pack()` is async, as `makeTea(cups:)` is, and the task calls it with `await`." }
+  ],
+  "example": {
+    "code": [
+      "func pack() async -> String {",
+      "    print(\"packing\")",
+      "    try? await Task.sleep(for: .milliseconds(100))",
+      "    return \"packed\"",
+      "}",
+      "",
+      "let work = Task {",
+      "    await pack()",
+      "}",
+      "print(\"task started\")",
+      "print(await work.value)"
+    ],
+    "sil": [
+      { "in": "closure #1 in ", "has": "hop_to_executor",
+        "shows": "The closure of the task on line 7 first moves to the executor of the main actor, which runs code on the main thread, as the top-level code does." },
+      { "in": "closure #1 in ", "has": "MainActor.shared",
+        "shows": "The executor that the closure moves to is the one of MainActor.shared, the main actor." }
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A task is a unit of work that runs an async closure, at the same time as other code. Writing `Task` before a closure makes one, as line 7 does, and the task starts by itself: no code calls it to start. The task's `value` is what its closure returns, which other code waits for with `await`.",
+      "marks": [
+        { "line": 7, "text": "Task {", "part": "task-closure", "label": "starts the work" },
+        { "line": 11, "text": "await work.value", "part": "task-value", "label": "waits for its result" }
+      ],
+      "afterExample": "Line 7 makes a task that packs, and line 10 runs before the packing starts. Line 11 then waits for the task's result.",
+      "problem": "Synchronous code, such as the action of a button, cannot call an async function, because it cannot wait. A task can: it is made from any code, runs the async work, and lets the code that made it go on without waiting.",
+      "how": "Apple's documentation says that a task can start running right after it is made, and that it runs whether or not code keeps a reference to it. Keeping it, as `work`, lets code wait for its result, or cancel it. Here the top-level code and the task's closure both run on the main thread, so the closure starts when the top-level code waits.",
+      "when": [
+        { "text": "Use a task to start async work from code that is not async, such as the action of a button." },
+        { "text": "Don't make a task inside an async function only to wait for it at once. Call the async function with `await` instead." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "task-closure", "name": "The task, lines 7 to 9",
+          "text": "The closure after `Task` is the work that the task runs. It is async, so it can call `pack()` with `await`. What it returns, `\"packed\"`, becomes the task's result." },
+        { "part": "task-value", "name": "The result, line 11",
+          "text": "The property `value` of `work` is the task's result. Reading it with `await` waits until the task has finished, then gives what the closure returned." }
+      ],
+      "marks": [
+        { "line": 7, "text": "Task {", "part": "task-closure", "label": "task" },
+        { "line": 11, "text": "await work.value", "part": "task-value", "label": "result" }
+      ],
+      "steps": [
+        { "text": "Line 7 makes a task, which will run the closure on lines 7 to 9. The closure runs on the main thread, as the top-level code does, so it waits to start.", "line": 7, "also": [8] },
+        { "text": "The top-level code goes on, and line 10 prints {{task started}}.", "line": 10, "prints": ["task started"] },
+        { "text": "Line 11 waits for the task's result, so the top-level code suspends, and the task's closure starts. It calls `pack()`, and line 2 prints {{packing}}.", "line": 2, "also": [11, 8], "prints": ["packing"] },
+        { "text": "Line 3 suspends `pack()` for a tenth of a second, and line 4 returns `\"packed\"`, which is the task's result.", "line": 4, "also": [3] },
+        { "text": "The task has finished, so line 11 goes on, and prints the result: {{packed}}.", "line": 11, "prints": ["packed"] }
+      ],
+      "end": { "kind": "answer", "text": "The task ran its async work while the top-level code went on, and the top-level code got the result by waiting for `work.value`." }
+    }
+  }
+}

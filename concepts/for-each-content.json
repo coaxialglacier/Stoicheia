@@ -1,0 +1,6 @@
+{
+  "id": "for-each-content",
+  "name": "Content closure",
+  "first": "The closure of a ForEach, which it calls with one element at a time, and which returns the view for that element.",
+  "parts": []
+}

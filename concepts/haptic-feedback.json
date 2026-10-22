@@ -1,0 +1,48 @@
+{
+  "id": "haptic-feedback",
+  "name": "Haptic feedback",
+  "area": "ui",
+  "first": "A modifier that plays a feeling the user's hand senses, such as a tap or a success, each time a value changes.",
+  "parts": ["feedback-kind", "feedback-trigger"],
+  "dependsOn": [
+    { "id": "view-modifier", "views": ["what"],
+      "why": "Haptic feedback is added to a view with a modifier.",
+      "whyInExample": "The call `sensoryFeedback` is a modifier of the button, as `padding(8)` is a modifier of `city`." },
+    { "id": "control", "views": ["what"],
+      "why": "The value that plays the feedback is usually changed by a control, such as a button.",
+      "whyInExample": "The action of the Save button adds 1 to `saves`, as the action of Save prints on the page of Control." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct Saver: View {",
+      "    @State private var saves = 0",
+      "    var body: some View {",
+      "        Button(\"Save\") { saves += 1 }",
+      "            .sensoryFeedback(",
+      "                .success, trigger: saves",
+      "            )",
+      "    }",
+      "}",
+      "print(type(of: Saver().body))"
+    ],
+    "output": ["ModifiedContent<Button<Text>, FeedbackGenerator<Int>>"]
+  },
+  "views": {
+    "what": {
+      "is": "Haptic feedback is a short vibration that the user feels, on devices that have the hardware for it, such as an iPhone. The modifier `sensoryFeedback` plays a kind of feedback, such as `.success`, each time the value it watches changes.",
+      "marks": [
+        { "line": 8, "text": ".success", "part": "feedback-kind", "label": "what to play" },
+        { "line": 8, "text": "trigger: saves", "part": "feedback-trigger", "label": "when to play" }
+      ],
+      "afterExample": "Each tap on Save adds 1 to `saves`, so the value changes, and an iPhone plays the feeling of success. A program with no device to play on prints the type: the button, with a modifier that plays feedback when an {{Int}} changes.",
+      "problem": "Some events need to be felt as well as seen, such as a save that worked, or a drag that reached its place. Haptic feedback lets the user feel the moment, without looking.",
+      "how": "Apple's documentation says that the modifier plays its feedback when the trigger value changes. So the code only changes a value, as it already does when something happens, and calls nothing to play the feedback. The kinds of feedback are named for what happened, such as success, warning, error, and a change of selection.",
+      "when": [
+        { "text": "Use it for a moment the user should feel, such as a completed save, or the end of a drag." },
+        { "text": "Don't play it for every change. Feedback that comes too often stops meaning anything." }
+      ]
+    }
+  }
+}

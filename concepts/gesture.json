@@ -1,0 +1,42 @@
+{
+  "id": "gesture",
+  "name": "Gesture",
+  "area": "ui",
+  "first": "A touch that a view recognizes, such as a tap, a drag, a pinch, or a rotation, which runs code as it changes and when it ends.",
+  "parts": ["gesture-modifier", "gesture-callback"],
+  "dependsOn": [
+    { "id": "view-modifier", "views": ["what"],
+      "why": "A gesture is added to a view with a modifier.",
+      "whyInExample": "The call `gesture(drag)` is a modifier of the `Text`, as `padding(8)` is a modifier of `city`." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "let drag = DragGesture()",
+      "    .onEnded { value in",
+      "        print(\"moved\", value.translation)",
+      "    }",
+      "let card = Text(\"Lima\").gesture(drag)",
+      "print(type(of: card))"
+    ],
+    "output": ["ModifiedContent<Text, AddGestureModifier<_EndedGesture<DragGesture>, DefaultGestureCombiner>>"]
+  },
+  "views": {
+    "what": {
+      "is": "A gesture is a touch that a view recognizes, such as a tap, a long press, a drag, a pinch, or a rotation. A gesture is a value, such as a `DragGesture`. Methods on it, such as `onEnded`, give it closures that it calls with its value as it changes and when it ends. The modifier `gesture` adds it to a view.",
+      "marks": [
+        { "line": 3, "text": "DragGesture()", "label": "a drag" },
+        { "line": 4, "text": "onEnded", "part": "gesture-callback", "label": "runs at the end" },
+        { "line": 7, "text": "gesture(drag)", "part": "gesture-modifier", "label": "adds it to the view" }
+      ],
+      "afterExample": "When the user drags the card and lifts the finger, the drag would call its closure with its value, and line 5 would print how far the finger moved. A program with no window has no touches, so line 8 prints the type: the `Text`, with a modifier that adds a drag gesture with a closure for its end.",
+      "problem": "Buttons and controls cover taps on things that look tappable. Other touches, such as dragging a card, pinching a map, or pressing and holding a photo, need code that follows the finger. A gesture recognizes such a touch, and gives the code its values.",
+      "how": "Apple's documentation says that a gesture matches a sequence of touch events, and gives a value for each of its states. A drag's value holds where it started, where the finger is, and how far it moved, `translation`. A gesture can be given a closure for each change, and the closure of `onEnded` is called with its last value.",
+      "when": [
+        { "text": "Use a gesture for a touch that is not a tap on a control, such as dragging a card to sort it, or pressing and holding to see more." },
+        { "text": "Don't use a tap gesture for an action that a button can do. A button has the platform's look, and VoiceOver reads it as a button." }
+      ]
+    }
+  }
+}

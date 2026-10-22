@@ -1,0 +1,6 @@
+{
+  "id": "glass-effect-modifier",
+  "name": "Glass effect modifier",
+  "first": "The modifier that puts Liquid Glass behind a view, by default the regular glass in the shape of a capsule, filling the view's frame.",
+  "parts": []
+}

@@ -1,0 +1,92 @@
+{
+  "id": "query",
+  "name": "Query",
+  "area": "ui",
+  "first": "A property wrapper that fetches SwiftData models for a view, and fetches again, and updates the view, when those models change.",
+  "parts": ["query-property", "model-container-modifier"],
+  "dependsOn": [
+    { "id": "model-context", "views": ["what", "parts"],
+      "why": "A query fetches models with the model context in the view's environment.",
+      "whyInExample": "The property `container.mainContext` is a model context, as `context` is on the page of Model context." },
+    { "id": "view-update", "views": ["parts"],
+      "why": "When the query's result changes, SwiftUI runs the body that read it again.",
+      "whyInExample": "The `body` of `TripList` reads `trips`, as the `body` of `Counter` reads `taps` on the page of View update." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "import SwiftData",
+      "",
+      "@Model",
+      "class Trip {",
+      "    var city: String",
+      "    init(city: String) {",
+      "        self.city = city",
+      "    }",
+      "}",
+      "",
+      "struct TripList: View {",
+      "    @Query(sort: \\Trip.city) var trips: [Trip]",
+      "    var body: some View {",
+      "        let _ = print(\"shows\", trips.map(\\.city))",
+      "        Text(\"\\(trips.count) trips\")",
+      "    }",
+      "}",
+      "",
+      "let memory = ModelConfiguration(",
+      "    isStoredInMemoryOnly: true",
+      ")",
+      "let container = try ModelContainer(",
+      "    for: Trip.self, configurations: memory",
+      ")",
+      "let context = container.mainContext",
+      "context.insert(Trip(city: \"Oslo\"))",
+      "context.insert(Trip(city: \"Lima\"))",
+      "let screen = TripList().modelContainer(container)",
+      "let renderer = ImageRenderer(content: screen)",
+      "_ = renderer.cgImage",
+      "context.insert(Trip(city: \"Cusco\"))",
+      "RunLoop.main.run(until: .now + 0.1)",
+      "_ = renderer.cgImage"
+    ],
+    "sil": [
+      { "in": "TripList.trips.getter", "has": "#TripList._trips",
+        "shows": "Reading trips reads _trips, the Query that swiftc stores for the wrapped property." }
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A property marked `@Query` fetches SwiftData models for a view, with the model context in the view's environment. The `body` reads the result as an array. Apple's documentation says that a query manages the models it fetched, so that they stay the same as the saved data: when matching models are inserted, changed, or deleted, the view gets the new result.",
+      "marks": [
+        { "line": 13, "text": "@Query(sort: \\Trip.city) var trips: [Trip]", "part": "query-property", "label": "fetches trips" },
+        { "line": 29, "text": "modelContainer(container)", "part": "model-container-modifier", "label": "where to fetch" }
+      ],
+      "afterExample": "The view `TripList` shows its trips, sorted by city. When line 32 inserts Cusco, the query's result changes, and the `body` runs again with all three trips.",
+      "problem": "A list of saved trips must match what is saved: a trip added on one screen must appear on another. Fetching by hand, and fetching again after every change, is easy to forget. A query does both for the view.",
+      "how": "Apple's documentation says that the modifier `modelContainer` puts the container, and a model context for it, in the view's environment, and that `Query` properties use that context. The query fetches the trips sorted by the key path after `sort:`. When the models change, its result changes, and SwiftUI runs the `body` that read it.",
+      "when": [
+        { "text": "Use it in a view that shows saved models, such as a list of trips, so that the list stays the same as what is saved." },
+        { "text": "Don't use it outside a view, such as in an observable class. It needs the model context in a view's environment." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "query-property", "name": "The query `trips`, line 13",
+          "text": "The attribute `@Query` makes `trips` a wrapped property of `Query`, a property wrapper that SwiftData provides. Its argument `sort:` orders the trips by `city`. The wrapped value is an array of the trips it fetched." },
+        { "part": "model-container-modifier", "name": "The modifier `modelContainer`, line 29",
+          "text": "The modifier puts the container in the environment of `TripList`, with a model context for it, which the query fetches with." }
+      ],
+      "marks": [
+        { "line": 13, "text": "@Query(sort: \\Trip.city) var trips: [Trip]", "part": "query-property", "label": "query" },
+        { "line": 29, "text": "modelContainer(container)", "part": "model-container-modifier", "label": "container modifier" }
+      ],
+      "steps": [
+        { "text": "Lines 20 to 25 make a container that keeps its trips in memory, and lines 27 and 28 insert two trips into its main context.", "line": 27, "also": [20, 23, 26, 28] },
+        { "text": "Line 29 puts the container in the environment of a `TripList`, and line 31 draws it. The query fetches the trips, sorted by city, and line 15 prints {{shows [\"Lima\", \"Oslo\"]}}.", "line": 15, "also": [29, 30, 31, 13], "prints": ["shows [\"Lima\", \"Oslo\"]"] },
+        { "text": "Line 32 inserts a third trip, Cusco. The query's result now has three trips.", "line": 32 },
+        { "text": "Line 33 runs the main run loop, and line 34 draws again. The `body` read `trips`, so it runs again, and line 15 prints {{shows [\"Cusco\", \"Lima\", \"Oslo\"]}}.", "line": 15, "also": [33, 34], "prints": ["shows [\"Cusco\", \"Lima\", \"Oslo\"]"] }
+      ],
+      "end": { "kind": "answer", "text": "The query fetched the trips for the view, and when a trip was inserted, the view got the new result with no code of its own." }
+    }
+  }
+}

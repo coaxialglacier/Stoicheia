@@ -1,0 +1,6 @@
+{
+  "id": "task-closure",
+  "name": "Task closure",
+  "first": "The async closure that a task runs, whose return value becomes the task's result.",
+  "parts": []
+}

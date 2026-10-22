@@ -1,0 +1,6 @@
+{
+  "id": "namespace",
+  "name": "Namespace",
+  "first": "A value, kept by a property marked with the Namespace attribute, that groups the ids of matched views, so that the same id in two namespaces links nothing.",
+  "parts": []
+}

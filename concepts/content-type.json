@@ -1,0 +1,6 @@
+{
+  "id": "content-type",
+  "name": "Content type",
+  "first": "The label that says what kind of data some bytes are, such as JSON, plain text, or a picture, so that the side that gets them knows whether it can use them.",
+  "parts": []
+}

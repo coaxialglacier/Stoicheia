@@ -1,0 +1,6 @@
+{
+  "id": "refresh-action",
+  "name": "Refresh action",
+  "first": "The environment value that a list reads to offer pull to refresh, which runs the async closure of the refreshable modifier when it is called.",
+  "parts": []
+}

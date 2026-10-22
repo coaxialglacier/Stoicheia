@@ -1,0 +1,6 @@
+{
+  "id": "model-container",
+  "name": "Model container",
+  "first": "The object that sets up where SwiftData keeps the models of the types it is given, such as a file on the device, or memory only.",
+  "parts": []
+}

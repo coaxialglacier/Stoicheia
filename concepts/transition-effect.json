@@ -1,0 +1,6 @@
+{
+  "id": "transition-effect",
+  "name": "Kind of transition",
+  "first": "The change that a transition makes to a view as it comes in and goes out, such as fading it, sliding it from an edge, or growing it from nothing.",
+  "parts": []
+}

@@ -1,0 +1,6 @@
+{
+  "id": "equal-to-operator",
+  "name": "Equal-to operator",
+  "first": "Two equal signs between two values, which give true when the values are equal.",
+  "parts": []
+}

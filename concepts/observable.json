@@ -1,0 +1,95 @@
+{
+  "id": "observable",
+  "name": "Observable",
+  "area": "ui",
+  "first": "A class whose stored properties report each read and each change, so that SwiftUI runs again the body of each view that read a property that changed.",
+  "parts": ["observable-macro", "tracked-property", "body-dependency"],
+  "dependsOn": [
+    { "id": "class", "views": ["what", "parts"],
+      "why": "An observable type is a class, so every view that uses one instance sees the same values.",
+      "whyInExample": "The type `Trip` is a class, as `Counter` is, and `NightsLabel` holds a reference to the one `trip`." },
+    { "id": "macro", "views": ["what", "parts"],
+      "why": "A class becomes observable through a macro, which adds the code that reports each read and each change.",
+      "whyInExample": "The attribute `@Observable` is an attached macro, as `#function` on the page of Macro is a freestanding one." },
+    { "id": "view-update", "views": ["what", "parts"],
+      "why": "SwiftUI runs a body again only when a value that the body read changes, and an observable class reports which of its properties a body read.",
+      "whyInExample": "The body of `NightsLabel` reads `trip.nights`, as the body of `Counter` on the page of View update reads `taps`." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "@Observable",
+      "class Trip {",
+      "    var nights = 3",
+      "    var city = \"Lima\"",
+      "}",
+      "",
+      "struct NightsLabel: View {",
+      "    let trip: Trip",
+      "    var body: some View {",
+      "        let _ = print(\"body runs:\", trip.nights)",
+      "        Text(\"\\(trip.nights) nights\")",
+      "    }",
+      "}",
+      "",
+      "let trip = Trip()",
+      "let label = NightsLabel(trip: trip)",
+      "let renderer = ImageRenderer(content: label)",
+      "_ = renderer.cgImage",
+      "trip.city = \"Oslo\"",
+      "RunLoop.main.run(until: .now + 0.1)",
+      "trip.nights = 5",
+      "RunLoop.main.run(until: .now + 0.1)"
+    ],
+    "sil": [
+      { "in": "Trip.nights.getter", "has": "#Trip.access",
+        "shows": "The macro makes nights a computed property, whose getter reports each read by calling access(keyPath:) with a key path to nights." },
+      { "in": "Trip.nights.getter", "has": "#Trip._nights",
+        "shows": "The getter reads the value from _nights, a stored property that the macro adds." },
+      { "in": "Trip.nights.setter", "has": "#Trip.withMutation",
+        "shows": "The setter reports each change by calling withMutation(keyPath:_:), which makes the change." }
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "An observable class is a class marked with the macro `@Observable`. The macro makes each stored property report when code reads it and when code changes it. SwiftUI notes which properties each view's `body` read, and when one of those properties changes, it runs that `body` again.",
+      "marks": [
+        { "line": 3, "text": "@Observable", "part": "observable-macro", "label": "observable" },
+        { "line": 12, "text": "trip.nights", "part": "body-dependency", "label": "read by body" }
+      ],
+      "afterExample": "The `body` of `NightsLabel` reads `nights`, and never reads `city`. So line 21, which changes `city`, runs no `body`, and line 23, which changes `nights`, runs it again.",
+      "problem": "Data that several views share, such as a trip that a list and an editor both show, cannot be state, because state belongs to one view. A class can be shared, but SwiftUI has no way to see a change to a plain class. An observable class reports its changes, and SwiftUI updates only the views that read what changed.",
+      "how": "The macro turns each stored property into a computed property, and keeps the value in a stored property of its own. Its getter reports the read, with a key path to the property, and its setter reports the change. While SwiftUI runs a `body`, it collects the reads. When a property it collected changes, it runs that `body` again.",
+      "when": [
+        { "text": "Use it for the data of an app that several views read and change, such as a store of trips, on iOS 17 or later." },
+        { "text": "Don't use it for a value that only one view uses, such as whether a menu is open. A state property is simpler." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "observable-macro", "name": "The macro `@Observable`, line 3",
+          "text": "An attached macro written before the class. When swiftc builds the program, it adds code to `Trip`: a stored property that keeps the value of each property, and code that reports each read and each change." },
+        { "part": "tracked-property", "name": "The tracked properties, lines 5 and 6",
+          "text": "The properties `nights` and `city` are written as plain stored properties. The macro makes each one a computed property that reports each read and each change, and keeps its value in a stored property that the macro adds." },
+        { "part": "body-dependency", "name": "The read of `trip.nights`, line 12",
+          "text": "The `body` of `NightsLabel` reads `nights` on lines 12 and 13. Each read reports itself, so SwiftUI notes that this `body` depends on `nights` of this trip, and not on `city`." }
+      ],
+      "marks": [
+        { "line": 3, "text": "@Observable", "part": "observable-macro", "label": "macro" },
+        { "line": 5, "text": "var nights = 3", "part": "tracked-property", "label": "tracked" },
+        { "line": 6, "text": "var city = \"Lima\"", "part": "tracked-property", "label": "tracked" },
+        { "line": 12, "text": "trip.nights", "part": "body-dependency", "label": "read by body" },
+        { "line": 13, "text": "trip.nights", "part": "body-dependency", "label": "read by body" }
+      ],
+      "steps": [
+        { "text": "Line 17 makes a `Trip`, and line 18 makes a `NightsLabel` that holds a reference to it. Line 19 makes a renderer for the label.", "line": 17, "also": [18, 19] },
+        { "text": "Line 20 asks for the image, so SwiftUI runs the `body` of `NightsLabel`. Line 12 reads `trip.nights`, which reports the read, and prints {{body runs: 3}}.", "line": 12, "also": [20], "prints": ["body runs: 3"] },
+        { "text": "Line 21 changes `city`, which reports the change. No `body` read `city`, so SwiftUI has nothing to update. Line 22 runs the main run loop, the loop that does the work waiting on the main thread, for a tenth of a second, and no `body` runs.", "line": 21, "also": [22] },
+        { "text": "Line 23 changes `nights` to 5. The `body` of `NightsLabel` read `nights`, so SwiftUI marks that view to update.", "line": 23 },
+        { "text": "Line 24 runs the main run loop, where SwiftUI does its waiting updates. It runs the `body` again, and line 12 prints {{body runs: 5}}.", "line": 12, "also": [24], "prints": ["body runs: 5"] }
+      ],
+      "end": { "kind": "answer", "text": "The class reported each read and each change. SwiftUI ran the `body` again for the change to `nights`, which it read, and not for `city`." }
+    }
+  }
+}

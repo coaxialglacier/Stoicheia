@@ -1,0 +1,6 @@
+{
+  "id": "keyframe-start",
+  "name": "Initial value",
+  "first": "The value that a keyframe timeline starts at, at time 0, before its first keyframe.",
+  "parts": []
+}

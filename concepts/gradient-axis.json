@@ -1,0 +1,6 @@
+{
+  "id": "gradient-axis",
+  "name": "Start and end points",
+  "first": "The two places in a rectangle, such as its leading and trailing edges, between which a linear gradient changes its color.",
+  "parts": []
+}

@@ -1,0 +1,6 @@
+{
+  "id": "structural-identity",
+  "name": "Structural identity",
+  "first": "A view's place in its parent's body, such as the first view, or the view in the true branch of an if statement, by which SwiftUI matches a view in a new description with a view it already has.",
+  "parts": []
+}

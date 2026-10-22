@@ -1,0 +1,6 @@
+{
+  "id": "animatable-data",
+  "name": "Animatable data",
+  "first": "The property of a shape or a view that SwiftUI sets to each value between the old one and the new one during an animation, and which the shape's own values are read from and written to.",
+  "parts": []
+}

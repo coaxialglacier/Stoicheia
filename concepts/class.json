@@ -1,0 +1,74 @@
+{
+  "id": "class",
+  "name": "Class",
+  "area": "swift",
+  "first": "A type whose instances are heap objects, so that assigning an instance copies only its address, and every copy refers to the same instance.",
+  "parts": ["class-keyword", "stored-property", "reference", "identity-operator"],
+  "dependsOn": [
+    { "id": "structure", "views": ["what", "parts"],
+      "why": "A class groups values under one name, as a structure does, and differs in what assigning an instance copies.",
+      "whyInExample": "The class `Counter` groups one value, `count`, as `Trip` on the page of Structure groups `city` and `nights`." },
+    { "id": "heap-object", "views": ["what", "parts"],
+      "why": "Each instance of a class is a heap object, and a constant or variable of the class holds its address.",
+      "whyInExample": "The call `Counter()` makes a heap object, as `Score()` does on the page of Heap object." }
+  ],
+  "example": {
+    "code": [
+      "class Counter {",
+      "    var count = 0",
+      "}",
+      "",
+      "let first = Counter()",
+      "let second = first",
+      "second.count = 5",
+      "print(first.count)",
+      "print(first === second)"
+    ],
+    "sil": [
+      { "in": "Counter.__allocating_init()", "has": "alloc_ref $Counter",
+        "shows": "Line 5 calls the initializer of Counter, which makes the instance with alloc_ref, which takes memory on the heap." }
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A class is a type that groups values under one name, as a structure does. Each instance of a class is a heap object. A constant or variable of the class holds a reference to the instance, which is its address, so assigning the instance to another constant copies only the reference, and both refer to the same instance.",
+      "marks": [
+        { "line": 1, "text": "class", "part": "class-keyword", "label": "a class" },
+        { "line": 6, "text": "first", "part": "reference", "label": "copies the reference" }
+      ],
+      "afterExample": "Line 6 copies the reference in `first` into `second`, so both refer to one `Counter`. When line 7 sets `count` through `second`, `first` sees 5 as well.",
+      "problem": "Some data must be shared, so that a change made in one place is seen everywhere that uses it, such as the list of trips that several screens show. A structure is copied each time it is assigned, so each screen would change its own copy. Every reference to an instance of a class reaches the same instance.",
+      "how": "Calling a class's initializer makes the instance on the heap and returns its address. Assigning or passing the instance copies that address. Swift counts the references to each instance, and frees the instance's memory when no reference is left.",
+      "when": [
+        { "text": "Use a class for data that several parts of a program must share and change, such as a store of trips that several screens show." },
+        { "text": "Don't use a class for a small group of values that should be copied, such as the details of one trip. A structure is simpler, and a copy can never change another copy." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "class-keyword", "name": "The keyword `class`, line 1",
+          "text": "The keyword `class` declares a class. Its name, `Counter`, comes right after it, and its stored properties are between the braces on lines 1 and 3." },
+        { "part": "stored-property", "name": "The stored property `count`, line 2",
+          "text": "Every instance of `Counter` holds its own value of `count`, which starts at 0. A class has no memberwise initializer, so a stored property needs a first value, or an initializer of the class's own that sets it." },
+        { "part": "reference", "name": "The reference in `first`, line 6",
+          "text": "The constants `first` and `second` hold references, the address of an instance on the heap, not the instance. Line 6 copies the reference in `first`, so `second` refers to the same instance." },
+        { "part": "identity-operator", "name": "The identity operator, line 9",
+          "text": "Three equal signs compare two references. The result is true when both refer to the same instance, even if another instance has equal values." }
+      ],
+      "marks": [
+        { "line": 1, "text": "class", "part": "class-keyword", "label": "keyword" },
+        { "line": 2, "text": "var count = 0", "part": "stored-property", "label": "stored property" },
+        { "line": 6, "text": "first", "part": "reference", "label": "a reference" },
+        { "line": 9, "text": "===", "part": "identity-operator", "label": "same instance?" }
+      ],
+      "steps": [
+        { "text": "Line 5 calls the initializer of `Counter`. It makes an instance on the heap whose `count` is 0, and `first` holds a reference to it.", "line": 5, "also": [2] },
+        { "text": "Line 6 copies the reference in `first` into `second`. There is still one instance.", "line": 6 },
+        { "text": "Line 7 sets `count` of the instance that `second` refers to, to 5. It is the instance that `first` refers to, so `first.count` is 5 too.", "line": 7, "value": { "line": 7, "name": "first.count", "is": "5" } },
+        { "text": "Line 8 prints `count` through `first`: {{5}}.", "line": 8, "prints": ["5"] },
+        { "text": "Line 9 checks whether `first` and `second` refer to the same instance. They do, so it prints {{true}}.", "line": 9, "prints": ["true"] }
+      ],
+      "end": { "kind": "answer", "text": "Line 6 copied a reference, not the instance, so the change made through `second` is seen through `first`." }
+    }
+  }
+}

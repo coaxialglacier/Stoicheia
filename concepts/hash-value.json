@@ -1,0 +1,6 @@
+{
+  "id": "hash-value",
+  "name": "Hash value",
+  "first": "One integer that a hashable value is turned into, which is the same for every two equal values, and which a set or a dictionary uses to find where it keeps the value.",
+  "parts": []
+}

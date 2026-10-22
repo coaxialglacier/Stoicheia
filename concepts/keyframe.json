@@ -1,0 +1,6 @@
+{
+  "id": "keyframe",
+  "name": "Keyframe",
+  "first": "One stage of a keyframe animation: a value to reach, how long to take, starting where the stage before it ended, and how to get there, such as at a steady speed.",
+  "parts": []
+}

@@ -1,0 +1,63 @@
+{
+  "id": "localization",
+  "name": "Localization",
+  "area": "ui",
+  "first": "Showing an app's text, numbers, and prices in each user's language and region, from a catalog with a translation of each string, including its plural forms.",
+  "parts": ["inflection", "locale"],
+  "dependsOn": [
+    { "id": "text", "views": ["what"],
+      "why": "A text's string is a key that SwiftUI looks up in the app's translations.",
+      "whyInExample": "The view `Text(\"Lima\")` on the page of Text would look up Lima in the app's string catalog, as `AttributedString(localized:` looks up its string here." }
+  ],
+  "example": {
+    "code": [
+      "import Foundation",
+      "",
+      "for count in [1, 3] {",
+      "    let text = AttributedString(localized:",
+      "        \"^[\\(count) night](inflect: true)\")",
+      "    print(String(text.characters))",
+      "}",
+      "let german = Locale(identifier: \"de_DE\")",
+      "let price = 12.5.formatted(",
+      "    .currency(code: \"EUR\").locale(german)",
+      ")",
+      "print(price)"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "Localization is showing an app in each user's language and region. Each string that the user reads is a key, which the app looks up in its string catalog, a file with a translation of each string for each language, including the forms that a word takes for one, two, or many. Numbers, dates, and prices are written in the way of the user's region.",
+      "marks": [
+        { "line": 5, "text": "inflect: true", "part": "inflection", "label": "makes the words agree" },
+        { "line": 10, "text": "locale(german)", "part": "locale", "label": "in a region's way" }
+      ],
+      "afterExample": "The same string gives 1 night and 3 nights, because Foundation changes the noun to agree with the number. A price of 12.5 euros is written for Germany as 12,50 €, with a comma and the sign after the number.",
+      "problem": "Users read an app in their own language, and expect numbers and prices written the way their region writes them. Writing night and nights, or a dot and a comma, into the code only works for one language. A catalog of translations and formatting for each region make one app right for each user.",
+      "how": "Xcode collects the strings of an app into a string catalog, where each language gets its translation, and a plural form for each count where the language needs one. At run time, the app looks up each key in the user's language. For English, the inflection on line 5 makes the noun agree with the number without a catalog. A formatter writes a number for a locale, the language and the region it is for.",
+      "when": [
+        { "text": "Use it for every string the user reads, and format every number, date, and price for the user's locale, even in an app in one language, so the text is right when a language is added." },
+        { "text": "Don't build sentences by joining translated words. Word order and plural forms differ between languages, so translate whole sentences, with the numbers in them." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "inflection", "name": "The inflection, line 5",
+          "text": "The string marks `\\(count) night` with `inflect: true`. Foundation then changes the words in the brackets to agree with the number: night for 1, and nights for 3. The marks are not shown: only the words are." },
+        { "part": "locale", "name": "The locale `german`, line 8",
+          "text": "A locale names a language and a region, here German in Germany, `de_DE`. A formatter writes a number for it in the way of that region, such as a comma before the cents, and the euro sign after the number." }
+      ],
+      "marks": [
+        { "line": 5, "text": "inflect: true", "part": "inflection", "label": "inflection" },
+        { "line": 8, "text": "Locale(identifier: \"de_DE\")", "part": "locale", "label": "locale" }
+      ],
+      "steps": [
+        { "text": "The loop on line 3 runs first with 1. Lines 4 and 5 look up the string, and make the words in its brackets agree with 1. Line 6 prints {{1 night}}.", "line": 6, "also": [3, 4, 5], "prints": ["1 night"] },
+        { "text": "The loop runs again with 3. The noun now agrees with 3, and line 6 prints {{3 nights}}.", "line": 6, "also": [5], "prints": ["3 nights"] },
+        { "text": "Line 8 makes the locale of German in Germany. Lines 9 to 11 write 12.5 as a price in euros for that locale.", "line": 9, "also": [8, 10, 11] },
+        { "text": "Line 12 prints {{12,50 €}}: a comma before the cents, and the euro sign after the number, with a space that never breaks between them.", "line": 12, "prints": ["12,50 €"] }
+      ],
+      "end": { "kind": "answer", "text": "One string gave the right noun for each number, and one price was written in the way of the user's region." }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "id": "path-value",
+  "name": "Value of a path",
+  "first": "One hashable value in a navigation stack's path, which stands for one pushed screen, made by the destination for the value's type.",
+  "parts": []
+}

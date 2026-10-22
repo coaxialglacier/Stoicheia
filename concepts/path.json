@@ -1,0 +1,68 @@
+{
+  "id": "path",
+  "name": "Path",
+  "area": "ui",
+  "first": "The outline of a flat shape, made of lines and curves between points, which can be filled or stroked.",
+  "parts": ["move-to", "add-line", "close-subpath"],
+  "dependsOn": [
+    { "id": "view", "views": ["what"],
+      "why": "A path is also a view, so it can be shown on the screen, filled with a color or stroked with a line.",
+      "whyInExample": "The path `path` could be shown on the screen as `Greeting` is, because a path is a view." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "var path = Path()",
+      "path.move(to: CGPoint(x: 0, y: 0))",
+      "path.addLine(to: CGPoint(x: 40, y: 0))",
+      "path.addLine(to: CGPoint(x: 40, y: 30))",
+      "path.closeSubpath()",
+      "print(path.boundingRect)",
+      "print(path.contains(CGPoint(x: 30, y: 5)))",
+      "print(path.contains(CGPoint(x: 5, y: 25)))"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A `Path` is the outline of a flat shape, made of lines and curves between points. Code builds it one piece at a time: it moves to the point where the outline starts, adds lines or curves to the next points, and can close the outline with a line back to the start. Apple's documentation calls it the outline of a 2D shape.",
+      "marks": [
+        { "line": 4, "text": "move(to: CGPoint(x: 0, y: 0))", "part": "move-to", "label": "starts here" },
+        { "line": 5, "text": "addLine(to: CGPoint(x: 40, y: 0))", "part": "add-line", "label": "a line" },
+        { "line": 7, "text": "closeSubpath()", "part": "close-subpath", "label": "closes it" }
+      ],
+      "afterExample": "The path is a triangle with corners at (0, 0), (40, 0), and (40, 30). Its smallest bounding rectangle is 40 by 30, and the point (30, 5) is inside it, while (5, 25) is not.",
+      "problem": "Not every drawing is a rectangle or a circle, such as a pennant, a speech bubble, or the line of a chart. A path draws any outline from points, lines, and curves.",
+      "how": "Each call adds to the outline from the current point, the end of the last piece. In SwiftUI, x grows to the right and y grows down, from the top leading corner. A path is also a view, so it can be shown, filled with a color, or stroked with a line of a given width.",
+      "when": [
+        { "text": "Use a path for an outline made of points, such as a triangle or the line of a chart, and inside a shape, which draws its path at any size." },
+        { "text": "Don't use a path for a rectangle, a circle, or a capsule. SwiftUI has shapes for those, which already fit any size." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "move-to", "name": "The start, line 4",
+          "text": "The method `move(to:)` sets the point where the outline starts, here (0, 0), the top leading corner. It draws nothing by itself." },
+        { "part": "add-line", "name": "The lines, lines 5 and 6",
+          "text": "The method `addLine(to:)` adds a straight line from the current point to the point it is given, which becomes the current point. Line 5 draws along the top to (40, 0), and line 6 down to (40, 30)." },
+        { "part": "close-subpath", "name": "The close, line 7",
+          "text": "The method `closeSubpath()` adds a line from the current point back to the start, so the outline is closed and has an inside." }
+      ],
+      "marks": [
+        { "line": 4, "text": "move(to: CGPoint(x: 0, y: 0))", "part": "move-to", "label": "start" },
+        { "line": 5, "text": "addLine(to: CGPoint(x: 40, y: 0))", "part": "add-line", "label": "line" },
+        { "line": 6, "text": "addLine(to: CGPoint(x: 40, y: 30))", "part": "add-line", "label": "line" },
+        { "line": 7, "text": "closeSubpath()", "part": "close-subpath", "label": "close" }
+      ],
+      "steps": [
+        { "text": "Line 3 makes an empty path, and line 4 moves to (0, 0), where the outline starts.", "line": 4, "also": [3] },
+        { "text": "Line 5 adds a line along the top to (40, 0), and line 6 adds a line down to (40, 30).", "line": 5, "also": [6] },
+        { "text": "Line 7 closes the outline with a line back to (0, 0). The path is a triangle.", "line": 7 },
+        { "text": "Line 8 prints the smallest rectangle that holds the path: its corner at x 0 and y 0, 40 wide and 30 tall: {{(0.0, 0.0, 40.0, 30.0)}}.", "line": 8, "prints": ["(0.0, 0.0, 40.0, 30.0)"] },
+        { "text": "Line 9 asks whether the point (30, 5), near the top right, is inside the outline. It is: {{true}}.", "line": 9, "prints": ["true"] },
+        { "text": "Line 10 asks about (5, 25), near the bottom left, which is outside the triangle: {{false}}.", "line": 10, "prints": ["false"] }
+      ],
+      "end": { "kind": "answer", "text": "Three calls drew a triangle from its corners, and closing it gave the outline an inside that the path can be asked about." }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "id": "fetch-descriptor",
+  "name": "Fetch descriptor",
+  "first": "A description of which models to fetch, and in what order, which a model context fetches.",
+  "parts": []
+}

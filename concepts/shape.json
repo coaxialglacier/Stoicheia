@@ -1,0 +1,80 @@
+{
+  "id": "shape",
+  "name": "Shape",
+  "area": "ui",
+  "first": "A view that is an outline, such as a rectangle or a circle, which takes the whole size it is proposed and draws its outline to fit it.",
+  "parts": ["conformance", "path-in-rect"],
+  "dependsOn": [
+    { "id": "path", "views": ["what", "parts"],
+      "why": "A shape returns its outline as a path, built for the rectangle it is given.",
+      "whyInExample": "The method `path(in:)` builds a path with `move(to:)`, `addLine(to:)`, and `closeSubpath()`, as on the page of Path." },
+    { "id": "protocol", "views": ["what", "parts"],
+      "why": "A shape is a type that conforms to SwiftUI's shape protocol, which requires one method.",
+      "whyInExample": "The type `Pennant` conforms to `Shape` by having `path(in:)`, as `Friendly` conforms to `Greeter` by having `greet(name:)`." },
+    { "id": "layout-process", "views": ["what", "parts"],
+      "why": "A shape takes the whole size it is proposed in the steps of layout, and draws its outline in that size.",
+      "whyInExample": "The renderer proposes 60 by 30 to `Pennant`, as `filler` proposes 300 by 200 to a color on the page of Layout process." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct Pennant: Shape {",
+      "    func path(in rect: CGRect) -> Path {",
+      "        print(\"path(in:) gets\", rect.size)",
+      "        let end = rect.maxX",
+      "        let mid = rect.midY",
+      "        let bottom = rect.maxY",
+      "        var path = Path()",
+      "        path.move(to: CGPoint(x: 0, y: 0))",
+      "        path.addLine(to: CGPoint(x: end, y: mid))",
+      "        path.addLine(to: CGPoint(x: 0, y: bottom))",
+      "        path.closeSubpath()",
+      "        return path",
+      "    }",
+      "}",
+      "",
+      "let size = CGSize(width: 60, height: 30)",
+      "let renderer = ImageRenderer(content: Pennant())",
+      "renderer.proposedSize = ProposedViewSize(size)",
+      "let image = renderer.cgImage!",
+      "print(image.width, image.height)"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A shape is a type that conforms to the protocol `Shape`. Its one required method, `path(in:)`, returns its outline for the rectangle it is given, so the same shape can be drawn at any size. A shape is a view: it takes the whole size it is proposed, and SwiftUI draws its outline in that size.",
+      "marks": [
+        { "line": 3, "text": "Shape", "part": "conformance", "label": "a shape" },
+        { "line": 4, "text": "path(in rect: CGRect)", "part": "path-in-rect", "label": "its outline" }
+      ],
+      "afterExample": "The shape `Pennant` is a triangle pointing right, from the corners and the middle of the rectangle it gets. The renderer proposes 60 by 30, so SwiftUI gives `path(in:)` a rectangle of 60 by 30, and the pennant fills it.",
+      "problem": "A path has fixed points, so it has one size. A view must fit whatever room it gets, on every screen. A shape describes its outline from the rectangle it gets, so it fits any size.",
+      "how": "In the steps of layout, a shape chooses the whole size it is proposed. SwiftUI then calls `path(in:)` with a rectangle of that size, and draws the path it returns. Apple's documentation says that a shape with no fill or stroke of its own is filled with the foreground color.",
+      "when": [
+        { "text": "Use a shape for an outline that should fit any frame, such as a pennant, a badge, or a ticket with a notch." },
+        { "text": "Don't write a shape that SwiftUI already has, such as a rectangle, a rounded rectangle, a circle, or a capsule." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "conformance", "name": "The conformance to `Shape`, line 3",
+          "text": "The colon and the name `Shape` after `Pennant` say that `Pennant` conforms to the protocol `Shape`. Its one requirement is the method `path(in:)`, and with it, a `Pennant` is a view." },
+        { "part": "path-in-rect", "name": "The method `path(in:)`, lines 4 to 15",
+          "text": "The method gets `rect`, the rectangle that the shape is drawn in, and returns the outline for it. Lines 6 to 8 read the right edge, the middle, and the bottom of `rect`, and lines 9 to 13 build a triangle from them, so the triangle grows and shrinks with `rect`." }
+      ],
+      "marks": [
+        { "line": 3, "text": "Shape", "part": "conformance", "label": "conformance" },
+        { "line": 4, "text": "path(in rect: CGRect)", "part": "path-in-rect", "label": "outline method" }
+      ],
+      "steps": [
+        { "text": "Line 19 makes a `Pennant` and a renderer for it, and line 20 proposes 60 by 30, the size on line 18.", "line": 19, "also": [18, 20] },
+        { "text": "Line 21 asks for the image. In the steps of layout, the shape chooses the whole size it is proposed, 60 by 30.", "line": 21 },
+        { "text": "SwiftUI calls `path(in:)` with a rectangle of that size, and line 5 prints {{path(in:) gets (60.0, 30.0)}}.", "line": 5, "also": [4], "prints": ["path(in:) gets (60.0, 30.0)"] },
+        { "text": "Lines 6 to 14 build the triangle for that rectangle, to (60, 15) and (0, 30), and return it. SwiftUI fills it.", "line": 14, "also": [6, 7, 8, 11, 12] },
+        { "text": "Line 22 prints the size of the image, the size that the shape chose: {{60 30}}.", "line": 22, "prints": ["60 30"] }
+      ],
+      "end": { "kind": "answer", "text": "The shape took the size it was proposed, and `path(in:)` drew the pennant to fit that size." }
+    }
+  }
+}

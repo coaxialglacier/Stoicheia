@@ -1,0 +1,6 @@
+{
+  "id": "reload-policy",
+  "name": "Reload policy",
+  "first": "The part of a timeline that says when the system asks the widget for its next timeline, such as after the last entry's date.",
+  "parts": []
+}

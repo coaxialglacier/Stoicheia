@@ -1,0 +1,6 @@
+{
+  "id": "member-binding",
+  "name": "Binding to a property",
+  "first": "A property's name written after the projected value of a bindable property, which makes a binding to that property of the object.",
+  "parts": []
+}

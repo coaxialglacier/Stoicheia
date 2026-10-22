@@ -1,0 +1,6 @@
+{
+  "id": "root-view",
+  "name": "Root view",
+  "first": "The first screen of a navigation stack, written in its braces, which is always at the bottom of the stack and has no back button.",
+  "parts": []
+}

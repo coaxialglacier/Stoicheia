@@ -1,0 +1,45 @@
+{
+  "id": "accessibility",
+  "name": "Accessibility",
+  "area": "ui",
+  "first": "What assistive technologies, such as VoiceOver, read and do for each view, which SwiftUI makes from the views themselves, and which modifiers can change.",
+  "parts": ["accessibility-label", "accessibility-trait"],
+  "dependsOn": [
+    { "id": "view-modifier", "views": ["what"],
+      "why": "A view's accessibility is changed with modifiers.",
+      "whyInExample": "The call `accessibilityLabel` is a modifier of the star, as `padding(8)` is a modifier of `city`." },
+    { "id": "image", "views": ["what"],
+      "why": "An image of a symbol shows no words, so it needs a label for VoiceOver to read.",
+      "whyInExample": "The image `Image(systemName: \"star.fill\")` shows a symbol, as `Image(systemName: \"star\")` does on the page of Image." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "let star = Image(systemName: \"star.fill\")",
+      "    .accessibilityLabel(\"Favorite\")",
+      "    .accessibilityAddTraits(.isButton)",
+      "let nights = Text(\"3\")",
+      "    .accessibilityLabel(\"3 nights\")",
+      "print(type(of: star))",
+      "print(type(of: nights))"
+    ],
+    "output": ["ModifiedContent<Image, AccessibilityAttachmentModifier>", "Text"]
+  },
+  "views": {
+    "what": {
+      "is": "Accessibility is what assistive technologies, such as VoiceOver, which reads the screen aloud, read and do for each view. SwiftUI makes it from the views: a `Text` is read as its words, and a button is read as a button. Modifiers change it, such as `accessibilityLabel`, which says what VoiceOver reads, and `accessibilityAddTraits`, which says what kind of thing a view is.",
+      "marks": [
+        { "line": 4, "text": "accessibilityLabel(\"Favorite\")", "part": "accessibility-label", "label": "what VoiceOver reads" },
+        { "line": 5, "text": "accessibilityAddTraits(.isButton)", "part": "accessibility-trait", "label": "what kind of thing" }
+      ],
+      "afterExample": "VoiceOver would read the star as Favorite, a button, in place of the symbol's name, and the number 3 as 3 nights. A program with no screen reader prints the types: the image with a modifier that holds its accessibility, and a `Text`, whose label stays part of the text.",
+      "problem": "Many people use an iPhone without seeing the screen, or with larger text, or with a switch in place of touch. A symbol or a number alone can mean nothing when it is read aloud. Accessibility gives each view words and a kind, so that everyone can use the app.",
+      "how": "SwiftUI builds the accessibility of each view from what the view is: the words of a `Text`, the title of a button, and that a toggle is on or off. Apple's documentation says to give a label to a view that shows no text, such as an icon, and not to repeat in the label what a trait already says, such as the word button.",
+      "when": [
+        { "text": "Use a label for every view that shows no words, such as a symbol, and for words that mean little alone, such as a number without its unit." },
+        { "text": "Don't label a view whose words already say what it is, such as a `Text` of a city. SwiftUI already reads it, and a label that repeats it says it twice." }
+      ]
+    }
+  }
+}

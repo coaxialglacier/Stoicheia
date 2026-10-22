@@ -1,0 +1,70 @@
+{
+  "id": "canvas",
+  "name": "Canvas",
+  "area": "ui",
+  "first": "A view that draws shapes, images, and text with code, all in one view, in place of a view for each thing it draws.",
+  "parts": ["canvas-closure", "graphics-context"],
+  "dependsOn": [
+    { "id": "path", "views": ["what", "parts"],
+      "why": "A canvas draws paths, by filling or stroking them in its context.",
+      "whyInExample": "The constant `circle` is a path, as `path` is on the page of Path, and line 10 fills it." },
+    { "id": "layout-process", "views": ["parts"],
+      "why": "A canvas takes the whole size it is proposed in the steps of layout, and draws in that size.",
+      "whyInExample": "The renderer proposes 200 by 10 to `dots`, as `filler` proposes 300 by 200 to a color on the page of Layout process." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "let dots = Canvas { context, size in",
+      "    print(\"size\", size.width, size.height)",
+      "    let dot = CGSize(width: 10, height: 10)",
+      "    for n in 0..<4 {",
+      "        let spot = CGPoint(x: n * 50, y: 0)",
+      "        let box = CGRect(origin: spot, size: dot)",
+      "        let circle = Path(ellipseIn: box)",
+      "        context.fill(circle, with: .color(.blue))",
+      "        print(\"dot at\", n * 50)",
+      "    }",
+      "}",
+      "let size = CGSize(width: 200, height: 10)",
+      "let renderer = ImageRenderer(content: dots)",
+      "renderer.proposedSize = ProposedViewSize(size)",
+      "_ = renderer.cgImage"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A `Canvas` is a view that draws with code. It calls its closure with a graphics context, which draws paths, images, and text, and with the size of the canvas. Everything it draws is part of one view, not a view for each thing.",
+      "marks": [
+        { "line": 3, "text": "{ context, size in", "part": "canvas-closure", "label": "draws with code" },
+        { "line": 10, "text": "context.fill(circle, with: .color(.blue))", "part": "graphics-context", "label": "draws a circle" }
+      ],
+      "afterExample": "The canvas draws a row of four blue circles, one every 50 points, in the size it was given, 200 by 10. It is one view, with no view for each circle.",
+      "problem": "A drawing of many small pieces, such as the dots of a chart or the stars of a sky, would need a view for each piece, and SwiftUI does work for every view. A canvas draws all the pieces with code inside one view.",
+      "how": "Apple's documentation says that a canvas passes a graphics context to its closure, for drawing, and a size, for fitting the drawing. It also says that a canvas offers no taps and no accessibility for the pieces it draws, and can be faster for a complex drawing.",
+      "when": [
+        { "text": "Use a canvas for a drawing of many pieces that the user does not tap one by one, such as a chart, a pattern, or a graph." },
+        { "text": "Don't use a canvas for pieces that the user taps, or that VoiceOver must read, such as buttons. Views give each piece taps and accessibility, and a canvas does not." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "canvas-closure", "name": "The closure, lines 3 to 13",
+          "text": "The closure draws the canvas. Its parameter `size` is the size of the canvas, so the drawing can fit it, and its parameter `context` is the graphics context it draws in. SwiftUI calls it each time the canvas is drawn." },
+        { "part": "graphics-context", "name": "The graphics context `context`, line 10",
+          "text": "A graphics context has methods that draw, such as `fill(_:with:)`, which fills a path with a color. Each call draws on the canvas, on top of what was drawn before it." }
+      ],
+      "marks": [
+        { "line": 3, "text": "{ context, size in", "part": "canvas-closure", "label": "closure" },
+        { "line": 10, "text": "context.fill(circle, with: .color(.blue))", "part": "graphics-context", "label": "context" }
+      ],
+      "steps": [
+        { "text": "Line 3 makes a `Canvas`, with the closure that draws it. Nothing is drawn yet.", "line": 3 },
+        { "text": "Lines 14 to 16 make a renderer that proposes 200 by 10, and line 17 draws. The canvas takes the size proposed, and calls its closure with a context and that size. Line 4 prints {{size 200.0 10.0}}.", "line": 4, "also": [14, 15, 16, 17], "prints": ["size 200.0 10.0"] },
+        { "text": "The loop on line 6 runs 4 times. Each time, lines 7 to 9 make a circle 10 points wide, 50 points further right than the last, and line 10 fills it blue. Line 11 prints {{dot at 0}}, {{dot at 50}}, {{dot at 100}}, and {{dot at 150}}.", "line": 11, "also": [6, 7, 8, 9, 10], "prints": ["dot at 0", "dot at 50", "dot at 100", "dot at 150"] }
+      ],
+      "end": { "kind": "answer", "text": "The canvas drew four circles with code, inside one view, in the size it got." }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "id": "model-container-modifier",
+  "name": "Model container modifier",
+  "first": "The modifier that puts a model container, and a model context for it, in the environment of a view and every view inside it.",
+  "parts": []
+}

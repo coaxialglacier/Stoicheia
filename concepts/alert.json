@@ -1,0 +1,48 @@
+{
+  "id": "alert",
+  "name": "Alert",
+  "area": "ui",
+  "first": "A message with buttons that SwiftUI shows over the screen while a binding is true, which the user must answer before going on.",
+  "parts": ["sheet-binding", "alert-action"],
+  "dependsOn": [
+    { "id": "sheet", "views": ["what"],
+      "why": "An alert is presented from a binding to a value of true or false, as a sheet is.",
+      "whyInExample": "The argument `isPresented: $asking` presents the alert, as `isPresented: $editing` presents the sheet on the page of Sheet." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct Trash: View {",
+      "    @State private var asking = true",
+      "    var body: some View {",
+      "        Text(\"Lima\")",
+      "            .alert(\"Delete Lima?\",",
+      "                   isPresented: $asking) {",
+      "                Button(\"Delete\") {}",
+      "                Button(\"Cancel\", role: .cancel) {}",
+      "            }",
+      "    }",
+      "}",
+      "print(type(of: Trash().body))"
+    ],
+    "output": ["ModifiedContent<Text, AlertModifier<ModifiedContent<TupleView<(Button<Text>, Button<Text>)>, ActionsModifier>, EmptyView>>"]
+  },
+  "views": {
+    "what": {
+      "is": "An alert is a message with buttons that SwiftUI shows over the screen, and the user taps one of the buttons before going on. The modifier `alert` is given a title and a binding to a value of true or false, and shows the alert while the value is true. Each `Button` in its braces is one of the alert's buttons, with a title and code that runs when it is tapped.",
+      "marks": [
+        { "line": 8, "text": "isPresented: $asking", "part": "sheet-binding", "label": "shown while true" },
+        { "line": 9, "text": "Button(\"Delete\") {}", "part": "alert-action", "label": "an action" },
+        { "line": 10, "text": "Button(\"Cancel\", role: .cancel) {}", "part": "alert-action", "label": "the cancel action" }
+      ],
+      "afterExample": "The state `asking` starts true, so in an app the alert would ask Delete Lima?, with two buttons, Delete and Cancel. A program with no window shows no alert, so line 14 prints the type of the `body`: the `Text`, with a modifier that holds the two buttons.",
+      "problem": "Some moments need the user's answer before anything else happens, such as before deleting a trip that cannot be brought back. An alert stops the user, says what will happen, and offers a choice.",
+      "how": "Apple's documentation says that every button of an alert dismisses the alert after its code runs, and that the system then sets the binding to false. An alert with no buttons gets an OK button. An alert has no cancel button unless it is given a button whose role is `.cancel`, as on line 10.",
+      "when": [
+        { "text": "Use an alert for a short question that needs an answer now, such as whether to delete a trip, or to say that something failed." },
+        { "text": "Don't use an alert for a task that needs more than a choice, such as typing a name. A sheet can hold any view." }
+      ]
+    }
+  }
+}

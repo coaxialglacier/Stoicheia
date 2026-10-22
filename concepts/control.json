@@ -1,0 +1,68 @@
+{
+  "id": "control",
+  "name": "Control",
+  "area": "ui",
+  "first": "A view that the user changes or taps, such as a button, a toggle, a picker, or a slider, which reports each change through a binding or by calling a closure.",
+  "parts": ["control-label", "control-binding", "control-action"],
+  "dependsOn": [
+    { "id": "binding", "views": ["what", "parts"],
+      "why": "A control that changes a value is given a binding to it, and writes the new value through the binding.",
+      "whyInExample": "The value `$reminders` is a binding to the state `reminders`, as `$nights` is a binding to `nights` on the page of Binding." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct Settings: View {",
+      "    @State private var reminders = true",
+      "    var body: some View {",
+      "        let _ = print(\"reminders:\", reminders)",
+      "        Toggle(\"Reminders\", isOn: $reminders)",
+      "            .onAppear { reminders.toggle() }",
+      "        Button(\"Save\") { print(\"saved\") }",
+      "    }",
+      "}",
+      "_ = ImageRenderer(content: Settings()).cgImage"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A control is a view that the user changes or taps, such as a button, a toggle, a picker, a slider, or a menu. A control that changes a value, such as a `Toggle`, is given a binding to the value, and writes each new value through it. A `Button` is given a closure, which it calls each time the user taps it.",
+      "marks": [
+        { "line": 7, "text": "isOn: $reminders", "part": "control-binding", "label": "writes the value" },
+        { "line": 9, "text": "{ print(\"saved\") }", "part": "control-action", "label": "runs when tapped" }
+      ],
+      "afterExample": "The toggle shows whether reminders are on, and writes the new value to `reminders` when the user flips it. No one taps anything here, so line 8 changes the value, as the toggle would, and the `body` runs again. No one taps Save, so its closure never runs.",
+      "problem": "Every app takes input: a setting turned on, a choice from a list, a number of nights, a tap on Save. Controls are views that SwiftUI draws in the style of each platform, and each one gives the code what the user did.",
+      "how": "Apple's documentation says that a toggle is made with a binding and a label, and a button with an action and a label. A control that changes a value reads the value through its binding to draw itself, and writes the new value through the binding when the user changes it. The value is usually state, so the `body` that read it runs again.",
+      "when": [
+        { "text": "Use SwiftUI's controls for input: a `Toggle` for on or off, a `Button` for an action, and a picker, a slider, or a stepper for a choice or a number." },
+        { "text": "Don't make a control from a text that reacts to taps. A `Button` already has the platform's look, and VoiceOver reads it as a button." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "control-label", "name": "The labels, lines 7 and 9",
+          "text": "A control's first argument is its label, which says what it does: Reminders for the toggle, and Save for the button. The label can also be any view." },
+        { "part": "control-binding", "name": "The binding, line 7",
+          "text": "The argument `isOn` gives the toggle a binding to `reminders`. The toggle draws itself on or off from the value, and writes the opposite value when the user flips it." },
+        { "part": "control-action", "name": "The action, line 9",
+          "text": "The closure after `Button(\"Save\")` is the button's action. The button keeps no value: it calls this closure each time the user taps it." }
+      ],
+      "marks": [
+        { "line": 7, "text": "\"Reminders\"", "part": "control-label", "label": "label" },
+        { "line": 9, "text": "\"Save\"", "part": "control-label", "label": "label" },
+        { "line": 7, "text": "isOn: $reminders", "part": "control-binding", "label": "binding" },
+        { "line": 9, "text": "{ print(\"saved\") }", "part": "control-action", "label": "action" }
+      ],
+      "steps": [
+        { "text": "Line 12 makes a `Settings` and draws it. The state `reminders` starts true.", "line": 12, "also": [4] },
+        { "text": "The `body` runs, and line 6 prints {{reminders: true}}. The toggle reads the value through its binding, and is drawn on.", "line": 6, "also": [7], "prints": ["reminders: true"] },
+        { "text": "The toggle appears, and line 8 flips `reminders` to false, as the toggle does through its binding when the user taps it.", "line": 8 },
+        { "text": "The `body` read `reminders`, so it runs again, and line 6 prints {{reminders: false}}. The toggle is now drawn off.", "line": 6, "prints": ["reminders: false"] },
+        { "text": "No one taps the button on line 9, so its closure never runs, and the program never prints saved.", "line": 9 }
+      ],
+      "end": { "kind": "answer", "text": "The toggle read and wrote `reminders` through its binding, so the change ran the `body` again. The button would only call its closure when tapped." }
+    }
+  }
+}

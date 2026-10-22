@@ -1,0 +1,6 @@
+{
+  "id": "add-line",
+  "name": "Line of a path",
+  "first": "A straight line that a path adds from its current point to a new point, which becomes the current point.",
+  "parts": []
+}

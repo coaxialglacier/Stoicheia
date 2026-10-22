@@ -1,0 +1,6 @@
+{
+  "id": "gradient-colors",
+  "name": "Colors of a gradient",
+  "first": "The colors that a gradient goes through, in order, which it blends from one to the next.",
+  "parts": []
+}

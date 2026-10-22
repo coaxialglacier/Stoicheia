@@ -1,0 +1,6 @@
+{
+  "id": "make-ui-view",
+  "name": "Make method",
+  "first": "The method of a representable view that makes its UIKit view, which SwiftUI calls once and keeps the view it returns.",
+  "parts": []
+}

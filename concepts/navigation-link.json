@@ -1,0 +1,6 @@
+{
+  "id": "navigation-link",
+  "name": "Navigation link",
+  "first": "A button inside a navigation stack that pushes the screen for its value when the user taps it.",
+  "parts": []
+}

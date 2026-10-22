@@ -1,0 +1,78 @@
+{
+  "id": "animation",
+  "name": "Animation",
+  "area": "ui",
+  "first": "SwiftUI changing what a view shows smoothly over time, from its old values to its new ones, after a change of state.",
+  "parts": ["with-animation", "animation-curve"],
+  "dependsOn": [
+    { "id": "view-update", "views": ["what", "parts"],
+      "why": "An animated change is a change of state, which runs the body once with the new values, as any other change does.",
+      "whyInExample": "The property `moved` is state that the `body` of `Mover` read, as `taps` is on the page of View update." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "let curve = UnitCurve.easeInOut",
+      "let move = Animation",
+      "    .timingCurve(curve, duration: 1)",
+      "",
+      "struct Mover: View {",
+      "    @State private var moved = false",
+      "    var body: some View {",
+      "        let _ = print(\"body runs:\", moved)",
+      "        Color.blue",
+      "            .offset(x: moved ? 100 : 0)",
+      "            .onAppear {",
+      "                withAnimation(move) {",
+      "                    moved = true",
+      "                }",
+      "            }",
+      "    }",
+      "}",
+      "",
+      "_ = ImageRenderer(content: Mover()).cgImage",
+      "for time in [0.0, 0.25, 0.5, 0.75, 1.0] {",
+      "    let done = curve.value(at: time)",
+      "    print(time, (done * 100).rounded())",
+      "}"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "An animation is SwiftUI changing what a view shows smoothly over time, from its old values to its new ones, after a change of state. A change made inside `withAnimation` is animated. SwiftUI runs `body` once with the new values, and then moves what it draws from the old values to the new ones, over the animation's duration, along its curve.",
+      "marks": [
+        { "line": 14, "text": "withAnimation(move)", "part": "with-animation", "label": "animates the change" },
+        { "line": 5, "text": "timingCurve(curve, duration: 1)", "part": "animation-curve", "label": "how it moves" }
+      ],
+      "afterExample": "When `Mover` appears, line 15 moves it 100 points to the right, inside `withAnimation`. The `body` runs only once more. In an app, the color would then slide over one second, and lines 22 to 25 print where the curve puts it at each quarter of that second.",
+      "problem": "A view that moves to a new place or size at once is hard to follow: the user does not see what changed. An animation shows the change happening, so the user sees where a view went.",
+      "how": "Apple's documentation says that `withAnimation` sets its animation on the current transaction, the set of changes that SwiftUI makes in one update. SwiftUI animates each value that changed in that update, such as an offset, from its old value to its new one. The curve maps each moment of the duration to how far along the change is.",
+      "when": [
+        { "text": "Use it for changes the user should see happen, such as a card that moves, grows, or fades when it is chosen." },
+        { "text": "Don't animate every change. A screen whose views all move each time its data loads hides what changed." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "with-animation", "name": "The call `withAnimation(move)`, lines 14 to 16",
+          "text": "The function `withAnimation` runs its closure, and animates the changes that the closure makes, here `moved` becoming true, with the animation `move`." },
+        { "part": "animation-curve", "name": "The curve, lines 3 to 5",
+          "text": "The animation `move` lasts 1 second and follows the curve `.easeInOut`, which starts slowly, goes fastest in the middle, and ends slowly. The method `value(at:)` gives how far along the change is at a moment, from 0 to 1." }
+      ],
+      "marks": [
+        { "line": 14, "text": "withAnimation(move)", "part": "with-animation", "label": "animated change" },
+        { "line": 3, "text": "UnitCurve.easeInOut", "part": "animation-curve", "label": "curve" },
+        { "line": 5, "text": "timingCurve(curve, duration: 1)", "part": "animation-curve", "label": "animation" }
+      ],
+      "steps": [
+        { "text": "Line 3 gets the ease-in-out curve, and lines 4 and 5 make an animation of 1 second that follows it.", "line": 4, "also": [3, 5] },
+        { "text": "Line 21 draws a `Mover`. Its `body` runs, and line 10 prints {{body runs: false}}. The offset is 0.", "line": 10, "also": [21, 12], "prints": ["body runs: false"] },
+        { "text": "The color appears, and line 14 calls `withAnimation`. Its closure sets `moved` to true, with the animation `move`.", "line": 14, "also": [15] },
+        { "text": "The `body` read `moved`, so it runs once more, and line 10 prints {{body runs: true}}. The offset is now 100. The `body` does not run again for the moments in between.", "line": 10, "also": [12], "prints": ["body runs: true"] },
+        { "text": "Lines 22 to 25 ask the curve how far along the change is at each quarter of the second, and print where the color is then, in points: {{0.0 0.0}}, {{0.25 13.0}}, {{0.5 50.0}}, {{0.75 87.0}}, and {{1.0 100.0}}. It moves slowly at first, fastest in the middle, and slowly at the end.", "line": 24, "also": [22, 23], "prints": ["0.0 0.0", "0.25 13.0", "0.5 50.0", "0.75 87.0", "1.0 100.0"] }
+      ],
+      "end": { "kind": "answer", "text": "SwiftUI ran `body` once with the new offset. The animation's curve says where the color is at each moment between the old offset and the new one." }
+    }
+  }
+}

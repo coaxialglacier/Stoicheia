@@ -1,0 +1,113 @@
+{
+  "id": "model-context",
+  "name": "Model context",
+  "area": "ui",
+  "first": "The object that inserts, deletes, fetches, and saves SwiftData models, which a view reads from the environment.",
+  "parts": ["model-container", "fetch-descriptor"],
+  "dependsOn": [
+    { "id": "swiftdata-model", "views": ["what", "parts"],
+      "why": "A model context saves and fetches instances of SwiftData models.",
+      "whyInExample": "The class `Trip` is a model, as `Trip` is on the page of SwiftData model." },
+    { "id": "environment", "views": ["what"],
+      "why": "SwiftUI puts the model context in the environment, where a view reads it." },
+    { "id": "key-path", "views": ["parts"],
+      "why": "A fetch is sorted by a property, named with a key path.",
+      "whyInExample": "The value `\\Trip.city` is a key path to `city`, as `\\Trip.nights` is to `nights`." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftData",
+      "import Foundation",
+      "",
+      "@Model",
+      "class Trip {",
+      "    var city: String",
+      "    init(city: String) {",
+      "        self.city = city",
+      "    }",
+      "}",
+      "",
+      "let memory = ModelConfiguration(",
+      "    isStoredInMemoryOnly: true",
+      ")",
+      "let container = try ModelContainer(",
+      "    for: Trip.self, configurations: memory",
+      ")",
+      "let context = ModelContext(container)",
+      "context.insert(Trip(city: \"Oslo\"))",
+      "context.insert(Trip(city: \"Lima\"))",
+      "try context.save()",
+      "let order = [SortDescriptor(\\Trip.city)]",
+      "let request = FetchDescriptor<Trip>(sortBy: order)",
+      "let trips = try context.fetch(request)",
+      "print(trips.map(\\.city))",
+      "context.delete(trips[0])",
+      "try context.save()",
+      "print(try context.fetchCount(request))"
+    ]
+  },
+  "snippets": {
+    "environment": {
+      "code": [
+        "import SwiftUI",
+        "import SwiftData",
+        "",
+        "@Model",
+        "class Trip {",
+        "    var city: String",
+        "    init(city: String) {",
+        "        self.city = city",
+        "    }",
+        "}",
+        "",
+        "struct AddButton: View {",
+        "    @Environment(\\.modelContext) var context",
+        "    var body: some View {",
+        "        Button(\"Add\") {",
+        "            context.insert(Trip(city: \"Lima\"))",
+        "        }",
+        "    }",
+        "}",
+        "print(type(of: AddButton().body))"
+      ],
+      "output": ["Button<Text>"]
+    }
+  },
+  "views": {
+    "what": {
+      "is": "A model context is the object that changes and reads SwiftData models. Its method `insert` adds a model, `delete` removes one, `fetch` reads the models that a request asks for, and `save` writes the changes to the container's store. A model container says where the models are kept, such as a file on the device.",
+      "marks": [
+        { "line": 18, "text": "ModelContext(container)", "label": "a model context" },
+        { "line": 15, "text": "ModelContainer", "part": "model-container", "label": "where models are kept" },
+        { "line": 23, "text": "FetchDescriptor<Trip>(sortBy: order)", "part": "fetch-descriptor", "label": "which models to read" }
+      ],
+      "afterExample": "The context inserts two trips, saves them, and fetches them sorted by city: Lima and Oslo. Then it deletes Lima, saves again, and one trip is left. The container here keeps its models in memory only, so the example leaves no file behind.",
+      "problem": "An app must add, change, and remove saved data, and read it back in an order. A model context does all of that for SwiftData models, and keeps track of what changed, so that one call saves every change.",
+      "how": "The context keeps the models that were inserted, changed, or deleted since the last save. Calling `save` writes those changes to the container's store. Calling `fetch` reads the models that a fetch descriptor describes, in its order. In an app, SwiftUI puts the container's main context in the environment, and a view reads it from there.",
+      "when": [
+        { "text": "Use the context from the environment in a view that adds or deletes models, such as an Add button:", "snippet": "environment" },
+        { "text": "Don't fetch with the context to show models in a view. A query fetches them for the view, and updates the view when they change." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "model-container", "name": "The container, lines 12 to 17",
+          "text": "A `ModelContainer` sets up the store for the model types it is given, here `Trip`. The configuration `memory` keeps the store in memory only, so nothing is written to a file. Line 18 makes a context for the container." },
+        { "part": "fetch-descriptor", "name": "The fetch descriptor, lines 22 and 23",
+          "text": "A `FetchDescriptor` describes which models to fetch, and in what order. This one asks for every `Trip`, sorted by `city`, which the key path `\\Trip.city` names." }
+      ],
+      "marks": [
+        { "line": 15, "text": "ModelContainer", "part": "model-container", "label": "container" },
+        { "line": 23, "text": "FetchDescriptor<Trip>(sortBy: order)", "part": "fetch-descriptor", "label": "fetch descriptor" }
+      ],
+      "steps": [
+        { "text": "Lines 12 to 17 make a container for `Trip` that keeps its store in memory, and line 18 makes a context for it.", "line": 18, "also": [12, 15] },
+        { "text": "Lines 19 and 20 insert two trips into the context, and line 21 saves them to the store.", "line": 21, "also": [19, 20] },
+        { "text": "Lines 22 and 23 describe a fetch of every trip, sorted by city. Line 24 fetches them, and line 25 prints their cities: {{[\"Lima\", \"Oslo\"]}}.", "line": 25, "also": [22, 23, 24], "prints": ["[\"Lima\", \"Oslo\"]"] },
+        { "text": "Line 26 deletes the first trip, Lima, and line 27 saves the change.", "line": 26, "also": [27] },
+        { "text": "Line 28 counts the trips that the same request finds: {{1}}.", "line": 28, "prints": ["1"] }
+      ],
+      "end": { "kind": "answer", "text": "The context inserted, saved, fetched, and deleted the trips, and each save wrote its changes to the store." }
+    }
+  }
+}

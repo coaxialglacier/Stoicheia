@@ -1,0 +1,6 @@
+{
+  "id": "toolbar-placement",
+  "name": "Toolbar placement",
+  "first": "The value that says where a toolbar item goes, such as the place of a screen's main action, which each platform puts where its users expect it.",
+  "parts": []
+}

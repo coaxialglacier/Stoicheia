@@ -1,0 +1,76 @@
+{
+  "id": "transferable",
+  "name": "Transferable",
+  "area": "ui",
+  "first": "A protocol for a type whose values can be dragged, dropped, copied, or shared, because the type says how its values become data and how data becomes values again.",
+  "parts": ["conformance", "transfer-representation", "content-type"],
+  "dependsOn": [
+    { "id": "protocol", "views": ["what", "parts"],
+      "why": "Transferable is a protocol, whose one requirement lists how the type becomes data.",
+      "whyInExample": "The type `Trip` conforms to `Transferable` by having `transferRepresentation`, as `Friendly` conforms to `Greeter` by having `greet(name:)`." },
+    { "id": "async-function", "views": ["parts"],
+      "why": "Turning a value into data and back are async functions, so their calls are written with await.",
+      "whyInExample": "The call `try await trip.exported(as: .json)` waits for an async function, as `await makeTea(cups: 2)` does." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct Trip: Codable, Transferable {",
+      "    let city: String",
+      "    let nights: Int",
+      "    static var transferRepresentation:",
+      "        some TransferRepresentation {",
+      "        CodableRepresentation(contentType: .json)",
+      "    }",
+      "}",
+      "",
+      "let trip = Trip(city: \"Lima\", nights: 3)",
+      "let data = try await trip.exported(as: .json)",
+      "print(data.count, \"bytes of JSON\")",
+      "let copy = try await Trip(",
+      "    importing: data, contentType: .json",
+      ")",
+      "print(copy.city, copy.nights)"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A type that conforms to the protocol `Transferable` says how its values become data, and how data becomes values again, for each kind of data it supports, such as JSON or plain text. Apple's documentation says that the protocol describes how a type works with ways of moving data, such as drag and drop and copy and paste.",
+      "marks": [
+        { "line": 3, "text": "Transferable", "part": "conformance", "label": "transferable" },
+        { "line": 8, "text": "CodableRepresentation(contentType: .json)", "part": "transfer-representation", "label": "becomes JSON" }
+      ],
+      "afterExample": "A `Trip` becomes JSON and back. Line 13 turns `trip` into 26 bytes of JSON, as a drag of the trip would, and lines 15 to 17 make a new trip from those bytes, as the place it was dropped would.",
+      "problem": "To move a trip onto another view, or into another app, it must become data that the other side can read, labeled with what kind of data it is. A transferable type says that once, and drag and drop, copy and paste, and sharing all use it.",
+      "how": "The property `transferRepresentation` lists the type's representations. A `CodableRepresentation` uses the type's conformance to `Codable`, for which swiftc writes the code that turns a value into data and back. Apple's documentation says that when the other side recognizes several representations, the first one in the list is used.",
+      "when": [
+        { "text": "Use it for a type of your own that the user can drag, copy, or share, such as a trip." },
+        { "text": "Don't write it for strings, images, or web addresses. They are already transferable." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "conformance", "name": "The conformances, line 3",
+          "text": "The type `Trip` conforms to two protocols. For `Codable`, swiftc writes the code that turns a `Trip` into data, such as JSON, and back. The protocol `Transferable` requires one property, `transferRepresentation`." },
+        { "part": "transfer-representation", "name": "The property `transferRepresentation`, lines 6 to 9",
+          "text": "This static property lists how a `Trip` becomes data and back. Its type is an opaque type, `some TransferRepresentation`. It has one representation, a `CodableRepresentation`, which uses the code that swiftc wrote for `Codable`." },
+        { "part": "content-type", "name": "The content type `.json`, line 8",
+          "text": "A content type says what kind of data the bytes are, such as JSON, plain text, or a picture. The other side reads it to know whether it can use the data." }
+      ],
+      "marks": [
+        { "line": 3, "text": "Codable, Transferable", "part": "conformance", "label": "conformances" },
+        { "line": 6, "text": "transferRepresentation", "part": "transfer-representation", "label": "representation" },
+        { "line": 8, "text": ".json", "part": "content-type", "label": "content type" }
+      ],
+      "steps": [
+        { "text": "Line 12 makes a trip to Lima for 3 nights.", "line": 12 },
+        { "text": "Line 13 asks the trip for its data as JSON. The representation on line 8 has that content type, so it turns the trip into JSON.", "line": 13, "also": [8] },
+        { "text": "Line 14 prints how many bytes the data has: {{26 bytes of JSON}}.", "line": 14, "prints": ["26 bytes of JSON"] },
+        { "text": "Lines 15 to 17 make a new `Trip` from the data, which the same representation reads back from JSON.", "line": 15, "also": [16, 17] },
+        { "text": "Line 18 prints the values of the copy: {{Lima 3}}.", "line": 18, "prints": ["Lima 3"] }
+      ],
+      "end": { "kind": "answer", "text": "The trip became JSON, and the JSON became a trip with the same values, through the representation that `Trip` listed." }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "id": "graphics-context",
+  "name": "Graphics context",
+  "first": "The value that a canvas gives its closure to draw with, whose methods fill and stroke paths, and draw images and text.",
+  "parts": []
+}

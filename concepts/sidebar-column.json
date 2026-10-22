@@ -1,0 +1,6 @@
+{
+  "id": "sidebar-column",
+  "name": "Sidebar",
+  "first": "The leading column of a split view, which usually lists the items that the user chooses from.",
+  "parts": []
+}

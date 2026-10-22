@@ -1,0 +1,46 @@
+{
+  "id": "scene-storage",
+  "name": "Scene storage",
+  "area": "ui",
+  "first": "A property wrapper that saves a small value for one scene, so that when the system opens the scene again, it opens where the user left it.",
+  "parts": ["scene-storage-property", "storage-key"],
+  "dependsOn": [
+    { "id": "app-storage", "views": ["what"],
+      "why": "Scene storage keeps a value under a key, as app storage does, but for one scene, not for the whole app.",
+      "whyInExample": "The attribute `@SceneStorage(\"tab\")` keeps `tab` under the key tab, as `@AppStorage(\"nights\")` keeps `nights`." },
+    { "id": "scene", "views": ["what"],
+      "why": "Each scene has storage of its own, which the system saves and restores with the scene.",
+      "whyInExample": "In an app, `Tabs` would be inside a scene, such as the `WindowGroup` on the page of Scene." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct Tabs: View {",
+      "    @SceneStorage(\"tab\") private var tab = \"Trips\"",
+      "    var body: some View {",
+      "        let _ = print(\"tab:\", tab)",
+      "        Text(tab)",
+      "    }",
+      "}",
+      "_ = ImageRenderer(content: Tabs()).cgImage"
+    ],
+    "output": ["tab: Trips"]
+  },
+  "views": {
+    "what": {
+      "is": "A property marked `@SceneStorage` keeps a small value for the scene that its view is in, under a key. Apple's documentation says that it works much as state does, except that the system saves its value, and restores it as the first value when the scene opens again. Each scene has its own storage, so two windows of the same app can each keep their own value.",
+      "marks": [
+        { "line": 4, "text": "@SceneStorage(\"tab\") private var tab = \"Trips\"", "part": "scene-storage-property", "label": "kept for the scene" },
+        { "line": 4, "text": "\"tab\"", "part": "storage-key", "label": "its key" }
+      ],
+      "afterExample": "The view `Tabs` keeps which tab is shown, under the key tab. In an app, the system would restore the last tab when the scene opens again. This program has no scene, and nothing was saved, so the property has its first value, and line 6 prints {{tab: Trips}}.",
+      "problem": "When the system ends an app in the background, the user expects to come back to where they were, such as the same tab and the same trip. Scene storage saves those small values for each scene, and the system restores them.",
+      "how": "Apple's documentation says that the system saves and restores scene storage, makes no promise of when or how often it saves, and destroys the data when the scene is destroyed, such as when a window is closed on the Mac. It also says to keep the data small, and never to keep private data in it.",
+      "when": [
+        { "text": "Use it for where the user was in a scene, such as the chosen tab, or the trip that was open." },
+        { "text": "Don't use it for the app's data, or for settings that every scene shares. A SwiftData model saves data, and app storage keeps settings for the whole app." }
+      ]
+    }
+  }
+}

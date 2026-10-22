@@ -1,0 +1,6 @@
+{
+  "id": "feedback-trigger",
+  "name": "Trigger",
+  "first": "The value that a feedback modifier watches, which plays its feedback each time the value changes.",
+  "parts": []
+}

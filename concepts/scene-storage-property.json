@@ -1,0 +1,6 @@
+{
+  "id": "scene-storage-property",
+  "name": "Scene storage property",
+  "first": "A property of a view marked with the SceneStorage attribute and a key, whose value the system saves for the view's scene, and restores when the scene opens again.",
+  "parts": []
+}

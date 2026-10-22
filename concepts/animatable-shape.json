@@ -1,0 +1,89 @@
+{
+  "id": "animatable-shape",
+  "name": "Animatable shape",
+  "area": "ui",
+  "first": "A shape whose own values SwiftUI changes a little on each frame of an animation, because the shape says which of its values to animate.",
+  "parts": ["animatable-data"],
+  "dependsOn": [
+    { "id": "animation", "views": ["what", "parts"],
+      "why": "An animatable shape changes smoothly during an animation, from its old values to its new ones.",
+      "whyInExample": "A change of `width` made inside `withAnimation`, as `moved` is changed on the page of Animation, would animate the bar." },
+    { "id": "shape", "views": ["what", "parts"],
+      "why": "An animatable shape is a shape, which draws its outline again for each value.",
+      "whyInExample": "The type `Bar` conforms to `Shape` and has `path(in:)`, as `Pennant` does." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct Bar: Shape {",
+      "    var width: Double",
+      "    var animatableData: Double {",
+      "        get { width }",
+      "        set { width = newValue }",
+      "    }",
+      "    func path(in rect: CGRect) -> Path {",
+      "        var bar = rect",
+      "        bar.size.width = width",
+      "        return Path(bar)",
+      "    }",
+      "}",
+      "",
+      "let size = CGSize(width: 100, height: 10)",
+      "let frame = CGRect(origin: .zero, size: size)",
+      "var bar = Bar(width: 0)",
+      "for step in [0.0, 0.5, 1.0] {",
+      "    bar.animatableData = 100 * step",
+      "    print(bar.path(in: frame).boundingRect.width)",
+      "}"
+    ]
+  },
+  "snippets": {
+    "plain": {
+      "code": [
+        "import SwiftUI",
+        "",
+        "struct Bar: Shape {",
+        "    var width: Double",
+        "    func path(in rect: CGRect) -> Path {",
+        "        Path(rect)",
+        "    }",
+        "}",
+        "print(type(of: Bar(width: 0).animatableData))"
+      ],
+      "output": ["EmptyAnimatableData"]
+    }
+  },
+  "views": {
+    "what": {
+      "is": "An animatable shape is a shape whose own values SwiftUI changes a little at a time during an animation, so that its outline changes smoothly. The shape says which value to animate with its property `animatableData`. Apple's documentation says that SwiftUI reads the old and the new value of `animatableData`, and on each frame sets it to a value between them.",
+      "marks": [
+        { "line": 5, "text": "var animatableData: Double", "part": "animatable-data", "label": "the value to animate" }
+      ],
+      "afterExample": "The shape `Bar` animates its `width`. If a change of `width` from 0 to 100 were animated, SwiftUI would set `animatableData` to each value in between, frame by frame, and draw the path for each. Lines 19 to 22 do that by hand, for three frames.",
+      "problem": "SwiftUI knows how to change an offset or an opacity a little at a time. It cannot know which value of a shape of your own to change, such as the width of a bar in a chart, so without help the bar is drawn at its new width at once. The property `animatableData` tells SwiftUI which value to change.",
+      "how": "SwiftUI reads `animatableData` before and after the change, and works out the values between them for each frame of the animation. It calls the setter of `animatableData` with each one, which sets `width`, and then calls `path(in:)`, which draws the bar at that width.",
+      "when": [
+        { "text": "Use it for a shape of your own whose outline should change smoothly, such as a bar of a chart, or a ring that fills." },
+        { "text": "Don't leave it out of such a shape. Without it, the shape's animatable data is empty, so SwiftUI has nothing to change a little at a time, and the shape is drawn with its new outline at once:", "snippet": "plain" }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "animatable-data", "name": "The property `animatableData`, lines 5 to 8",
+          "text": "The property `animatableData` is the value that SwiftUI animates. Its getter returns `width`, and its setter sets `width`, so each value that SwiftUI sets during an animation becomes the bar's width. Its type is `Double`, a number that SwiftUI can work out values between." }
+      ],
+      "marks": [
+        { "line": 5, "text": "var animatableData: Double", "part": "animatable-data", "label": "animatable data" }
+      ],
+      "steps": [
+        { "text": "Lines 16 and 17 make a rectangle of 100 by 10, and line 18 makes a `Bar` whose `width` is 0.", "line": 18, "also": [16, 17] },
+        { "text": "The loop on line 19 takes three moments of an animation from 0 to 100: its start, its middle, and its end.", "line": 19 },
+        { "text": "At the start, line 20 sets `animatableData` to 0, whose setter sets `width` to 0. Line 21 draws the path and prints its width: {{0.0}}.", "line": 21, "also": [20, 7], "prints": ["0.0"] },
+        { "text": "In the middle, line 20 sets it to 50, and line 21 prints {{50.0}}.", "line": 21, "also": [20], "prints": ["50.0"] },
+        { "text": "At the end, line 20 sets it to 100, and line 21 prints {{100.0}}.", "line": 21, "also": [20], "prints": ["100.0"] }
+      ],
+      "end": { "kind": "answer", "text": "Each value set through `animatableData` became the bar's width, so the path grew a little with each frame." }
+    }
+  }
+}

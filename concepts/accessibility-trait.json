@@ -1,0 +1,6 @@
+{
+  "id": "accessibility-trait",
+  "name": "Accessibility trait",
+  "first": "What kind of thing a view is, such as a button, a header, or a picture, which VoiceOver reads after the label and uses to say how to use the view.",
+  "parts": []
+}

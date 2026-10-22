@@ -1,0 +1,101 @@
+{
+  "id": "task-modifier",
+  "name": "Task modifier",
+  "area": "ui",
+  "first": "A modifier that starts a task before its view appears, and cancels the task if the view is removed before the task ends.",
+  "parts": ["task-action"],
+  "dependsOn": [
+    { "id": "task", "views": ["what", "parts"],
+      "why": "The modifier runs its closure in a task, which can wait for async work while the view is on the screen.",
+      "whyInExample": "The closure on line 13 runs in a task, as the closure after `Task` does on the page of Task." },
+    { "id": "view-update", "views": ["parts"],
+      "why": "The task changes state when its work ends, which runs the body again with the new value.",
+      "whyInExample": "The property `report` is state that the `body` read, as `taps` is on the page of View update." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "func fetch() async -> String {",
+      "    try? await Task.sleep(for: .milliseconds(50))",
+      "    return \"sunny\"",
+      "}",
+      "",
+      "struct Weather: View {",
+      "    @State private var report = \"loading\"",
+      "    var body: some View {",
+      "        let _ = print(\"shows\", report)",
+      "        Text(report)",
+      "            .task { report = await fetch() }",
+      "    }",
+      "}",
+      "",
+      "let renderer = ImageRenderer(content: Weather())",
+      "_ = renderer.cgImage",
+      "RunLoop.main.run(until: .now + 0.3)",
+      "_ = renderer.cgImage"
+    ]
+  },
+  "snippets": {
+    "cancel": {
+      "code": [
+        "import SwiftUI",
+        "",
+        "func fetch() async -> String {",
+        "    try? await Task.sleep(for: .seconds(1))",
+        "    print(\"cancelled:\", Task.isCancelled)",
+        "    return \"sunny\"",
+        "}",
+        "",
+        "struct Weather: View {",
+        "    @State private var report = \"loading\"",
+        "    var body: some View {",
+        "        Text(report)",
+        "            .task { report = await fetch() }",
+        "    }",
+        "}",
+        "",
+        "let first = AnyView(Weather())",
+        "let renderer = ImageRenderer(content: first)",
+        "_ = renderer.cgImage",
+        "RunLoop.main.run(until: .now + 0.1)",
+        "renderer.content = AnyView(Text(\"Map\"))",
+        "_ = renderer.cgImage",
+        "RunLoop.main.run(until: .now + 0.3)"
+      ],
+      "output": ["cancelled: true"]
+    }
+  },
+  "views": {
+    "what": {
+      "is": "The modifier `task` starts a task before its view appears, and runs its async closure in that task. Apple's documentation says that the task's lifetime matches the view's: if the task has not finished when SwiftUI removes the view, or the view changes identity, SwiftUI cancels it.",
+      "marks": [
+        { "line": 13, "text": ".task { report = await fetch() }", "part": "task-action", "label": "runs while the view is there" }
+      ],
+      "afterExample": "The view `Weather` shows loading, and its task fetches the report. When `fetch()` returns, the task sets `report`, and the view shows sunny.",
+      "problem": "A screen often loads its data when it appears, such as the weather for a trip, and loading is async. A task started by hand would also need code to cancel it when the user leaves the screen. The task modifier starts the task and cancels it.",
+      "how": "The closure is async, so it can wait with `await`. When the data arrives, it changes state, which runs the `body` again with the data. If the view is removed first, SwiftUI cancels the task, and the async code it waits in can stop early.",
+      "when": [
+        { "text": "Use it to load a view's data when the view appears, such as a forecast, or the trips of a list." },
+        { "text": "Don't make a task by hand when the view appears, for this. That task is not cancelled when the view goes away, and goes on loading for a screen that is gone. With the modifier, when the view is replaced while its task waits, SwiftUI cancels the task:", "snippet": "cancel" }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "task-action", "name": "The task's closure, line 13",
+          "text": "The closure after `task` is async. It waits for `fetch()` with `await`, then sets `report` to the result. SwiftUI runs it in a new task before the `Text` appears." }
+      ],
+      "marks": [
+        { "line": 13, "text": "{ report = await fetch() }", "part": "task-action", "label": "task's closure" }
+      ],
+      "steps": [
+        { "text": "Line 17 makes a `Weather` and a renderer, and line 18 draws it. The state `report` starts as loading.", "line": 18, "also": [17, 9] },
+        { "text": "The `body` runs, and line 11 prints {{shows loading}}.", "line": 11, "prints": ["shows loading"] },
+        { "text": "Before the `Text` appears, SwiftUI starts a task that runs the closure on line 13. It calls `fetch()`, which suspends for 50 milliseconds on line 4.", "line": 13, "also": [4] },
+        { "text": "Line 19 runs the main run loop, the loop that does the work waiting on the main thread, for 0.3 seconds. In that time `fetch()` returns `\"sunny\"`, and line 13 sets `report` to it.", "line": 13, "also": [19, 5] },
+        { "text": "Line 20 draws again. The `body` read `report`, so it runs again, and line 11 prints {{shows sunny}}.", "line": 11, "also": [20], "prints": ["shows sunny"] }
+      ],
+      "end": { "kind": "answer", "text": "The task that the modifier started loaded the report while the view was on the screen, and the change to `report` showed it." }
+    }
+  }
+}

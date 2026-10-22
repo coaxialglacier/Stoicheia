@@ -1,0 +1,6 @@
+{
+  "id": "tab-selection",
+  "name": "Tab selection",
+  "first": "The binding that a tab view is given to the value of the chosen tab, which it reads to choose the tab it shows, and writes when the user taps a tab.",
+  "parts": []
+}

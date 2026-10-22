@@ -1,0 +1,6 @@
+{
+  "id": "path-in-rect",
+  "name": "Outline method",
+  "first": "The method that every shape must have, which gets the rectangle that the shape is drawn in and returns the shape's outline for it.",
+  "parts": []
+}

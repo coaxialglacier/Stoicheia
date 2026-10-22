@@ -1,0 +1,60 @@
+{
+  "id": "split-view",
+  "name": "Split view",
+  "area": "ui",
+  "first": "A view that shows a list and the details of the chosen item side by side when there is room, and collapses into one stack of screens when there is not.",
+  "parts": ["sidebar-column", "detail-column"],
+  "dependsOn": [
+    { "id": "navigation-stack", "views": ["what", "parts"],
+      "why": "On a narrow screen, a split view collapses its columns into one navigation stack.",
+      "whyInExample": "On an iPhone, the sidebar of `split` would be the root view of a stack, as `list` is on the page of Navigation stack." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "let split = NavigationSplitView {",
+      "    Text(\"Trips\")",
+      "        .onAppear { print(\"shows the sidebar\") }",
+      "} detail: {",
+      "    Text(\"Lima\")",
+      "        .onAppear { print(\"shows the detail\") }",
+      "}",
+      "_ = ImageRenderer(content: split).cgImage"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A `NavigationSplitView` is a view that shows two or three columns side by side: a sidebar, which usually lists items, and a detail column, which shows the item the user chose. Apple's documentation says that at narrow sizes, such as on an iPhone, it collapses its columns into one stack of screens.",
+      "marks": [
+        { "line": 4, "text": "Text(\"Trips\")", "part": "sidebar-column", "label": "the sidebar" },
+        { "line": 7, "text": "Text(\"Lima\")", "part": "detail-column", "label": "the detail" }
+      ],
+      "afterExample": "This program runs on a Mac, where there is room for both columns, so the split view shows the sidebar and the detail side by side.",
+      "problem": "On an iPad or a Mac, a list and the details of one item fit side by side, and the user picks items without leaving the list. On an iPhone they do not fit. A split view is written once, and shows columns where there is room and a stack of screens where there is not.",
+      "how": "Apple's documentation says that people choose an item in a leading column to show its details in the following columns. At narrow sizes, the split view collapses all its columns into a stack, and shows the last column that has something useful to show.",
+      "when": [
+        { "text": "Use it for the main screen of an app that lists items and shows one in detail, when the app runs on an iPad or a Mac as well as an iPhone." },
+        { "text": "Don't use it for an app that only runs on an iPhone. There it is always one stack, and a navigation stack is simpler." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "sidebar-column", "name": "The sidebar, lines 3 to 6",
+          "text": "The first braces after `NavigationSplitView` hold the sidebar, the leading column. Here it is a `Text`, Trips. In an app it is usually a list of the items the user chooses from." },
+        { "part": "detail-column", "name": "The detail, lines 6 to 9",
+          "text": "The braces after the argument label `detail:` hold the detail column, the trailing column, which shows the chosen item. Here it is a `Text`, Lima." }
+      ],
+      "marks": [
+        { "line": 4, "text": "Text(\"Trips\")", "part": "sidebar-column", "label": "sidebar" },
+        { "line": 6, "text": "detail:", "part": "detail-column", "label": "detail" }
+      ],
+      "steps": [
+        { "text": "Line 3 makes a split view with two columns: the sidebar, in its first braces, and the detail, after `detail:`.", "line": 3, "also": [6] },
+        { "text": "Line 10 makes a renderer and draws the split view. There is room for both columns, so it shows both. The sidebar appears, and line 5 prints {{shows the sidebar}}.", "line": 5, "also": [10], "prints": ["shows the sidebar"] },
+        { "text": "The detail appears beside it, and line 8 prints {{shows the detail}}.", "line": 8, "prints": ["shows the detail"] }
+      ],
+      "end": { "kind": "answer", "text": "With room for both, the split view showed the sidebar and the detail side by side." }
+    }
+  }
+}

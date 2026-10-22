@@ -1,0 +1,6 @@
+{
+  "id": "search-text",
+  "name": "Search text",
+  "first": "The string that holds what the user typed in a search field, usually state of the view, which the view filters its data with.",
+  "parts": []
+}

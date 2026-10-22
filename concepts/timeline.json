@@ -1,0 +1,6 @@
+{
+  "id": "timeline",
+  "name": "Timeline",
+  "first": "The list of entries that a widget gives the system ahead of time, in the order of their dates, with a policy for when to ask for the next list.",
+  "parts": []
+}

@@ -1,0 +1,6 @@
+{
+  "id": "updating-callback",
+  "name": "Updating closure",
+  "first": "The closure that a gesture is given with a binding to a gesture state property, which sets that property from the gesture's value each time the gesture changes.",
+  "parts": []
+}

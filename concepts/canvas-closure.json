@@ -1,0 +1,6 @@
+{
+  "id": "canvas-closure",
+  "name": "Drawing closure",
+  "first": "The closure of a canvas, which SwiftUI calls each time it draws the canvas, with a graphics context to draw in and the size of the canvas.",
+  "parts": []
+}

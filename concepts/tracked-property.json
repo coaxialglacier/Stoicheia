@@ -1,0 +1,6 @@
+{
+  "id": "tracked-property",
+  "name": "Tracked property",
+  "first": "A stored property of an observable class, which the macro turns into a computed property that reports each read and each change, and whose value it keeps in a stored property of its own.",
+  "parts": []
+}

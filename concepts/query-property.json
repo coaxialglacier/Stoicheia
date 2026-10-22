@@ -1,0 +1,6 @@
+{
+  "id": "query-property",
+  "name": "Query property",
+  "first": "A property of a view marked with the Query attribute, whose value is the array of models that the query fetched, in the order it is given.",
+  "parts": []
+}

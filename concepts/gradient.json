@@ -1,0 +1,68 @@
+{
+  "id": "gradient",
+  "name": "Gradient",
+  "area": "ui",
+  "first": "A fill whose color changes smoothly between two or more colors, along a line, around a center, or out from a center.",
+  "parts": ["gradient-colors", "gradient-axis"],
+  "dependsOn": [
+    { "id": "shape", "views": ["what", "parts"],
+      "why": "A gradient fills a shape, as a color does, and is also a view that takes the whole size it is proposed.",
+      "whyInExample": "The gradient `fade` takes the whole size it is proposed, 101 by 1, as `Pennant` takes 60 by 30 on the page of Shape." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "let fade = LinearGradient(",
+      "    colors: [.black, .white],",
+      "    startPoint: .leading,",
+      "    endPoint: .trailing",
+      ")",
+      "let size = CGSize(width: 101, height: 1)",
+      "let renderer = ImageRenderer(content: fade)",
+      "renderer.proposedSize = ProposedViewSize(size)",
+      "let image = renderer.cgImage!",
+      "let pixels = image.dataProvider!.data! as Data",
+      "for x in [0, 25, 50, 75, 100] {",
+      "    print(x, pixels[x * 4])",
+      "}"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A gradient is a fill whose color changes smoothly from one color to the next. A `LinearGradient` changes along a line, from its start point to its end point. A radial gradient changes out from a center, and an angular gradient changes around a center. A gradient fills a shape, as a color does, or is shown as a view of its own.",
+      "marks": [
+        { "line": 4, "text": "[.black, .white]", "part": "gradient-colors", "label": "its colors" },
+        { "line": 5, "text": "startPoint: .leading", "part": "gradient-axis", "label": "from" },
+        { "line": 6, "text": "endPoint: .trailing", "part": "gradient-axis", "label": "to" }
+      ],
+      "afterExample": "The gradient goes from black at the leading edge to white at the trailing edge. Drawn as a row of 101 pixels, each pixel is lighter than the one before it, from 0, black, to 254, almost white.",
+      "problem": "A flat color can look plain on a large area, such as the header of a trip or the background of a card. A gradient changes the color across the area, in a direction that the code chooses, and SwiftUI draws it at any size.",
+      "how": "Apple's documentation says that a linear gradient applies its colors along an axis, set by its start and end points, and maps that axis into the rectangle of each shape it fills. The points are given as places in the rectangle, such as `.leading` and `.trailing`, so the gradient fits any size.",
+      "when": [
+        { "text": "Use a gradient for the background of a large area, such as a header or a card, or to fade content into a background." },
+        { "text": "Don't put text on a gradient whose colors are both near the color of the text. Some of the text would be hard to read." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "gradient-colors", "name": "The colors, line 4",
+          "text": "The argument `colors` lists the colors that the gradient goes through, in order, here black and then white. More colors make more changes along the way." },
+        { "part": "gradient-axis", "name": "The start and end points, lines 5 and 6",
+          "text": "The start point `.leading` and the end point `.trailing` set the line that the color changes along: from the middle of the leading edge to the middle of the trailing edge, so the color changes from left to right." }
+      ],
+      "marks": [
+        { "line": 4, "text": "[.black, .white]", "part": "gradient-colors", "label": "colors" },
+        { "line": 5, "text": "startPoint: .leading", "part": "gradient-axis", "label": "start" },
+        { "line": 6, "text": "endPoint: .trailing", "part": "gradient-axis", "label": "end" }
+      ],
+      "steps": [
+        { "text": "Lines 3 to 7 make a linear gradient from black, at the leading edge, to white, at the trailing edge.", "line": 3, "also": [4, 5, 6, 7] },
+        { "text": "Lines 8 to 10 make a renderer that proposes 101 by 1, one row of 101 pixels, and line 11 draws the gradient in it.", "line": 11, "also": [8, 9, 10] },
+        { "text": "Line 12 reads the bytes of the image. Each pixel has 4 bytes, for its red, green, blue, and opacity, each from 0 for none to 255 for full. In a gray, the red, green, and blue are equal.", "line": 12 },
+        { "text": "Lines 13 to 15 print the red byte of 5 pixels across the row: {{0 0}}, {{25 34}}, {{50 100}}, {{75 172}}, and {{100 254}}. Each one is lighter than the one before it.", "line": 14, "also": [13], "prints": ["0 0", "25 34", "50 100", "75 172", "100 254"] }
+      ],
+      "end": { "kind": "answer", "text": "The gradient filled the whole row, and changed from black to almost white along the line from its start point to its end point." }
+    }
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "id": "bindable",
+  "name": "Bindable",
+  "area": "ui",
+  "first": "A property wrapper for a view's property that holds an observable class, which makes a binding to any property of that class.",
+  "parts": ["bindable-property", "dollar-sign", "member-binding"],
+  "dependsOn": [
+    { "id": "observable", "views": ["what", "parts"],
+      "why": "A bindable property holds an observable class, and its bindings read and write that class's properties.",
+      "whyInExample": "The class `Trip` is observable, as `Trip` is on the page of Observable." },
+    { "id": "binding", "views": ["what", "parts"],
+      "why": "A bindable property makes bindings, which a view passes to another view that changes the value.",
+      "whyInExample": "The property `count` in `Adder` is a binding, as `nights` in `NightsEditor` is on the page of Binding." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "@Observable",
+      "class Trip {",
+      "    var nights = 3",
+      "}",
+      "",
+      "struct Adder: View {",
+      "    @Binding var count: Int",
+      "    var body: some View {",
+      "        Text(\"\\(count)\")",
+      "            .onAppear { count += 1 }",
+      "    }",
+      "}",
+      "",
+      "struct TripEditor: View {",
+      "    @Bindable var trip: Trip",
+      "    var body: some View {",
+      "        Adder(count: $trip.nights)",
+      "    }",
+      "}",
+      "",
+      "let trip = Trip()",
+      "let editor = TripEditor(trip: trip)",
+      "let renderer = ImageRenderer(content: editor)",
+      "_ = renderer.cgImage",
+      "print(trip.nights)"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A bindable property is a property of a view marked `@Bindable`, which holds an observable class. A dollar sign before it and a property's name after it, as `$trip.nights`, make a binding to that property of the object.",
+      "marks": [
+        { "line": 17, "text": "@Bindable var trip: Trip", "part": "bindable-property", "label": "bindable" },
+        { "line": 19, "text": "$trip.nights", "label": "a binding to nights" }
+      ],
+      "afterExample": "The view `Adder` changes a number through a binding. The view `TripEditor` gives it a binding to `nights` of the trip, so when `Adder` adds 1, the trip's `nights` becomes 4, as line 27 prints.",
+      "problem": "Controls and editors take a binding for the value they change. A state property gives a binding with a dollar sign, but a view that is given an observable class holds it in a plain property, which gives no binding. A bindable property gives a binding to each property of the class.",
+      "how": "The type `Bindable` is a property wrapper that SwiftUI provides. Its projected value, read with `$trip`, makes a binding for the property named after it. Reading that binding reads `nights` of the trip, and writing it sets `nights`, which the observable class reports as any other change.",
+      "when": [
+        { "text": "Use it in a view that is given an observable class and must pass a binding to one of its properties, such as to an editor or a control." },
+        { "text": "Don't use it in a view that only reads the object. A plain property is enough there, because reading the object's properties needs no binding." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "bindable-property", "name": "The bindable property `trip`, line 17",
+          "text": "The attribute `@Bindable` makes `trip` a wrapped property of `Bindable`, a property wrapper that SwiftUI provides. Its wrapped value is the `Trip` that line 24 passes in." },
+        { "part": "dollar-sign", "name": "The dollar sign, in `$trip`, line 19",
+          "text": "A dollar sign before `trip` reads the projected value of `Bindable`, which can make a binding to each property of the trip." },
+        { "part": "member-binding", "name": "The property `nights`, after `$trip`, line 19",
+          "text": "The name `nights` after `$trip` makes a binding to `nights` of the trip. Line 19 passes it to `count` of `Adder`." }
+      ],
+      "marks": [
+        { "line": 17, "text": "@Bindable var trip: Trip", "part": "bindable-property", "label": "bindable" },
+        { "line": 19, "text": "$", "part": "dollar-sign", "label": "projected value" },
+        { "line": 19, "text": ".nights", "part": "member-binding", "label": "binding to nights" }
+      ],
+      "steps": [
+        { "text": "Line 23 makes a `Trip`, whose `nights` is 3. Line 24 makes a `TripEditor` with it, and line 25 makes a renderer.", "line": 23, "also": [24, 25] },
+        { "text": "Line 26 asks for the image, so SwiftUI runs the `body` of `TripEditor`. Line 19 makes a binding to `nights` of the trip, and gives it to an `Adder`.", "line": 19, "also": [26] },
+        { "text": "The `Text` of `Adder` appears, so SwiftUI calls the closure of `onAppear`, which adds 1 to `count`. Writing the binding sets `nights` of the trip to 4.", "line": 12, "also": [9] },
+        { "text": "Line 27 prints `nights` of the trip: {{4}}.", "line": 27, "prints": ["4"] }
+      ],
+      "end": { "kind": "answer", "text": "The binding that `$trip.nights` made wrote to the trip itself, so the trip's `nights` changed." }
+    }
+  }
+}

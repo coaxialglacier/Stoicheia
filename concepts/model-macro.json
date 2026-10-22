@@ -1,0 +1,6 @@
+{
+  "id": "model-macro",
+  "name": "Model macro",
+  "first": "The attached macro written before a class that makes it a SwiftData model, by adding backing data for its values and the code that saving needs.",
+  "parts": []
+}

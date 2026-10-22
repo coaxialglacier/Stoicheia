@@ -1,0 +1,6 @@
+{
+  "id": "style-body",
+  "name": "Style body",
+  "first": "The method of a button style that gets one button's configuration and returns the view that the button is drawn as.",
+  "parts": []
+}

@@ -1,0 +1,84 @@
+{
+  "id": "observable-object",
+  "name": "Observable object",
+  "area": "ui",
+  "first": "How a class told SwiftUI that it changed before iOS 17: it sent one signal before any of its published properties changed, and every view that observed it ran its body again.",
+  "parts": ["conformance", "published-property", "observed-object-property"],
+  "dependsOn": [
+    { "id": "observable", "views": ["what", "parts"],
+      "why": "An observable object does what an observable class does, in the way it was done before iOS 17, and updates more views.",
+      "whyInExample": "This is the example of the page of Observable, with `ObservableObject` and `@Published` in place of the macro `@Observable`." },
+    { "id": "property-wrapper", "views": ["parts"],
+      "why": "A published property and an observed object are wrapped properties of property wrappers.",
+      "whyInExample": "The attributes `@Published` and `@ObservedObject` name property wrappers, as `@AtMostTen` is." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "class Trip: ObservableObject {",
+      "    @Published var nights = 3",
+      "    @Published var city = \"Lima\"",
+      "}",
+      "",
+      "struct NightsLabel: View {",
+      "    @ObservedObject var trip: Trip",
+      "    var body: some View {",
+      "        let _ = print(\"body runs:\", trip.nights)",
+      "        Text(\"\\(trip.nights) nights\")",
+      "    }",
+      "}",
+      "",
+      "let trip = Trip()",
+      "let label = NightsLabel(trip: trip)",
+      "let renderer = ImageRenderer(content: label)",
+      "_ = renderer.cgImage",
+      "trip.city = \"Oslo\"",
+      "RunLoop.main.run(until: .now + 0.1)",
+      "trip.nights = 5",
+      "RunLoop.main.run(until: .now + 0.1)"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "An observable object is a class that conforms to the protocol `ObservableObject`. Before iOS 17, it was how a class told SwiftUI that it changed. Setting a property marked `@Published` makes the object send one signal, and a view that holds the object with `@ObservedObject` runs its `body` again after each signal, whichever property changed.",
+      "marks": [
+        { "line": 3, "text": "ObservableObject", "part": "conformance", "label": "observable object" },
+        { "line": 4, "text": "@Published", "part": "published-property", "label": "sends the signal" },
+        { "line": 9, "text": "@ObservedObject", "part": "observed-object-property", "label": "gets the signal" }
+      ],
+      "afterExample": "The `body` of `NightsLabel` reads only `nights`. Line 20 changes `city`, and the `body` still runs again, because the object sends the same signal for every change.",
+      "problem": "SwiftUI must know when a shared class changes. Before iOS 17, which added observable classes, a class told it with this protocol. Much code written before then still uses it, so a Swift developer still meets it.",
+      "how": "Apple's documentation says that an observable object has a publisher that sends a signal before any of its published properties changes. A publisher is a value that sends signals to the code that subscribes to it. The attribute `@ObservedObject` subscribes the view, and SwiftUI runs its `body` again after each signal. The signal does not say which property changed.",
+      "when": [
+        { "text": "Use it in an app that must run on iOS 16 or earlier, and expect it in code written before iOS 17." },
+        { "text": "Don't use it in new code for iOS 17 or later. An observable class updates only the views that read the property that changed, where an observable object updates every view that observes it." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "conformance", "name": "The conformance to `ObservableObject`, line 3",
+          "text": "The colon and the name `ObservableObject` after `Trip` say that `Trip` conforms to the protocol `ObservableObject`. Apple's documentation says the protocol gives each instance a publisher that sends a signal before any of its published properties changes, so `Trip` needs no code of its own for it." },
+        { "part": "published-property", "name": "The published properties, lines 4 and 5",
+          "text": "The attribute `@Published` makes `nights` and `city` wrapped properties of `Published`, a property wrapper. Setting either one makes the object send its signal, before the new value is stored. The signal is the same for both." },
+        { "part": "observed-object-property", "name": "The observed object `trip`, line 9",
+          "text": "The attribute `@ObservedObject` makes `trip` a wrapped property of `ObservedObject`, a property wrapper that SwiftUI provides. SwiftUI subscribes the view to the signal of the object it holds, and runs its `body` again after each signal." }
+      ],
+      "marks": [
+        { "line": 3, "text": "ObservableObject", "part": "conformance", "label": "conformance" },
+        { "line": 4, "text": "@Published", "part": "published-property", "label": "published" },
+        { "line": 5, "text": "@Published", "part": "published-property", "label": "published" },
+        { "line": 9, "text": "@ObservedObject", "part": "observed-object-property", "label": "observed object" }
+      ],
+      "steps": [
+        { "text": "Line 16 makes a `Trip`, line 17 makes a `NightsLabel` that observes it, and line 18 makes a renderer for the label.", "line": 16, "also": [17, 18] },
+        { "text": "Line 19 asks for the image, so SwiftUI runs the `body` of `NightsLabel`, and line 11 prints {{body runs: 3}}.", "line": 11, "also": [19], "prints": ["body runs: 3"] },
+        { "text": "Line 20 changes `city`. Its property wrapper makes the object send its signal, before the change.", "line": 20, "also": [5] },
+        { "text": "Line 21 runs the main run loop, the loop that does the work waiting on the main thread. SwiftUI got the signal, which does not say which property changed, so it runs the `body` again, though the `body` never read `city`. Line 11 prints {{body runs: 3}}.", "line": 11, "also": [21], "prints": ["body runs: 3"] },
+        { "text": "Line 22 changes `nights` to 5, which sends the same signal.", "line": 22, "also": [4] },
+        { "text": "Line 23 runs the main run loop, and SwiftUI runs the `body` again. Line 11 prints {{body runs: 5}}.", "line": 11, "also": [23], "prints": ["body runs: 5"] }
+      ],
+      "end": { "kind": "answer", "text": "The object sent the same signal for each change, so SwiftUI ran the `body` again for `city` as well as for `nights`." }
+    }
+  }
+}

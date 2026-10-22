@@ -1,0 +1,44 @@
+{
+  "id": "list",
+  "name": "List",
+  "area": "ui",
+  "first": "A view that shows rows of data in one scrolling column, grouped in sections, whose rows the user can select, swipe, and delete.",
+  "parts": ["list-row", "list-section"],
+  "dependsOn": [
+    { "id": "for-each", "views": ["what"],
+      "why": "The rows of a list are usually made by a ForEach, one row for each item of data.",
+      "whyInExample": "The `ForEach` in the section makes a row for each city, as the `ForEach` on the page of ForEach makes a `Text` for each trip." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "let cities = [\"Lima\", \"Cusco\", \"Oslo\"]",
+      "let list = List {",
+      "    Section(\"Trips\") {",
+      "        ForEach(cities, id: \\.self) { city in",
+      "            Text(city)",
+      "        }",
+      "    }",
+      "}",
+      "print(type(of: list))"
+    ],
+    "output": ["List<Never, Section<Text, ForEach<Array<String>, String, Text>, EmptyView>>"]
+  },
+  "views": {
+    "what": {
+      "is": "A `List` is a view that shows rows in one column that scrolls. Each view in its braces is a row, and a `Section` groups rows under a header. On iOS, the user can tap a row to select it, and swipe it to show buttons, such as Delete.",
+      "marks": [
+        { "line": 5, "text": "Section(\"Trips\")", "part": "list-section", "label": "a section" },
+        { "line": 7, "text": "Text(city)", "part": "list-row", "label": "one row" }
+      ],
+      "afterExample": "The list has one section, with the header Trips, and a row for each city. A program with no window cannot show a list's rows, so line 11 prints the list's type. Its first type, {{Never}}, says that the list has no selection. The section holds a `Text` as its header, the `ForEach` as its rows, and {{EmptyView}} as its footer, because it has none.",
+      "problem": "Many screens are a column of rows that can be longer than the screen, such as a list of trips or a screen of settings. A list scrolls, draws each row in the platform's style, with lines between rows, and gives rows the actions that users expect, such as swiping to delete.",
+      "how": "Apple's documentation says that a list presents rows of data arranged in a single column, and that it can group rows in sections. It also says that a list asks a `ForEach` inside it for its elements lazily, as it needs them, so a long list does not make every row at once.",
+      "when": [
+        { "text": "Use it for rows of data that the user scrolls, selects, swipes, or deletes, such as the trips of a planner." },
+        { "text": "Don't use it for a layout that is not rows, such as a grid of photos. A lazy grid, or a stack in a scroll view, places views as it is told, and draws no lines between them." }
+      ]
+    }
+  }
+}

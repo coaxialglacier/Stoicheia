@@ -1,0 +1,45 @@
+{
+  "id": "matched-geometry",
+  "name": "Matched geometry effect",
+  "area": "ui",
+  "first": "A modifier that links views that share an id, so that when one is removed and another inserted, SwiftUI moves the frame from the old view's place to the new one's.",
+  "parts": ["namespace", "geometry-id"],
+  "dependsOn": [
+    { "id": "transition", "views": ["what"],
+      "why": "The linked views are inserted and removed, and their transitions still say how each one is drawn while the frame moves.",
+      "whyInExample": "A second view with the id `\"lima\"` would be inserted as this `Text` is removed, as the `Text` of `Card` is inserted and removed on the page of Transition." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct Cards: View {",
+      "    @Namespace private var space",
+      "    var body: some View {",
+      "        Text(\"Lima\")",
+      "            .matchedGeometryEffect(",
+      "                id: \"lima\", in: space",
+      "            )",
+      "    }",
+      "}",
+      "print(type(of: Cards().body))"
+    ],
+    "output": ["ModifiedContent<Text, _MatchedGeometryEffect<String>>"]
+  },
+  "views": {
+    "what": {
+      "is": "The modifier `matchedGeometryEffect` links the views that share an id in a namespace. When one of them is removed and another is inserted in the same animated change, SwiftUI moves and resizes the frame from the old view's place to the new view's, so that it looks like one view that moves.",
+      "marks": [
+        { "line": 4, "text": "@Namespace private var space", "part": "namespace", "label": "a namespace" },
+        { "line": 8, "text": "id: \"lima\"", "part": "geometry-id", "label": "the shared id" }
+      ],
+      "afterExample": "In an app, a second view with the id `\"lima\"`, such as a large card, would be inserted as this `Text` is removed, and SwiftUI would move the frame from the small place to the large one. A program with no window draws nothing over time, so line 12 prints the type: the `Text`, with the matched geometry modifier for an id of type {{String}}.",
+      "problem": "When a small card opens into a full screen, one view fading out while another fades in does not show that they are the same item. Linking their frames makes the card grow from where it was to where it goes, so the user sees that it is the same item.",
+      "how": "Apple's documentation says that if a view is inserted in the same transaction in which another view with the same id is removed, SwiftUI goes between their frames, so that it appears that a single view moves from its old position to its new one. It also says that the modifier links only their geometry: their transitions still say how each of the two views is drawn.",
+      "when": [
+        { "text": "Use it for one item that moves between two layouts, such as a card that opens into a detail view, or a highlight that slides to the chosen tab." },
+        { "text": "Don't give the same id to two views that are both on the screen as the source of the geometry. Apple's documentation says that the result is undefined when more than one view in the group is the source." }
+      ]
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "id": "observed-object-property",
+  "name": "Observed object property",
+  "first": "A property of a view marked with the ObservedObject attribute, which holds an observable object and makes SwiftUI run the view's body again after each signal that the object sends.",
+  "parts": []
+}

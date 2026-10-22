@@ -1,0 +1,68 @@
+{
+  "id": "keyframe-animation",
+  "name": "Keyframe animation",
+  "area": "ui",
+  "first": "An animation that moves a value through set values at set times, one stage after another, in place of going straight from an old value to a new one.",
+  "parts": ["keyframe-start", "keyframe"],
+  "dependsOn": [
+    { "id": "animation", "views": ["what", "parts"],
+      "why": "A keyframe animation is an animation, whose value changes over time, as an animation's curve says how far along a change is.",
+      "whyInExample": "The method `value(time:)` gives the value at a moment, as `value(at:)` gives how far along the change is on the page of Animation." },
+    { "id": "result-builder", "views": ["parts"],
+      "why": "The keyframes are listed in braces, one per line, which a result builder combines.",
+      "whyInExample": "The braces after `KeyframeTimeline` list keyframes one per line, as `packing()` lists strings." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "let bounce = KeyframeTimeline(initialValue: 0.0) {",
+      "    LinearKeyframe(30.0, duration: 0.5)",
+      "    LinearKeyframe(0.0, duration: 0.5)",
+      "}",
+      "for time in [0.0, 0.25, 0.5, 0.75, 1.0] {",
+      "    print(time, bounce.value(time: time))",
+      "}",
+      "print(bounce.duration)"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A keyframe animation moves a value through set values at set times. Each keyframe gives a value to reach, and how long to take to reach it from the keyframe before it. Apple's documentation says that, unlike other animations, keyframes do not go between an old value and a new one from a change of state: they define the whole path that the value takes over time.",
+      "marks": [
+        { "line": 3, "text": "initialValue: 0.0", "part": "keyframe-start", "label": "starts at 0" },
+        { "line": 4, "text": "LinearKeyframe(30.0, duration: 0.5)", "part": "keyframe", "label": "up to 30" },
+        { "line": 5, "text": "LinearKeyframe(0.0, duration: 0.5)", "part": "keyframe", "label": "back to 0" }
+      ],
+      "afterExample": "The timeline `bounce` starts at 0, rises to 30 in half a second, and comes back to 0 in the next half second. Lines 7 to 9 ask it for the value at each quarter of the second.",
+      "problem": "Some motion has more than a start and an end, such as a bounce that rises and falls, or a shake that goes left and right several times. A keyframe animation describes each stage, with its value and its time.",
+      "how": "A `KeyframeTimeline` holds the keyframes of one value, played one after another from its initial value. A `LinearKeyframe` moves to its value at a steady speed. The method `value(time:)` gives the value at any moment of the timeline. In a view, a modifier plays keyframes each time a value it watches changes, with a track of keyframes for each property it animates, such as a scale and an offset.",
+      "when": [
+        { "text": "Use it for motion with several stages, such as a bounce, a shake, or a pulse when a trip is saved." },
+        { "text": "Don't use it to move a view from one place to another. An animated change of state already goes from the old value to the new one." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "keyframe-start", "name": "The initial value, line 3",
+          "text": "The argument `initialValue` is where the value starts, at time 0, before the first keyframe: here 0." },
+        { "part": "keyframe", "name": "The keyframes, lines 4 and 5",
+          "text": "Each `LinearKeyframe` gives a value and a duration. The first goes from 0 to 30 in 0.5 seconds. The second starts where the first ended, and goes back to 0 in 0.5 seconds. Other kinds of keyframe reach their value along a curve, with a spring, or at once." }
+      ],
+      "marks": [
+        { "line": 3, "text": "initialValue: 0.0", "part": "keyframe-start", "label": "initial value" },
+        { "line": 4, "text": "LinearKeyframe(30.0, duration: 0.5)", "part": "keyframe", "label": "keyframe 1" },
+        { "line": 5, "text": "LinearKeyframe(0.0, duration: 0.5)", "part": "keyframe", "label": "keyframe 2" }
+      ],
+      "steps": [
+        { "text": "Line 3 makes a timeline that starts at 0, with the two keyframes on lines 4 and 5.", "line": 3, "also": [4, 5] },
+        { "text": "Line 8 asks for the value at 0 seconds, which is the initial value: {{0.0 0.0}}.", "line": 8, "also": [7], "prints": ["0.0 0.0"] },
+        { "text": "At 0.25 seconds, halfway through the first keyframe, the value has gone halfway from 0 to 30: {{0.25 15.0}}.", "line": 8, "also": [4], "prints": ["0.25 15.0"] },
+        { "text": "At 0.5 seconds, the first keyframe ends at its value: {{0.5 30.0}}.", "line": 8, "also": [4], "prints": ["0.5 30.0"] },
+        { "text": "At 0.75 seconds, the second keyframe is halfway back: {{0.75 15.0}}. At 1 second, it ends at its value: {{1.0 0.0}}.", "line": 8, "also": [5], "prints": ["0.75 15.0", "1.0 0.0"] },
+        { "text": "Line 10 prints the duration of the timeline, the sum of the keyframes' durations: {{1.0}}.", "line": 10, "prints": ["1.0"] }
+      ],
+      "end": { "kind": "answer", "text": "The value went up to 30 and back to 0, through each keyframe in turn, at the times the keyframes set." }
+    }
+  }
+}

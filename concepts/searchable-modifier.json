@@ -1,0 +1,6 @@
+{
+  "id": "searchable-modifier",
+  "name": "Searchable modifier",
+  "first": "The modifier that adds a search field to the toolbar of the navigation stack around a view, with a binding to the string where the field writes the text.",
+  "parts": []
+}

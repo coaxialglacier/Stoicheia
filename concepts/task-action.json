@@ -1,0 +1,6 @@
+{
+  "id": "task-action",
+  "name": "Task modifier closure",
+  "first": "The async closure of the task modifier, which SwiftUI runs in a new task before the view appears, and cancels if the view is removed first.",
+  "parts": []
+}

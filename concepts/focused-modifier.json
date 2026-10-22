@@ -1,0 +1,6 @@
+{
+  "id": "focused-modifier",
+  "name": "Focused modifier",
+  "first": "The modifier that links a field to a focus state property, so the property follows the field's focus, and setting the property moves the focus to the field.",
+  "parts": []
+}

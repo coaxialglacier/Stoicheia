@@ -1,0 +1,38 @@
+{
+  "id": "liquid-glass",
+  "name": "Liquid Glass",
+  "area": "ui",
+  "first": "The material of iOS 26 and later for bars and controls, which blurs what is behind it, reflects the color and light around it, and reacts to touch.",
+  "parts": ["glass-effect-modifier"],
+  "dependsOn": [
+    { "id": "material", "views": ["what"],
+      "why": "Liquid Glass is a material, which blurs what is behind it, and also reflects the light and color around it.",
+      "whyInExample": "The modifier `glassEffect()` puts glass behind the padded `Text`, as `background(.ultraThinMaterial)` puts a material behind it on the page of Material." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "let label = Text(\"Lima\")",
+      "    .padding()",
+      "    .glassEffect()",
+      "print(type(of: label))"
+    ],
+    "output": ["StaticIf<GlassEnabledPredicate, ModifiedContent<ModifiedContent<Text, _PaddingLayout>, GlassEffectModifier>, ModifiedContent<Text, _PaddingLayout>>"]
+  },
+  "views": {
+    "what": {
+      "is": "Liquid Glass is the material that the design of iOS 26 uses for bars and controls. Apple's documentation says that it blurs the content behind it, reflects the color and light of the content around it, and reacts to touch and the pointer as they happen. SwiftUI's own bars and controls use it with no code. The modifier `glassEffect` puts it behind a view of your own.",
+      "marks": [
+        { "line": 5, "text": "glassEffect()", "part": "glass-effect-modifier", "label": "glass behind the view" }
+      ],
+      "afterExample": "The label Lima, with space around it, gets glass behind it. Line 6 prints the type, which has two forms, chosen by {{GlassEnabledPredicate}}: the padded `Text` with the glass, when the glass is enabled, and the padded `Text` alone, when it is not.",
+      "problem": "Controls that are drawn over content, such as a button over a map, must be easy to see against what is behind them, without hiding it. Liquid Glass keeps the content visible through the control, and makes custom controls match the system's own.",
+      "how": "Apple's documentation says that by default the modifier uses the regular kind of glass, in the shape of a capsule, behind the view's content, and that the glass fills the view's frame, including its padding. A different shape or a tint can be given to it.",
+      "when": [
+        { "text": "Use it for custom controls that are drawn over content, such as a row of buttons over a map, so that they match the system's bars." },
+        { "text": "Don't put glass on content itself, such as the rows of a list, or on glass. It is for the controls that sit over content." }
+      ]
+    }
+  }
+}

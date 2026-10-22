@@ -1,0 +1,51 @@
+{
+  "id": "form",
+  "name": "Form",
+  "area": "ui",
+  "first": "A view that arranges controls for entering data, such as a settings screen, grouped in sections and styled for each platform.",
+  "parts": ["list-section"],
+  "dependsOn": [
+    { "id": "control", "views": ["what"],
+      "why": "A form holds controls, which it styles for entering data.",
+      "whyInExample": "The `Toggle` in the form is a control with a binding, as the `Toggle` on the page of Control is." },
+    { "id": "list", "views": ["what"],
+      "why": "On iOS, a form is drawn as a list of grouped rows, with sections.",
+      "whyInExample": "The `Section` groups the two controls under a header, as a `Section` groups cities on the page of List." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct Settings: View {",
+      "    @State private var alerts = true",
+      "    @State private var nights = 3",
+      "    var body: some View {",
+      "        Form {",
+      "            Section(\"Trip\") {",
+      "                Toggle(\"Alerts\", isOn: $alerts)",
+      "                Stepper(\"Nights\", value: $nights)",
+      "            }",
+      "        }",
+      "    }",
+      "}",
+      "print(type(of: Settings().body))"
+    ],
+    "output": ["Form<Section<Text, TupleView<(Toggle<Text>, Stepper<Text>)>, EmptyView>>"]
+  },
+  "views": {
+    "what": {
+      "is": "A `Form` is a view that arranges controls for entering data, such as the screen of an app's settings. Apple's documentation says that SwiftUI styles the views inside a form for each platform: on iOS a form is a list of grouped rows, and on the Mac a stack of aligned controls. A `Section` groups rows under a header.",
+      "marks": [
+        { "line": 7, "text": "Form", "label": "styles the controls" },
+        { "line": 8, "text": "Section(\"Trip\")", "part": "list-section", "label": "a group of rows" }
+      ],
+      "afterExample": "The form has one section, Trip, with a toggle for alerts and a stepper for the number of nights. Line 15 prints the type of the `body`: a form whose content is the section, whose header is a text, Trip, and whose rows are the two controls.",
+      "problem": "A screen of settings or details needs labels and controls lined up the same way in every app on the platform. A form gives the controls that style, so the code only lists them.",
+      "how": "The form styles each control inside it, such as buttons, toggles, and pickers, as rows of a grouped list on iOS. Each control still reads and writes its value through its binding, as it does anywhere else.",
+      "when": [
+        { "text": "Use it for a screen of settings, or of fields to fill in, such as the details of a new trip." },
+        { "text": "Don't use it for content that is not input, such as a list of trips to read. A list or a stack shows content without the style of a form." }
+      ]
+    }
+  }
+}

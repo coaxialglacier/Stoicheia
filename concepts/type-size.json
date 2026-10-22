@@ -1,0 +1,6 @@
+{
+  "id": "type-size",
+  "name": "Text size",
+  "first": "One of the sizes that a user can choose for text in Settings, from extra small to the five much larger accessibility sizes.",
+  "parts": []
+}

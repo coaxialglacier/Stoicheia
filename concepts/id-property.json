@@ -1,0 +1,6 @@
+{
+  "id": "id-property",
+  "name": "Id property",
+  "first": "The property that an identifiable type must have, whose value gives each value of the type its identity, and stays the same while the value's other properties change.",
+  "parts": []
+}

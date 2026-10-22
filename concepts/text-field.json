@@ -1,0 +1,62 @@
+{
+  "id": "text-field",
+  "name": "Text field",
+  "area": "ui",
+  "first": "A control that lets the user type and edit a string, which it reads and writes through a binding.",
+  "parts": ["text-field-prompt", "control-binding"],
+  "dependsOn": [
+    { "id": "control", "views": ["what", "parts"],
+      "why": "A text field is a control that changes a value through a binding.",
+      "whyInExample": "The argument `text: $name` gives the field a binding, as `isOn: $reminders` gives the toggle one on the page of Control." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct NameField: View {",
+      "    @State private var name = \"\"",
+      "    var body: some View {",
+      "        let _ = print(\"name is \\\"\\(name)\\\"\")",
+      "        TextField(\"Trip name\", text: $name)",
+      "            .onAppear { name = \"Lima\" }",
+      "    }",
+      "}",
+      "_ = ImageRenderer(content: NameField()).cgImage"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A `TextField` is a control that lets the user type and edit a string, with the keyboard. It is given a prompt, which it shows while it is empty, and a binding to the string. Apple's documentation says that for a string, the field updates the value continuously as the user types.",
+      "marks": [
+        { "line": 7, "text": "\"Trip name\"", "part": "text-field-prompt", "label": "shown while empty" },
+        { "line": 7, "text": "text: $name", "part": "control-binding", "label": "the string it edits" }
+      ],
+      "afterExample": "The field edits `name`. No one types here, so line 8 sets `name` to Lima, as the field would after the user typed it, and the `body` runs again with the new string.",
+      "problem": "Many screens need words from the user, such as the name of a trip or a city to search for. A text field shows the keyboard, lets the user type and edit, and gives the code each change.",
+      "how": "The field reads the string through its binding to show it, and writes the new string through the binding after each change. The string is usually state, so the `body` that read it runs again. A modifier can run code when the user presses Return, to submit the text.",
+      "when": [
+        { "text": "Use it for a short string on one line, such as a name or a city." },
+        { "text": "Don't use it for long text of many lines, such as notes about a trip. A text editor shows and edits many lines." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "text-field-prompt", "name": "The prompt, line 7",
+          "text": "The first argument, Trip name, is the prompt. The field shows it, dimmed, while the string is empty, to say what to type." },
+        { "part": "control-binding", "name": "The binding, line 7",
+          "text": "The argument `text` gives the field a binding to `name`. The field shows the string that `name` holds, and writes the string through the binding as the user types." }
+      ],
+      "marks": [
+        { "line": 7, "text": "\"Trip name\"", "part": "text-field-prompt", "label": "prompt" },
+        { "line": 7, "text": "text: $name", "part": "control-binding", "label": "binding" }
+      ],
+      "steps": [
+        { "text": "Line 11 makes a `NameField` and draws it. The state `name` starts empty.", "line": 11, "also": [4] },
+        { "text": "The `body` runs, and line 6 prints {{name is \"\"}}. The string is empty, so the field shows its prompt.", "line": 6, "also": [7], "prints": ["name is \"\""] },
+        { "text": "The field appears, and line 8 sets `name` to `\"Lima\"`, as the field does through its binding as the user types.", "line": 8 },
+        { "text": "The `body` read `name`, so it runs again, and line 6 prints {{name is \"Lima\"}}. The field now shows Lima.", "line": 6, "prints": ["name is \"Lima\""] }
+      ],
+      "end": { "kind": "answer", "text": "The field read and wrote `name` through its binding, so each change to the string ran the `body` again." }
+    }
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "id": "hashable",
+  "name": "Hashable",
+  "area": "swift",
+  "first": "A protocol for a type whose values can be compared for equality and turned into one integer, their hash value, so that they can be the members of a set or the keys of a dictionary.",
+  "parts": ["conformance", "equal-to-operator", "hash-value"],
+  "dependsOn": [
+    { "id": "protocol", "views": ["what", "parts"],
+      "why": "Hashable is a protocol, whose requirements are the comparison and the hash.",
+      "whyInExample": "The type `City` conforms to `Hashable`, as `Friendly` conforms to `Greeter`." },
+    { "id": "structure", "views": ["what", "parts"],
+      "why": "swiftc writes the comparison and the hash for a structure from its stored properties.",
+      "whyInExample": "The type `City` is a structure with two stored properties, `name` and `country`, as `Trip` has `city` and `nights` on the page of Structure." }
+  ],
+  "example": {
+    "code": [
+      "struct City: Hashable {",
+      "    let name: String",
+      "    let country: String",
+      "}",
+      "",
+      "let lima = City(name: \"Lima\", country: \"Peru\")",
+      "let again = City(name: \"Lima\", country: \"Peru\")",
+      "print(lima == again)",
+      "let visited: Set = [lima, again]",
+      "print(visited.count)",
+      "let nights = [lima: 4]",
+      "print(nights[again, default: 0])"
+    ],
+    "sil": [
+      { "in": "static City.__derived_struct_equals(_:_:)", "has": "#City.country",
+        "shows": "swiftc writes the comparison of two cities for City, which compares country as well as name." },
+      { "in": "City.hash(into:)", "has": "#City.name",
+        "shows": "swiftc writes the method hash(into:) for City, which gives name to the hasher." },
+      { "in": "City.hash(into:)", "has": "#City.country",
+        "shows": "The method hash(into:) gives country to the hasher too, so the hash value comes from both properties." }
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A type that conforms to the protocol `Hashable` has values that can be compared for equality, with `==`, and hashed: turned into one integer, the hash value, which is the same for every two equal values. A set and a dictionary find a value by its hash value, so their members and keys must be hashable.",
+      "marks": [
+        { "line": 1, "text": "Hashable", "part": "conformance", "label": "hashable" },
+        { "line": 8, "text": "==", "part": "equal-to-operator", "label": "equal?" }
+      ],
+      "afterExample": "The constants `lima` and `again` are two instances with the same values, so they are equal. The set on line 9 keeps only one of them, and the dictionary on line 11 finds the value for `lima` when it is given `again`.",
+      "problem": "A set must know when two values are the same, so that it keeps one, and a dictionary must find a key's value without comparing the key with every key it has. A hash value tells them where to look, so they compare only the few values kept there.",
+      "how": "When every stored property of a structure is hashable, swiftc writes `==` and the hash for it. The comparison `==` compares each property, and the hash combines the hash of each property. Two equal values give the same hash value, so a set or a dictionary finds equal values in the same place.",
+      "when": [
+        { "text": "Use it for a type whose values are members of a set or keys of a dictionary, such as a city, or that tell the items of a list apart." },
+        { "text": "Don't write `==` and the hash yourself when swiftc can write them. Written by hand, two equal values must still give the same hash value, or a set or a dictionary can lose them." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "conformance", "name": "The conformance to `Hashable`, line 1",
+          "text": "The colon and the name `Hashable` after `City` say that `City` conforms to the protocol `Hashable`. Its stored properties, `name` and `country`, are strings, which are hashable, so swiftc writes the comparison and the hash for `City`." },
+        { "part": "equal-to-operator", "name": "The equal-to operator, line 8",
+          "text": "Two equal signs compare two values, and give true when they are equal. The `==` that swiftc writes for `City` gives true when `name` and `country` are both equal." },
+        { "part": "hash-value", "name": "The hash values, lines 9 and 11",
+          "text": "A set and a dictionary hash each value they are given: they turn it into one integer, from the hash of each stored property. Equal values give the same integer, so `again` is found where `lima` was put." }
+      ],
+      "marks": [
+        { "line": 1, "text": "Hashable", "part": "conformance", "label": "conformance" },
+        { "line": 8, "text": "==", "part": "equal-to-operator", "label": "equal-to" },
+        { "line": 9, "text": "Set", "part": "hash-value", "label": "hashes each member" },
+        { "line": 11, "text": "[lima: 4]", "part": "hash-value", "label": "hashes the key" }
+      ],
+      "steps": [
+        { "text": "Lines 6 and 7 make two cities with the same name and the same country.", "line": 6, "also": [7] },
+        { "text": "Line 8 compares them with `==`, which compares `name` and then `country`. Both are equal, so it prints {{true}}.", "line": 8, "also": [2, 3], "prints": ["true"] },
+        { "text": "Line 9 makes a set of `lima` and `again`. The set hashes each one. They give the same hash value and are equal, so the set keeps only one.", "line": 9 },
+        { "text": "Line 10 prints how many members the set has: {{1}}.", "line": 10, "prints": ["1"] },
+        { "text": "Line 11 makes a dictionary with `lima` as its one key, for the value 4.", "line": 11 },
+        { "text": "Line 12 looks up `again`. Its hash value is the hash value of `lima`, and the two are equal, so the dictionary finds 4, and line 12 prints {{4}}. With no such key, it would give 0, the value after `default:`.", "line": 12, "prints": ["4"] }
+      ],
+      "end": { "kind": "answer", "text": "Equal cities gave the same hash value, so the set kept one of them, and the dictionary found the value of `lima` from `again`." }
+    }
+  }
+}

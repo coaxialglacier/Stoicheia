@@ -1,0 +1,80 @@
+{
+  "id": "widget",
+  "name": "Widget",
+  "area": "ui",
+  "first": "A view that the system shows outside the app, such as on the Home Screen, from a timeline of entries that the app gives it ahead of time.",
+  "parts": ["timeline-entry", "timeline", "reload-policy"],
+  "dependsOn": [
+    { "id": "view", "views": ["what"],
+      "why": "A widget's content is a SwiftUI view, made from one entry of its timeline.",
+      "whyInExample": "For each entry, the widget would show a view, such as `Greeting` on the page of View, made from the entry's `nights`." },
+    { "id": "protocol", "views": ["parts"],
+      "why": "An entry is a type that conforms to WidgetKit's protocol for timeline entries.",
+      "whyInExample": "The type `Entry` conforms to `TimelineEntry` by having `date`, as `Friendly` conforms to `Greeter` by having `greet(name:)`." }
+  ],
+  "example": {
+    "code": [
+      "import WidgetKit",
+      "import SwiftUI",
+      "",
+      "struct Entry: TimelineEntry {",
+      "    let date: Date",
+      "    let nights: Int",
+      "}",
+      "",
+      "let start = Date(timeIntervalSince1970: 0)",
+      "var entries: [Entry] = []",
+      "for day in 0..<3 {",
+      "    let date = start + Double(day * 86400)",
+      "    let entry = Entry(date: date, nights: 3 - day)",
+      "    entries.append(entry)",
+      "}",
+      "let timeline = Timeline(",
+      "    entries: entries, policy: .atEnd",
+      ")",
+      "for entry in timeline.entries {",
+      "    let seconds = entry.date.timeIntervalSince1970",
+      "    let day = Int(seconds) / 86400",
+      "    print(\"day\", day, entry.nights)",
+      "}"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A widget is a view that the system shows outside the app, such as on the Home Screen. The app does not run while its widget is shown. Ahead of time, it gives the system a timeline: a list of entries, each with a date and the data for the widget's view at that date. Apple's documentation says that WidgetKit shows the view for each entry at the entry's date, or later.",
+      "marks": [
+        { "line": 4, "text": "TimelineEntry", "part": "timeline-entry", "label": "one entry" },
+        { "line": 16, "text": "Timeline", "part": "timeline", "label": "the entries" },
+        { "line": 17, "text": ".atEnd", "part": "reload-policy", "label": "when to ask again" }
+      ],
+      "afterExample": "The timeline has three entries, one a day apart, which count down the nights left before a trip: 3, then 2, then 1. The policy `.atEnd` asks the system for a new timeline after the last date.",
+      "problem": "People want to see a little of an app without opening it, such as how many nights are left before a trip. Running the app each time the user looks would use up the battery. A widget's views come from a timeline made ahead of time, which the system shows by itself.",
+      "how": "In a widget extension, a timeline provider, a type that the widget's code has, gives the system each timeline. To show an entry, Apple's documentation says that WidgetKit runs the widget's content with that entry, which returns the view. It also says that the policy `.atEnd` tells WidgetKit to ask for a new timeline after the last date has passed.",
+      "when": [
+        { "text": "Use a widget for a small piece of information that people check often, such as the nights left before a trip." },
+        { "text": "Don't use a widget for work that the user does, such as editing a trip. A widget shows data that was made ahead of time, and the work belongs in the app." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "timeline-entry", "name": "The entry type `Entry`, lines 4 to 7",
+          "text": "A type that conforms to `TimelineEntry` has a `date`, when its view should be shown, and the data that the view needs, here `nights`." },
+        { "part": "timeline", "name": "The timeline, lines 16 to 18",
+          "text": "A `Timeline` holds the entries, in the order of their dates, and a policy. A timeline provider returns one when the system asks it for the next timeline." },
+        { "part": "reload-policy", "name": "The policy `.atEnd`, line 17",
+          "text": "The policy says when the system asks for the next timeline. The policy `.atEnd` asks after the date of the last entry has passed." }
+      ],
+      "marks": [
+        { "line": 4, "text": "TimelineEntry", "part": "timeline-entry", "label": "entry" },
+        { "line": 16, "text": "Timeline", "part": "timeline", "label": "timeline" },
+        { "line": 17, "text": ".atEnd", "part": "reload-policy", "label": "policy" }
+      ],
+      "steps": [
+        { "text": "Line 9 takes a starting date. Lines 11 to 15 make three entries, one day apart, with 3, 2, and 1 nights left.", "line": 13, "also": [9, 11, 12, 14] },
+        { "text": "Lines 16 to 18 make a timeline of the entries, with the policy `.atEnd`.", "line": 16, "also": [17] },
+        { "text": "Lines 19 to 23 go through the timeline's entries, and print the day of each one and its nights: {{day 0 3}}, {{day 1 2}}, and {{day 2 1}}. On each of those days, the system would show the widget's view for that entry.", "line": 22, "also": [19, 20, 21], "prints": ["day 0 3", "day 1 2", "day 2 1"] }
+      ],
+      "end": { "kind": "answer", "text": "The timeline held a view's data for each day ahead of time, so the system can show the widget without running the app." }
+    }
+  }
+}

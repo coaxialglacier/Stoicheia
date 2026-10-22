@@ -1,0 +1,77 @@
+{
+  "id": "transition",
+  "name": "Transition",
+  "area": "ui",
+  "first": "How a view is animated as it is inserted into the screen or removed from it, such as fading in and fading out.",
+  "parts": ["transition-modifier", "transition-effect"],
+  "dependsOn": [
+    { "id": "animation", "views": ["what", "parts"],
+      "why": "A transition runs when a view is inserted or removed in an animated change.",
+      "whyInExample": "Line 19 makes its change inside `withAnimation`, as line 14 does on the page of Animation." },
+    { "id": "view-identity", "views": ["what", "parts"],
+      "why": "A view is inserted when a view with a new identity appears, and removed when its identity goes away.",
+      "whyInExample": "The `Text` in the if statement has its place as its identity, as `Counter()` has on the page of View identity." },
+    { "id": "view-builder", "views": ["parts"],
+      "why": "The example inserts and removes its view with an if statement, which the view builder builds.",
+      "whyInExample": "The if statement on line 6 is there only when `shown` is true, as the one in the `body` of `Card` on the page of View builder." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct Card: View {",
+      "    let shown: Bool",
+      "    var body: some View {",
+      "        if shown {",
+      "            Text(\"Lima\")",
+      "                .transition(.opacity)",
+      "                .onAppear { print(\"inserted\") }",
+      "                .onDisappear { print(\"removed\") }",
+      "        }",
+      "    }",
+      "}",
+      "",
+      "let card = Card(shown: true)",
+      "let renderer = ImageRenderer(content: card)",
+      "_ = renderer.cgImage",
+      "withAnimation {",
+      "    renderer.content = Card(shown: false)",
+      "}",
+      "_ = renderer.cgImage"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A transition says how a view is animated as it is inserted into the screen or removed from it. The modifier `transition` gives a view its transition, such as `.opacity`, which fades it in and out. Apple's documentation says that when the view appears or disappears, its transition is applied, so that it can be animated in and out.",
+      "marks": [
+        { "line": 8, "text": "transition(.opacity)", "part": "transition-modifier", "label": "how it comes and goes" },
+        { "line": 8, "text": ".opacity", "part": "transition-effect", "label": "fades" }
+      ],
+      "afterExample": "The view `Card` shows its `Text` only while `shown` is true. Line 19 gives the renderer a card whose `shown` is false, inside `withAnimation`, so the `Text` is removed, and in an app it would fade out.",
+      "problem": "A view that appears or disappears at once changes the screen in one frame, and the user can miss what changed. A transition animates the view in and out, so the user sees it arrive and leave.",
+      "how": "A view is inserted when a view with a new identity appears, such as when the condition of an if statement becomes true, and removed when its identity goes away. When that happens in an animated change, SwiftUI animates the view with its transition, which for `.opacity` goes from clear to opaque as the view comes in, and back as it goes out.",
+      "when": [
+        { "text": "Use it for a view that comes and goes, such as a banner, a detail that opens, or a row that is added." },
+        { "text": "Don't expect a transition on a view that only changes, such as a `Text` whose words change. It stays the same view, so it is never inserted or removed, and its transition does not run." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "transition-modifier", "name": "The modifier `transition`, line 8",
+          "text": "The modifier `transition` gives the `Text` the transition that SwiftUI uses when the `Text` is inserted or removed. It changes nothing while the view stays on the screen." },
+        { "part": "transition-effect", "name": "The transition `.opacity`, line 8",
+          "text": "The transition `.opacity` fades the view in when it is inserted, and out when it is removed. Other transitions slide a view in from an edge, or grow it from nothing." }
+      ],
+      "marks": [
+        { "line": 8, "text": "transition(.opacity)", "part": "transition-modifier", "label": "transition" },
+        { "line": 8, "text": ".opacity", "part": "transition-effect", "label": "fade" }
+      ],
+      "steps": [
+        { "text": "Lines 15 to 17 draw a `Card` whose `shown` is true. The if statement on line 6 is true, so SwiftUI inserts the `Text`, and line 9 prints {{inserted}}.", "line": 9, "also": [15, 16, 17, 6], "prints": ["inserted"] },
+        { "text": "Line 19 gives the renderer a `Card` whose `shown` is false, inside `withAnimation` on line 18, so the change is animated.", "line": 19, "also": [18] },
+        { "text": "Line 21 draws again. The if statement is now false, so SwiftUI removes the `Text`, with its transition, and line 10 prints {{removed}}. In an app, the `Text` would fade out.", "line": 10, "also": [21, 6], "prints": ["removed"] }
+      ],
+      "end": { "kind": "answer", "text": "The `Text` was inserted when the if statement became true, and removed when it became false. Its transition says how it comes in and goes out." }
+    }
+  }
+}

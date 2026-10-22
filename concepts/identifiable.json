@@ -1,0 +1,72 @@
+{
+  "id": "identifiable",
+  "name": "Identifiable",
+  "area": "swift",
+  "first": "A protocol for a type whose values each have an identity, a value that stays the same while their other properties change.",
+  "parts": ["conformance", "id-property"],
+  "dependsOn": [
+    { "id": "protocol", "views": ["what", "parts"],
+      "why": "Identifiable is a protocol, whose one requirement is a property that gives each value its identity.",
+      "whyInExample": "The type `Trip` conforms to `Identifiable` by having `id`, as `Friendly` conforms to `Greeter` by having `greet(name:)`." },
+    { "id": "structure", "views": ["what"],
+      "why": "An identifiable type is often a structure, whose instances are copied, so an identity is what says that two copies are the same item.",
+      "whyInExample": "The type `Trip` is a structure, as `Trip` is on the page of Structure, so `trips[0]` holds its own copy of each value." }
+  ],
+  "example": {
+    "code": [
+      "struct Trip: Identifiable {",
+      "    let id: Int",
+      "    var city: String",
+      "}",
+      "",
+      "var trips = [",
+      "    Trip(id: 1, city: \"Lima\"),",
+      "    Trip(id: 2, city: \"Oslo\")",
+      "]",
+      "let chosen = trips[0].id",
+      "trips[0].city = \"Cusco\"",
+      "trips.reverse()",
+      "for trip in trips {",
+      "    if trip.id == chosen {",
+      "        print(trip.city)",
+      "    }",
+      "}"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A type that conforms to the protocol `Identifiable` has a property named `id`, which gives each value its identity. The identity stays the same while the value's other properties change, so code can tell which item a value is after it changes or moves.",
+      "marks": [
+        { "line": 1, "text": "Identifiable", "part": "conformance", "label": "identifiable" },
+        { "line": 2, "text": "let id: Int", "part": "id-property", "label": "its identity" }
+      ],
+      "afterExample": "Line 11 changes the city of the first trip, and line 12 moves it to the end of the array. Its `id` is still 1, so lines 13 to 17 find it again, and print its new city.",
+      "problem": "A structure is copied, so two copies of a trip are two separate values, and after a trip's city changes, nothing in its values says it is the same trip as before. An identity that never changes says which item a value is, so code, and SwiftUI, can follow one item through every change.",
+      "how": "The protocol requires one property, `id`, whose type must be hashable, such as `Int` or `String`. Apple's documentation says that the `id` identifies an item even when its other data changes. Code compares two items' `id` to tell whether they are the same item.",
+      "when": [
+        { "text": "Use it for the items of a list that changes, such as trips that the user edits, adds, and deletes, so that each one can be followed by its `id`." },
+        { "text": "Don't make `id` a value that can change, such as `city`. A changed id would make the same item look like a new one." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "conformance", "name": "The conformance to `Identifiable`, line 1",
+          "text": "The colon and the name `Identifiable` after `Trip` say that `Trip` conforms to the protocol `Identifiable`. Its one requirement is a property named `id`." },
+        { "part": "id-property", "name": "The property `id`, line 2",
+          "text": "Each trip has an `id`, of type `Int`. It is a constant, declared with `let`, so no code can change it, while `city` is a variable that code can change." }
+      ],
+      "marks": [
+        { "line": 1, "text": "Identifiable", "part": "conformance", "label": "conformance" },
+        { "line": 2, "text": "let id: Int", "part": "id-property", "label": "id" }
+      ],
+      "steps": [
+        { "text": "Lines 6 to 9 make an array of two trips, whose ids are 1 and 2.", "line": 6, "also": [7, 8] },
+        { "text": "Line 10 keeps the id of the first trip in `chosen`.", "line": 10, "value": { "line": 10, "name": "chosen", "is": "1" } },
+        { "text": "Line 11 changes the city of that trip to `\"Cusco\"`. Its `id` is still 1.", "line": 11 },
+        { "text": "Line 12 reverses the array, so that trip is now the second one.", "line": 12 },
+        { "text": "Lines 13 to 17 go through the trips and find the one whose `id` is `chosen`. Line 15 prints its city: {{Cusco}}.", "line": 15, "also": [13, 14], "prints": ["Cusco"] }
+      ],
+      "end": { "kind": "answer", "text": "The trip moved and its city changed, but its `id` stayed 1, so the code found the same trip by its `id`." }
+    }
+  }
+}

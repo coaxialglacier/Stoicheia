@@ -1,0 +1,6 @@
+{
+  "id": "list-row",
+  "name": "Row",
+  "first": "One view in a list's content, which the list draws as one row of its column, in the platform's style.",
+  "parts": []
+}

@@ -1,0 +1,6 @@
+{
+  "id": "update-ui-view",
+  "name": "Update method",
+  "first": "The method of a representable view that changes its UIKit view to match the SwiftUI view's values, which SwiftUI calls after making the view and again each time the values change.",
+  "parts": []
+}

@@ -1,0 +1,6 @@
+{
+  "id": "class-keyword",
+  "name": "class",
+  "first": "The keyword that declares a class. The class's name comes right after it.",
+  "parts": []
+}

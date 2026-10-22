@@ -1,0 +1,6 @@
+{
+  "id": "draggable-modifier",
+  "name": "Draggable modifier",
+  "first": "The modifier that makes a view the start of a drag, carrying a value of a transferable type.",
+  "parts": []
+}

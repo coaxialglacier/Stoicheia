@@ -1,0 +1,85 @@
+{
+  "id": "navigation-stack",
+  "name": "Navigation stack",
+  "area": "ui",
+  "first": "A view that shows a first screen, and the screens pushed on top of it one after another, with a back button that goes back one screen.",
+  "parts": ["root-view", "navigation-link", "navigation-destination"],
+  "dependsOn": [
+    { "id": "view-modifier", "views": ["what", "parts"],
+      "why": "A navigation stack learns which screen to show for a value from a modifier on a view inside it.",
+      "whyInExample": "The call `navigationDestination(for:)` is a modifier of the link, as `padding(8)` is a modifier of `city`." },
+    { "id": "binding", "views": ["parts"],
+      "why": "A navigation stack can be given a binding to the list of values whose screens it shows.",
+      "whyInExample": "The value `$path` is a binding to the state `path`, as `$nights` is a binding to `nights` on the page of Binding." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct TripScreen: View {",
+      "    let id: Int",
+      "    var body: some View {",
+      "        Text(\"Trip \\(id)\")",
+      "            .onAppear { print(\"shows trip\", id) }",
+      "    }",
+      "}",
+      "",
+      "let list = NavigationLink(\"Trip 1\", value: 1)",
+      "    .onAppear { print(\"shows the list\") }",
+      "    .navigationDestination(for: Int.self) { id in",
+      "        TripScreen(id: id)",
+      "    }",
+      "",
+      "struct Trips: View {",
+      "    @State private var path = [1]",
+      "    var body: some View {",
+      "        NavigationStack(path: $path) {",
+      "            list",
+      "        }",
+      "    }",
+      "}",
+      "",
+      "let renderer = ImageRenderer(content: Trips())",
+      "_ = renderer.cgImage"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A `NavigationStack` is a view that shows a first screen, its root view, and screens pushed on top of it. It shows only the top screen, with a back button that goes back one screen. A `NavigationLink` pushes a screen when the user taps it, and the modifier `navigationDestination(for:)` says which screen to show for each value.",
+      "marks": [
+        { "line": 21, "text": "list", "part": "root-view", "label": "the first screen" },
+        { "line": 11, "text": "NavigationLink(\"Trip 1\", value: 1)", "part": "navigation-link", "label": "pushes trip 1" },
+        { "line": 13, "text": "navigationDestination(for: Int.self)", "part": "navigation-destination", "label": "the screen for a number" }
+      ],
+      "afterExample": "The stack starts with the value 1 already pushed, as if the user had tapped the link, so it makes the list and then the screen of trip 1 on top of it.",
+      "problem": "Most apps go from a list to the details of one item, and from there deeper, and the user must be able to go back the same way. A navigation stack keeps the screens in order, shows the newest one, and gives each screen a way back.",
+      "how": "A navigation stack keeps a list of values, one for each screen pushed on top of its root view. Tapping a link adds its value to the list. For each value, the stack finds the destination for the value's type, and calls its closure with the value to make the screen. Apple's documentation says that the stack always shows the most recently added screen, never removes the root view, and removes a value from the list when the user goes back.",
+      "when": [
+        { "text": "Use it for screens that go deeper, one from another, such as a list of trips, then one trip, then one day of it." },
+        { "text": "Don't use it to move between the main areas of an app, which the user switches between at any time. A tab view shows those side by side, in a tab bar." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "root-view", "name": "The root view `list`, line 21",
+          "text": "The braces of `NavigationStack` hold its root view, the first screen, which is always at the bottom of the stack. Here it is `list`, which lines 11 to 15 make." },
+        { "part": "navigation-link", "name": "The link, line 11",
+          "text": "A `NavigationLink` shows its title, Trip 1, as a button. When the user taps it, it pushes the screen for its value, 1. This program has no user, so nothing taps it." },
+        { "part": "navigation-destination", "name": "The destination, lines 13 to 15",
+          "text": "The modifier `navigationDestination(for:)` says which screen the stack shows for a value of the type `Int`. The stack calls its closure with the value, here as `id`, and the closure returns a `TripScreen` for it." }
+      ],
+      "marks": [
+        { "line": 21, "text": "list", "part": "root-view", "label": "root view" },
+        { "line": 11, "text": "NavigationLink(\"Trip 1\", value: 1)", "part": "navigation-link", "label": "link" },
+        { "line": 13, "text": "navigationDestination(for: Int.self)", "part": "navigation-destination", "label": "destination" }
+      ],
+      "steps": [
+        { "text": "Line 26 makes a `Trips` and a renderer, and line 27 asks for its image. The state `path` is a list of the values whose screens are pushed, and starts with one value, 1. Line 20 gives the stack a binding to it.", "line": 27, "also": [26, 18, 20] },
+        { "text": "The stack shows its root view first, at the bottom, and line 12 prints {{shows the list}}.", "line": 12, "also": [21], "prints": ["shows the list"] },
+        { "text": "For the value 1 in `path`, the stack finds the destination for an `Int`, and calls its closure with 1, which makes a `TripScreen` whose `id` is 1.", "line": 14, "also": [13] },
+        { "text": "That screen is pushed on top of the list, and line 7 prints {{shows trip 1}}.", "line": 7, "prints": ["shows trip 1"] }
+      ],
+      "end": { "kind": "answer", "text": "The stack showed its root view, and pushed on top of it the screen that its destination made for the value 1." }
+    }
+  }
+}

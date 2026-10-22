@@ -1,0 +1,6 @@
+{
+  "id": "detail-column",
+  "name": "Detail column",
+  "first": "The trailing column of a split view, which shows the item that the user chose in a column before it.",
+  "parts": []
+}

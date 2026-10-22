@@ -1,0 +1,6 @@
+{
+  "id": "gesture-state-property",
+  "name": "Gesture state property",
+  "first": "A property of a view marked with the GestureState attribute, which a gesture sets while it is in progress, and which goes back to its first value when the gesture ends.",
+  "parts": []
+}

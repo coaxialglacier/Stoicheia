@@ -1,0 +1,6 @@
+{
+  "id": "persisted-property",
+  "name": "Saved property",
+  "first": "A stored property of a SwiftData model, which the macro turns into a computed property that reads and writes the model's backing data, and which is saved with the model.",
+  "parts": []
+}

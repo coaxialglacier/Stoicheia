@@ -1,0 +1,6 @@
+{
+  "id": "adaptive-color",
+  "name": "Color for each mode",
+  "first": "A color with a value for light mode and a value for dark mode, such as a system color, which SwiftUI resolves with the environment it is drawn in.",
+  "parts": []
+}

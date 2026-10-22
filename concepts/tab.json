@@ -1,0 +1,6 @@
+{
+  "id": "tab",
+  "name": "Tab",
+  "first": "One screen of a tab view, with a title and a symbol for the tab bar, and a value that says which tab it is.",
+  "parts": []
+}

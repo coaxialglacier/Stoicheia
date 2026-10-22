@@ -1,0 +1,6 @@
+{
+  "id": "hosted-root-view",
+  "name": "Hosted root view",
+  "first": "The SwiftUI view that a hosting controller shows, given when the controller is made, and changed by setting its root view property.",
+  "parts": []
+}

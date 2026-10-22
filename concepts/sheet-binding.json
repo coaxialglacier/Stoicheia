@@ -1,0 +1,6 @@
+{
+  "id": "sheet-binding",
+  "name": "Presentation binding",
+  "first": "The binding to a value of true or false that a sheet or an alert is given, which presents it while the value is true.",
+  "parts": []
+}

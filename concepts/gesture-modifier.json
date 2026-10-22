@@ -1,0 +1,6 @@
+{
+  "id": "gesture-modifier",
+  "name": "Gesture modifier",
+  "first": "The modifier that adds a gesture to a view, so that the view recognizes that touch.",
+  "parts": []
+}

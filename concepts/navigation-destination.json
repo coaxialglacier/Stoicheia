@@ -1,0 +1,6 @@
+{
+  "id": "navigation-destination",
+  "name": "Navigation destination",
+  "first": "A modifier inside a navigation stack that says which screen to show for a value of one type, with a closure that makes the screen from the value.",
+  "parts": []
+}

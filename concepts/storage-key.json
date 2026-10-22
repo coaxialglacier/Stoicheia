@@ -1,0 +1,6 @@
+{
+  "id": "storage-key",
+  "name": "Storage key",
+  "first": "The string that a stored value is kept under, which every reader of the value must use.",
+  "parts": []
+}

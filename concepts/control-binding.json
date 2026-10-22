@@ -1,0 +1,6 @@
+{
+  "id": "control-binding",
+  "name": "Binding of a control",
+  "first": "The binding that a control is given to the value it changes, which it reads to draw itself and writes when the user changes it.",
+  "parts": []
+}

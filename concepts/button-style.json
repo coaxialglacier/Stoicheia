@@ -1,0 +1,79 @@
+{
+  "id": "button-style",
+  "name": "Button style",
+  "area": "ui",
+  "first": "A type of your own that draws each button it is applied to, both at rest and while it is pressed, while the button keeps its own action.",
+  "parts": ["conformance", "style-body", "style-configuration"],
+  "dependsOn": [
+    { "id": "control", "views": ["what", "parts"],
+      "why": "A button style draws buttons, which are controls with a label and an action.",
+      "whyInExample": "The call `Button(\"Save\") {}` makes a button with a label and an action, as the Save button is on the page of Control." },
+    { "id": "protocol", "views": ["what", "parts"],
+      "why": "A button style is a type that conforms to SwiftUI's button style protocol, which requires one method.",
+      "whyInExample": "The type `Pill` conforms to `ButtonStyle` by having `makeBody(configuration:)`, as `Friendly` conforms to `Greeter` by having `greet(name:)`." },
+    { "id": "view-modifier", "views": ["parts"],
+      "why": "The style draws the button's label with modifiers.",
+      "whyInExample": "The calls `padding(8)` and `opacity` are modifiers of the label, as `padding(8)` and `opacity(0.5)` are on the page of View modifier." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct Pill: ButtonStyle {",
+      "    func makeBody(",
+      "        configuration: Configuration",
+      "    ) -> some View {",
+      "        let pressed = configuration.isPressed",
+      "        let _ = print(\"pressed:\", pressed)",
+      "        configuration.label",
+      "            .padding(8)",
+      "            .background(Color.yellow)",
+      "            .opacity(pressed ? 0.5 : 1)",
+      "    }",
+      "}",
+      "",
+      "let save = Button(\"Save\") {}",
+      "    .buttonStyle(Pill())",
+      "_ = ImageRenderer(content: save).cgImage"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A button style is a type that conforms to the protocol `ButtonStyle`. Its method `makeBody(configuration:)` gets a button's label and whether the button is pressed, and returns the view that the button is drawn as. Apple's documentation says that a button with a style still has the platform's standard behavior for a button, such as when its action runs.",
+      "marks": [
+        { "line": 3, "text": "ButtonStyle", "part": "conformance", "label": "a button style" },
+        { "line": 4, "text": "makeBody", "part": "style-body", "label": "draws the button" },
+        { "line": 17, "text": "buttonStyle(Pill())", "label": "uses the style" }
+      ],
+      "afterExample": "The style `Pill` draws a button as its label, with space around it, on yellow, and at half opacity while it is pressed. Line 17 gives the Save button that style.",
+      "problem": "An app often wants its own look for buttons, the same on every screen. Building that look into every button repeats it, and loses the platform's behavior for presses. A button style is written once, and every button that uses it gets the look and keeps its behavior.",
+      "how": "Apple's documentation says that the modifier `buttonStyle` sets the style for the buttons in a view and the views inside it. For each button, SwiftUI calls `makeBody(configuration:)` with a configuration: its `label`, and `isPressed`, which is true while the user presses the button. The style decides how each one looks.",
+      "when": [
+        { "text": "Use it for the look of buttons across an app, such as a pill shape, so that every button looks and behaves the same." },
+        { "text": "Don't use it to change what a button does when tapped. Its action is the button's own, and a button style only draws it." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "conformance", "name": "The conformance to `ButtonStyle`, line 3",
+          "text": "The colon and the name `ButtonStyle` after `Pill` say that `Pill` conforms to the protocol `ButtonStyle`, whose one requirement is the method `makeBody(configuration:)`." },
+        { "part": "style-body", "name": "The method `makeBody`, lines 4 to 13",
+          "text": "The method returns the view that the button is drawn as. Here it is the label with 8 points of padding, a yellow background, and an opacity of 0.5 while pressed and 1 otherwise." },
+        { "part": "style-configuration", "name": "The configuration, line 5",
+          "text": "The parameter `configuration` describes one button: its `label`, the view that says what it does, and `isPressed`, which is true while the user presses it." }
+      ],
+      "marks": [
+        { "line": 3, "text": "ButtonStyle", "part": "conformance", "label": "conformance" },
+        { "line": 4, "text": "makeBody", "part": "style-body", "label": "draws the button" },
+        { "line": 5, "text": "configuration: Configuration", "part": "style-configuration", "label": "the button" }
+      ],
+      "steps": [
+        { "text": "Line 16 makes a button, Save, with an empty action, and line 17 gives it the style `Pill`.", "line": 16, "also": [17] },
+        { "text": "Line 18 draws the button. SwiftUI calls `makeBody(configuration:)` of `Pill`, with the configuration of this button.", "line": 18, "also": [4, 5] },
+        { "text": "No one presses the button, so line 7 reads false from `isPressed`, and line 8 prints {{pressed: false}}.", "line": 8, "also": [7], "prints": ["pressed: false"] },
+        { "text": "Lines 9 to 12 return the label, Save, with padding, a yellow background, and an opacity of 1. While the user pressed it, `isPressed` would be true, and the button would be drawn at half opacity.", "line": 12, "also": [9, 10, 11] }
+      ],
+      "end": { "kind": "answer", "text": "The style drew the button from its label and from whether it was pressed. The button kept its own action." }
+    }
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "id": "for-each",
+  "name": "ForEach",
+  "area": "ui",
+  "first": "A structure that makes one view for each element of a collection, and tells the elements apart by their identity.",
+  "parts": ["for-each-data", "element-identity", "for-each-content"],
+  "dependsOn": [
+    { "id": "view-builder", "views": ["what", "parts"],
+      "why": "A ForEach is written among the views that a view builder combines, and its closure is built by the view builder too.",
+      "whyInExample": "The `ForEach` is a view on its own line in the braces of `VStack`, as `Text(\"Lima\")` is in the `body` of `Card`." },
+    { "id": "identifiable", "views": ["what", "parts"],
+      "why": "A ForEach tells its elements apart by their id, when the elements are identifiable.",
+      "whyInExample": "The type `Trip` is identifiable, as `Trip` is on the page of Identifiable, so the `ForEach` uses each trip's `id`." },
+    { "id": "view-identity", "views": ["what", "parts"],
+      "why": "The identity of each element becomes the identity of its view, so a view keeps its state while its element moves or changes.",
+      "whyInExample": "The `id` of each trip is the explicit identity of its `Text`, as `version` is the id of `Counter` on the page of View identity." },
+    { "id": "key-path", "views": ["what"],
+      "why": "For elements that are not identifiable, a ForEach is given a key path to the property that tells them apart." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct Trip: Identifiable {",
+      "    let id: Int",
+      "    let city: String",
+      "}",
+      "",
+      "let trips = [",
+      "    Trip(id: 1, city: \"Lima\"),",
+      "    Trip(id: 2, city: \"Oslo\")",
+      "]",
+      "var shown: [String] = []",
+      "let column = VStack {",
+      "    ForEach(trips) { trip in",
+      "        Text(trip.city)",
+      "            .onAppear { shown.append(trip.city) }",
+      "    }",
+      "}",
+      "_ = ImageRenderer(content: column).cgImage",
+      "print(shown.sorted())"
+    ]
+  },
+  "snippets": {
+    "keyPath": {
+      "code": [
+        "import SwiftUI",
+        "",
+        "let cities = [\"Lima\", \"Oslo\"]",
+        "let rows = ForEach(cities, id: \\.self) { city in",
+        "    Text(city)",
+        "}",
+        "print(type(of: rows))"
+      ],
+      "output": ["ForEach<Array<String>, String, Text>"]
+    }
+  },
+  "views": {
+    "what": {
+      "is": "A `ForEach` is a structure that makes one view for each element of a collection, from a closure that it calls with each element. It tells the elements apart by their identity, and the identity of an element becomes the identity of its view.",
+      "marks": [
+        { "line": 14, "text": "trips", "part": "for-each-data", "label": "the elements" },
+        { "line": 14, "text": "{ trip in", "part": "for-each-content", "label": "one view per element" }
+      ],
+      "afterExample": "The `ForEach` makes a `Text` for each of the two trips, and each one adds its city to `shown` when it appears, so line 20 prints both cities.",
+      "problem": "A screen often shows one view for each item of data, such as a row for each trip, and the number of items changes. A `ForEach` makes those views from the data. Because it knows each element's identity, SwiftUI can tell which view belongs to which item when items are added, removed, or moved.",
+      "how": "Apple's documentation says that a `ForEach` computes views on demand from a collection of identified data, and that its elements must be identifiable, or it must be given an `id` parameter. For each element, it calls its closure, which returns the view for that element, and it gives that view the element's identity. Apple's documentation also says that if an element's id changes, the view made from it loses its state.",
+      "when": [
+        { "text": "Use it inside a stack, a list, or any other view that lists views, for a view per item of data. For elements that are not identifiable, such as strings, give it a key path to the property that is unique, with `id:`. The key path `\\.self` names the whole element:", "snippet": "keyPath" },
+        { "text": "Don't identify the elements by a value that changes, such as a city that the user can edit. Apple's documentation says that when an element's id changes, the view made from it loses its state and its animations." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "for-each-data", "name": "The data `trips`, line 14",
+          "text": "The first argument of `ForEach` is the collection whose elements it makes views for, in order. Here it is `trips`, an array of two trips." },
+        { "part": "element-identity", "name": "The identity of each trip",
+          "text": "The elements are identifiable, so the `ForEach` tells them apart by `id`, which line 4 declares. The view for a trip has that trip's `id` as its identity." },
+        { "part": "for-each-content", "name": "The closure, lines 14 to 17",
+          "text": "The closure takes one element, `trip`, and returns the view for it: a `Text` of the trip's city, which adds the city to `shown` when it appears. The view builder builds the closure's body, as it builds the body of a view." }
+      ],
+      "marks": [
+        { "line": 14, "text": "trips", "part": "for-each-data", "label": "data" },
+        { "line": 4, "text": "let id: Int", "part": "element-identity", "label": "identity" },
+        { "line": 14, "text": "{ trip in", "part": "for-each-content", "label": "content" }
+      ],
+      "steps": [
+        { "text": "Lines 8 to 11 make an array of two trips, and line 12 makes an empty array, `shown`.", "line": 8, "also": [12] },
+        { "text": "Line 13 makes a `VStack` whose one view is a `ForEach` over `trips`.", "line": 13, "also": [14] },
+        { "text": "Line 19 makes a renderer for the column and asks for its image. The `ForEach` calls its closure for each trip, and gives each `Text` the trip's `id` as its identity.", "line": 19, "also": [15] },
+        { "text": "Each `Text` appears, and the closure of `onAppear` on line 16 adds its city to `shown`.", "line": 16 },
+        { "text": "Line 20 prints the cities that appeared, sorted, because SwiftUI does not promise the order in which views appear: {{[\"Lima\", \"Oslo\"]}}.", "line": 20, "prints": ["[\"Lima\", \"Oslo\"]"] }
+      ],
+      "end": { "kind": "answer", "text": "The `ForEach` made one `Text` for each element of `trips`, and gave each one the identity of its trip." }
+    }
+  }
+}

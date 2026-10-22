@@ -1,0 +1,6 @@
+{
+  "id": "published-property",
+  "name": "Published property",
+  "first": "A property of an observable object marked with the Published attribute, whose every change makes the object send its signal, before the new value is stored.",
+  "parts": []
+}

@@ -1,0 +1,6 @@
+{
+  "id": "geometry-id",
+  "name": "Matched id",
+  "first": "The hashable value that views share to be matched, so that SwiftUI moves the frame from one to the other.",
+  "parts": []
+}

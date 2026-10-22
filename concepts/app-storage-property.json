@@ -1,0 +1,6 @@
+{
+  "id": "app-storage-property",
+  "name": "App storage property",
+  "first": "A property of a view marked with the AppStorage attribute and a key, which reads and writes the value under that key in user defaults, and updates the view when it changes.",
+  "parts": []
+}

@@ -1,0 +1,6 @@
+{
+  "id": "style-configuration",
+  "name": "Style configuration",
+  "first": "The value that a button style gets for each button: the button's label, and whether the user is pressing it.",
+  "parts": []
+}

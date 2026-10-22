@@ -1,8 +1,6 @@
 [
  { "id": "optional", "name": "Optional", "area": "swift", "needs": [],
    "first": "A value that is either a value of its type, or nil." },
- { "id": "class", "name": "Class", "area": "swift", "needs": ["structure", "heap-object"],
-   "first": "A type whose instances are shared: assigning one copies its address, not the instance." },
  { "id": "escaping-closure", "name": "Escaping closure", "area": "swift", "needs": ["closure-value"],
    "first": "A closure that can be called after the function it was passed to has returned." },
 
@@ -15,8 +13,6 @@
  { "id": "copy-on-write", "name": "Copy on write", "area": "memory", "needs": ["structure", "arc"],
    "first": "A value whose copies share one storage on the heap, until one copy is changed." },
 
- { "id": "task", "name": "Task", "area": "conc", "needs": ["async-function", "closure"],
-   "first": "Work that runs an async closure, at the same time as the code that started it." },
  { "id": "task-group", "name": "Task group", "area": "conc", "needs": ["task"],
    "first": "A set of child tasks that run at the same time, whose results the task that made them waits for." },
  { "id": "actor", "name": "Actor", "area": "conc", "needs": ["task", "class"],
@@ -26,10 +22,5 @@
  { "id": "sendable", "name": "Sendable", "area": "conc", "needs": ["actor", "structure"],
    "first": "A type whose values can be passed safely from one task or actor to another." },
  { "id": "data-race-safety", "name": "Data-race safety", "area": "conc", "needs": ["sendable", "main-actor"],
-   "first": "Swift 6 checks, when it builds a program, that no two pieces of code that run at the same time can change the same value." },
-
- { "id": "observable", "name": "Observable", "area": "ui", "needs": ["state", "class"],
-   "first": "A class whose properties SwiftUI watches, so a view that reads them is drawn again when they change." },
- { "id": "task-modifier", "name": "Task modifier", "area": "ui", "needs": ["view-modifier", "task"],
-   "first": "A modifier that starts a task when its view appears, and cancels the task when the view goes away." }
+   "first": "Swift 6 checks, when it builds a program, that no two pieces of code that run at the same time can change the same value." }
 ]

@@ -1,0 +1,65 @@
+{
+  "id": "dynamic-type",
+  "name": "Dynamic Type",
+  "area": "ui",
+  "first": "The text size that a user chooses in Settings, which text in a text style follows, and which a layout must make room for.",
+  "parts": ["text-style", "type-size"],
+  "dependsOn": [
+    { "id": "text", "views": ["what", "parts"],
+      "why": "Text in a text style grows and shrinks with the user's text size.",
+      "whyInExample": "The view `Text(\"Lima\")` is a text, as `Text(\"Lima\")` is on the page of Text." },
+    { "id": "environment", "views": ["parts"],
+      "why": "SwiftUI sets the text size in the environment, where text reads it.",
+      "whyInExample": "The modifier `dynamicTypeSize(size)` sets the size in the environment of the text, as `environment(\\.isEnabled, false)` sets whether views are enabled." }
+  ],
+  "example": {
+    "ios": true,
+    "code": [
+      "import SwiftUI",
+      "",
+      "let usual = DynamicTypeSize.large",
+      "let bigger = DynamicTypeSize.accessibility3",
+      "for size in [usual, bigger] {",
+      "    let label = Text(\"Lima\")",
+      "        .font(.body)",
+      "        .dynamicTypeSize(size)",
+      "    let renderer = ImageRenderer(content: label)",
+      "    print(size, renderer.cgImage!.height)",
+      "}"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "Dynamic Type is the text size that a user chooses in Settings. Text in a text style, such as `.body`, follows it: it is drawn larger or smaller for each size. Apple's documentation says that the five sizes whose names begin with accessibility are much larger than the rest.",
+      "marks": [
+        { "line": 7, "text": ".font(.body)", "part": "text-style", "label": "follows the size" },
+        { "line": 8, "text": "dynamicTypeSize(size)", "part": "type-size", "label": "the user's size" }
+      ],
+      "afterExample": "The same `Text` is drawn twice in the body style: at the size most people use, and at one of the accessibility sizes. It is 21 pixels tall the first time, and 48 the second. The program runs on an iPhone in the simulator, because text sizes come from iOS.",
+      "problem": "People see differently, and many need larger text to read at all. Text that keeps one size is too small for them to read. Text styles grow with the size each user chooses, so the same app is readable for everyone.",
+      "how": "SwiftUI sets the user's size in the environment, and text in a text style reads it, and picks its font size from it. Here the modifier `dynamicTypeSize` sets the size for the text, as Settings would. A layout must leave room for the larger sizes, such as by letting text wrap onto more lines.",
+      "when": [
+        { "text": "Use text styles, such as body, headline, and caption, for all text, so that every word follows the user's size." },
+        { "text": "Don't give text a fixed size in points. It stays the same at every size the user chooses, and is too small for those who need it larger." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "text-style", "name": "The text style `.body`, line 7",
+          "text": "The modifier `font` gives the text the body style, the style of the main text of a screen. A text style has a font size for each text size, so the text follows the user's choice." },
+        { "part": "type-size", "name": "The text size, line 8",
+          "text": "The modifier `dynamicTypeSize` sets the text size for the text, as the user's setting would. The size `.large` is the one most people use, and `.accessibility3` is one of the much larger sizes." }
+      ],
+      "marks": [
+        { "line": 7, "text": ".font(.body)", "part": "text-style", "label": "text style" },
+        { "line": 8, "text": "dynamicTypeSize(size)", "part": "type-size", "label": "text size" }
+      ],
+      "steps": [
+        { "text": "Lines 3 and 4 name two text sizes, and the loop on line 5 runs first with `.large`.", "line": 5, "also": [3, 4] },
+        { "text": "Lines 6 to 8 make a `Text` in the body style at the size `.large`. Line 9 makes a renderer, and line 10 draws it and prints the height of the image: {{large 21}}.", "line": 10, "also": [6, 7, 8, 9], "prints": ["large 21"] },
+        { "text": "The loop runs again with `.accessibility3`. The same text in the same style is now drawn much larger, and line 10 prints {{accessibility3 48}}.", "line": 10, "also": [8], "prints": ["accessibility3 48"] }
+      ],
+      "end": { "kind": "answer", "text": "The text in the body style took its font size from the text size, so the same words grew from 21 to 48 pixels tall." }
+    }
+  }
+}

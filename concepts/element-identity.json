@@ -1,0 +1,6 @@
+{
+  "id": "element-identity",
+  "name": "Identity of an element",
+  "first": "The value that tells one element of a ForEach's data from the others: the element's id when it is identifiable, or the property that a key path names, which becomes the identity of the element's view.",
+  "parts": []
+}

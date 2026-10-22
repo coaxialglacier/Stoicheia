@@ -1,0 +1,71 @@
+{
+  "id": "app-storage",
+  "name": "App storage",
+  "area": "ui",
+  "first": "A property wrapper that keeps a small value in the app's user defaults, so that it is still there after the app quits, and updates the view when it changes.",
+  "parts": ["app-storage-property", "storage-key"],
+  "dependsOn": [
+    { "id": "state", "views": ["what", "parts"],
+      "why": "App storage works as state does in a view, and keeps its value in user defaults in place of SwiftUI's storage.",
+      "whyInExample": "The attribute `@AppStorage(\"nights\")` makes `nights` change the view, as `@State` makes `taps` change `Counter`." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "let suite = \"Example.Trips\"",
+      "let store = UserDefaults(suiteName: suite)!",
+      "store.removeObject(forKey: \"nights\")",
+      "",
+      "struct Settings: View {",
+      "    @AppStorage(\"nights\") var nights = 3",
+      "    var body: some View {",
+      "        let _ = print(\"nights:\", nights)",
+      "        Text(\"\\(nights)\")",
+      "            .onAppear { nights = 5 }",
+      "    }",
+      "}",
+      "",
+      "let screen = Settings().defaultAppStorage(store)",
+      "_ = ImageRenderer(content: screen).cgImage",
+      "print(store.integer(forKey: \"nights\"))",
+      "let again = Settings().defaultAppStorage(store)",
+      "_ = ImageRenderer(content: again).cgImage"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A property marked `@AppStorage` keeps its value in user defaults, the small store of settings that the system keeps for each app on the device, under a key. Apple's documentation says that it reflects a value from user defaults, and updates the view when that value changes. Its value is still there after the app quits.",
+      "marks": [
+        { "line": 8, "text": "@AppStorage(\"nights\") var nights = 3", "part": "app-storage-property", "label": "kept in user defaults" }
+      ],
+      "afterExample": "The view `Settings` keeps `nights` in user defaults, under the key nights. Setting it to 5 writes 5 there, as line 18 shows, so a second `Settings`, made on line 19, starts at 5, as the screen would after the app starts again.",
+      "problem": "Some values must outlive the app, such as the number of nights a user usually plans, or whether reminders are on. State is gone when the view goes away. App storage keeps the value in user defaults, which the system saves to the device.",
+      "how": "Reading the property reads the value under its key in user defaults, or its first value, 3, when there is none. Writing it writes to user defaults, and runs the `body` again. Apple's documentation says that a view uses the standard user defaults unless `defaultAppStorage` gives it another store, as line 16 does here so the example has a store of its own.",
+      "when": [
+        { "text": "Use it for small settings of the user, such as a number, a choice, or whether something is on." },
+        { "text": "Don't keep private data in it, such as a password. Apple's documentation says that user defaults are stored on disk unencrypted, and that private data belongs in the keychain. Don't keep the app's data there either, such as trips: a SwiftData model saves those." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "app-storage-property", "name": "The property `nights`, line 8",
+          "text": "The attribute `@AppStorage` makes `nights` a wrapped property of `AppStorage`, a property wrapper that SwiftUI provides. Its first value, 3, is used while user defaults has nothing under its key." },
+        { "part": "storage-key", "name": "The key, line 8",
+          "text": "The string in the parentheses, nights, is the key that the value is kept under in user defaults. Line 18 reads the same key straight from the store." }
+      ],
+      "marks": [
+        { "line": 8, "text": "@AppStorage(\"nights\") var nights = 3", "part": "app-storage-property", "label": "app storage" },
+        { "line": 8, "text": "\"nights\"", "part": "storage-key", "label": "key" }
+      ],
+      "steps": [
+        { "text": "Lines 3 and 4 open a store of user defaults of the example's own, and line 5 removes the key nights from it, so every run starts the same.", "line": 4, "also": [3, 5] },
+        { "text": "Line 16 makes a `Settings` that uses that store, and line 17 draws it. The store has nothing under nights, so `nights` is 3, and line 10 prints {{nights: 3}}.", "line": 10, "also": [16, 17, 8], "prints": ["nights: 3"] },
+        { "text": "The `Text` appears, and line 12 sets `nights` to 5, which writes 5 under the key nights. The `body` runs again, and line 10 prints {{nights: 5}}.", "line": 10, "also": [12], "prints": ["nights: 5"] },
+        { "text": "Line 18 reads the key from the store: {{5}}.", "line": 18, "prints": ["5"] },
+        { "text": "Line 19 makes a new `Settings`, and line 20 draws it. The store has 5 under nights, so line 10 prints {{nights: 5}}, and setting 5 again on line 12 changes nothing.", "line": 10, "also": [19, 20, 12], "prints": ["nights: 5"] }
+      ],
+      "end": { "kind": "answer", "text": "The value of `nights` went into user defaults, so a new view, as after a restart of the app, started from it." }
+    }
+  }
+}

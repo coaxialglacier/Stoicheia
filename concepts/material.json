@@ -1,0 +1,39 @@
+{
+  "id": "material",
+  "name": "Material",
+  "area": "ui",
+  "first": "A see-through background that blurs what is behind a view, whose thickness says how much of the colors behind it come through, and which differs in light and dark appearance.",
+  "parts": ["material-thickness"],
+  "dependsOn": [
+    { "id": "view-modifier", "views": ["what"],
+      "why": "A material is put behind a view with the background modifier.",
+      "whyInExample": "The call `background(.ultraThinMaterial)` is a modifier of the padded `Text`, as `opacity(0.5)` is a modifier of `padded`." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "let label = Text(\"Lima\")",
+      "    .padding()",
+      "    .background(.ultraThinMaterial)",
+      "print(type(of: label))"
+    ],
+    "output": ["ModifiedContent<ModifiedContent<Text, _PaddingLayout>, _BackgroundStyleModifier<Material>>"]
+  },
+  "views": {
+    "what": {
+      "is": "A material is a background that blurs what is behind a view, and lets some of its colors through. The modifier `background` puts a material behind a view and its padding. Apple's documentation says that a material is not a view, and that its blur is not plain opacity, but a blend that differs on each platform.",
+      "marks": [
+        { "line": 5, "text": "background(.ultraThinMaterial)", "label": "blurs what is behind" },
+        { "line": 5, "text": ".ultraThinMaterial", "part": "material-thickness", "label": "its thickness" }
+      ],
+      "afterExample": "The label Lima, with space around it, gets the thinnest material behind it, which lets the most color through. A program with no window has nothing behind the label to blur, so line 6 prints the type: the padded `Text`, with a modifier that draws a material, {{Material}}, behind it.",
+      "problem": "Text drawn over a photo or a map can be hard to read, and a solid background behind it hides what is under it. A material keeps the text readable, while the colors and shapes behind it still show through, blurred.",
+      "how": "Apple's documentation says that the background modifier puts the material below the view, and blurs the part of the background that the view and its padding cover. How much of the background comes through depends on the material's thickness, and the effect differs between light and dark appearance. Text on a material is drawn in a blend of the colors in front and behind, which keeps it easy to read.",
+      "when": [
+        { "text": "Use a material behind controls or text that sit over content with many colors and shapes, such as a label over a photo or a bar over a map." },
+        { "text": "Don't use a material over a plain background. With nothing to blur, it only changes the color, and a plain color is simpler." }
+      ]
+    }
+  }
+}

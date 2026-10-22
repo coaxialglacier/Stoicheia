@@ -1,0 +1,6 @@
+{
+  "id": "task-value",
+  "name": "Task result",
+  "first": "The value that a task's closure returned, which code reads with await, waiting until the task has finished.",
+  "parts": []
+}

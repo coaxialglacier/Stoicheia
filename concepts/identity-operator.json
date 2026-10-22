@@ -1,0 +1,6 @@
+{
+  "id": "identity-operator",
+  "name": "Identity operator",
+  "first": "Three equal signs between two references, which give true when both refer to the same instance.",
+  "parts": []
+}

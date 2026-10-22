@@ -1,0 +1,72 @@
+{
+  "id": "search-field",
+  "name": "Search field",
+  "area": "ui",
+  "first": "A field for the text the user searches for, which SwiftUI places in the toolbar of a navigation stack, and whose text is a binding that the view filters its data with.",
+  "parts": ["searchable-modifier", "search-text"],
+  "dependsOn": [
+    { "id": "navigation-stack", "views": ["what", "parts"],
+      "why": "SwiftUI places the search field in the toolbar of the navigation stack around the view.",
+      "whyInExample": "The `Text` is inside a `NavigationStack`, as `list` is on the page of Navigation stack." },
+    { "id": "binding", "views": ["what", "parts"],
+      "why": "A search field writes the text the user types through a binding to a string.",
+      "whyInExample": "The value `$query` is a binding to the state `query`, as `$nights` is a binding to `nights` on the page of Binding." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct Cities: View {",
+      "    @State private var query = \"\"",
+      "    let all = [\"Lima\", \"Oslo\", \"Lisbon\"]",
+      "    var body: some View {",
+      "        let shown = all.filter { city in",
+      "            query.isEmpty || city.contains(query)",
+      "        }",
+      "        let _ = print(\"shows\", shown)",
+      "        NavigationStack {",
+      "            Text(shown.joined(separator: \", \"))",
+      "                .searchable(text: $query)",
+      "                .onAppear { query = \"Li\" }",
+      "        }",
+      "    }",
+      "}",
+      "_ = ImageRenderer(content: Cities()).cgImage"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A search field is a field for the text that the user searches for. The modifier `searchable(text:)` adds one, with a binding to a string that holds the text, and SwiftUI places it in the toolbar of the navigation stack around the view. The view filters its data with that string.",
+      "marks": [
+        { "line": 13, "text": "searchable(text: $query)", "part": "searchable-modifier", "label": "a search field" },
+        { "line": 8, "text": "city.contains(query)", "label": "filters with the text" }
+      ],
+      "afterExample": "The view `Cities` shows the cities that contain the search text. When the text becomes Li, the `body` runs again, and shows only Lima and Lisbon.",
+      "problem": "A long list is hard to look through. A search field lets the user type part of a name, and the view shows only what matches. The system draws the field, in the place that users expect on each platform.",
+      "how": "Apple's documentation says that the modifier, on a navigation stack or a view inside one, makes a search field appear in the toolbar, and that it takes a binding to a string, whose storage the app provides. As the user types, the field writes the text through the binding. The `body` read that state, so it runs again, and filters with the new text.",
+      "when": [
+        { "text": "Use it for a list that the user looks for items in, such as trips or cities." },
+        { "text": "Don't use it for a few items that fit on the screen. A short list is quicker to read than to search." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "searchable-modifier", "name": "The modifier `searchable(text:)`, line 13",
+          "text": "The modifier adds a search field to the toolbar of the navigation stack that the `Text` is in. It is given `$query`, a binding to the state `query`, where the field writes the text the user types." },
+        { "part": "search-text", "name": "The search text `query`, line 4",
+          "text": "The state `query` holds the search text, and starts empty. Lines 7 to 9 keep the cities that contain it, or every city while it is empty." }
+      ],
+      "marks": [
+        { "line": 13, "text": "searchable(text: $query)", "part": "searchable-modifier", "label": "search field" },
+        { "line": 4, "text": "@State private var query = \"\"", "part": "search-text", "label": "search text" }
+      ],
+      "steps": [
+        { "text": "Line 18 makes a `Cities` and draws it. The state `query` starts empty.", "line": 18, "also": [4] },
+        { "text": "The `body` runs. The state `query` is empty, so lines 7 to 9 keep every city, and line 10 prints {{shows [\"Lima\", \"Oslo\", \"Lisbon\"]}}.", "line": 10, "also": [7, 8, 9], "prints": ["shows [\"Lima\", \"Oslo\", \"Lisbon\"]"] },
+        { "text": "The `Text` appears, and line 14 sets `query` to `\"Li\"`, as the search field would when the user types Li.", "line": 14 },
+        { "text": "The `body` read `query`, so it runs again. Line 8 keeps the cities that contain Li, and line 10 prints {{shows [\"Lima\", \"Lisbon\"]}}.", "line": 10, "also": [8], "prints": ["shows [\"Lima\", \"Lisbon\"]"] }
+      ],
+      "end": { "kind": "answer", "text": "The search text is state, so each change to it ran the `body` again, which filtered the cities with the new text." }
+    }
+  }
+}

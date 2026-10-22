@@ -1,0 +1,6 @@
+{
+  "id": "text-field-prompt",
+  "name": "Prompt",
+  "first": "The text that a text field shows, dimmed, while its string is empty, to say what to type.",
+  "parts": []
+}

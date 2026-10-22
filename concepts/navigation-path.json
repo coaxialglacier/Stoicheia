@@ -1,0 +1,121 @@
+{
+  "id": "navigation-path",
+  "name": "Navigation path",
+  "area": "ui",
+  "first": "The list of values that a navigation stack shows a screen for, one value for each screen pushed on its root view, so that code pushes a screen by adding a value and goes back by removing one.",
+  "parts": ["path-argument", "path-value"],
+  "dependsOn": [
+    { "id": "navigation-stack", "views": ["what", "parts"],
+      "why": "A path is the list of values whose screens a navigation stack pushes on its root view.",
+      "whyInExample": "The view `list` is the root view, with a destination for an `Int`, as on the page of Navigation stack." },
+    { "id": "hashable", "views": ["what", "parts"],
+      "why": "The values of a path must be hashable.",
+      "whyInExample": "The values of `path` are of type `Int`, which is hashable, as `City` is." },
+    { "id": "bindable", "views": ["parts"],
+      "why": "The example keeps its path in an observable class, and gives the stack a binding to it with a bindable property.",
+      "whyInExample": "The value `$router.path` is a binding to `path` of the router, as `$trip.nights` is a binding to `nights` of the trip." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "@Observable",
+      "class Router {",
+      "    var path: [Int] = []",
+      "}",
+      "",
+      "struct TripScreen: View {",
+      "    let id: Int",
+      "    var body: some View {",
+      "        Text(\"Trip \\(id)\")",
+      "            .onAppear { print(\"shows trip\", id) }",
+      "            .onDisappear {",
+      "                print(\"hides trip\", id)",
+      "            }",
+      "    }",
+      "}",
+      "",
+      "let list = Text(\"All trips\")",
+      "    .onAppear { print(\"shows the list\") }",
+      "    .navigationDestination(for: Int.self) { id in",
+      "        TripScreen(id: id)",
+      "    }",
+      "",
+      "struct Trips: View {",
+      "    @Bindable var router: Router",
+      "    var body: some View {",
+      "        NavigationStack(path: $router.path) {",
+      "            list",
+      "        }",
+      "    }",
+      "}",
+      "",
+      "let router = Router()",
+      "let screen = Trips(router: router)",
+      "let renderer = ImageRenderer(content: screen)",
+      "_ = renderer.cgImage",
+      "router.path.append(3)",
+      "RunLoop.main.run(until: .now + 0.1)",
+      "_ = renderer.cgImage",
+      "router.path.append(5)",
+      "RunLoop.main.run(until: .now + 0.1)",
+      "_ = renderer.cgImage",
+      "router.path.removeLast()",
+      "RunLoop.main.run(until: .now + 0.1)",
+      "_ = renderer.cgImage",
+      "print(router.path)"
+    ]
+  },
+  "snippets": {
+    "mixed": {
+      "code": [
+        "import SwiftUI",
+        "",
+        "var path = NavigationPath()",
+        "path.append(3)",
+        "path.append(\"Lima\")",
+        "print(path.count)"
+      ],
+      "output": ["2"]
+    }
+  },
+  "views": {
+    "what": {
+      "is": "A navigation stack's path is the list of values whose screens are pushed on its root view, from the bottom up. The stack is given a binding to it, with `path:`. Code that adds a value pushes the screen for that value, and code that removes the last value goes back one screen.",
+      "marks": [
+        { "line": 28, "text": "path: $router.path", "part": "path-argument", "label": "the path" },
+        { "line": 38, "text": "append(3)", "label": "pushes trip 3" },
+        { "line": 44, "text": "removeLast()", "label": "goes back" }
+      ],
+      "afterExample": "No one taps anything here. Lines 38 and 41 push the screens of trips 3 and 5 by adding 3 and 5 to the path, and line 44 goes back from trip 5 by removing its value.",
+      "problem": "An app often has to show a screen from code, not from a tap: after a trip is saved, from a link that opens the app, or to go back to the first screen. With the path in a value of its own, code pushes and goes back by changing a list.",
+      "how": "Apple's documentation says that the stack adds a value to the path as it adds a screen, and removes it when it removes the screen, and that code can change the path to change the screens on the stack. Here the path is a property of an observable class, so any code that has the router can change it.",
+      "when": [
+        { "text": "Use a path for navigation from code, such as going back to the root view after a save, by removing every value. For values of different types, use a `NavigationPath`, which holds values of any hashable type:", "snippet": "mixed" },
+        { "text": "Don't add a path to a stack whose screens change only when the user taps. Without one, the stack keeps its path itself." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "path-argument", "name": "The path, line 28",
+          "text": "The argument `path` of `NavigationStack` is a binding to the list of values whose screens are pushed. Here it is `$router.path`, a binding to `path` of the router, which starts empty." },
+        { "part": "path-value", "name": "The values of the path, lines 38 and 41",
+          "text": "Each value in the path stands for one pushed screen. The values here are of type `Int`, which is hashable, as every value of a path must be, and the stack makes each screen with the destination for an `Int`." }
+      ],
+      "marks": [
+        { "line": 28, "text": "path: $router.path", "part": "path-argument", "label": "path" },
+        { "line": 38, "text": "3", "part": "path-value", "label": "a value" },
+        { "line": 41, "text": "5", "part": "path-value", "label": "a value" }
+      ],
+      "steps": [
+        { "text": "Line 34 makes a `Router`, whose `path` is empty. Lines 35 and 36 make a `Trips` and a renderer, and line 28 gives the stack a binding to `path`.", "line": 34, "also": [35, 36, 28] },
+        { "text": "Line 37 asks for the image. The path is empty, so the stack shows only its root view, and line 20 prints {{shows the list}}.", "line": 20, "also": [37], "prints": ["shows the list"] },
+        { "text": "Line 38 adds 3 to the path. Line 39 runs the main run loop, the loop that does the work waiting on the main thread, and line 40 draws again. The stack pushes the screen for 3, and line 12 prints {{shows trip 3}}.", "line": 12, "also": [38, 39, 40], "prints": ["shows trip 3"] },
+        { "text": "Line 41 adds 5, and lines 42 and 43 draw again. The stack pushes the screen for 5 on top, and line 12 prints {{shows trip 5}}.", "line": 12, "also": [41, 42, 43], "prints": ["shows trip 5"] },
+        { "text": "Line 44 removes the last value, 5, and lines 45 and 46 draw again. The stack removes the screen of trip 5, as its back button would, and line 14 prints {{hides trip 5}}.", "line": 14, "also": [44, 45, 46], "prints": ["hides trip 5"] },
+        { "text": "Line 47 prints the path: {{[3]}}. The screen of trip 3 is on top again.", "line": 47, "prints": ["[3]"] }
+      ],
+      "end": { "kind": "answer", "text": "Adding a value to the path pushed its screen, and removing the last value went back one screen, with no tap." }
+    }
+  }
+}

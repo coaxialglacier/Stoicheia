@@ -1,0 +1,85 @@
+{
+  "id": "view-identity",
+  "name": "View identity",
+  "area": "ui",
+  "first": "How SwiftUI tells whether a view in a new description is the same view as before, which keeps its state, or a new view, whose state starts again.",
+  "parts": ["structural-identity", "explicit-identity"],
+  "dependsOn": [
+    { "id": "state", "views": ["what", "parts"],
+      "why": "Identity decides whether a view keeps its state or starts it again.",
+      "whyInExample": "The property `taps` is state of `Counter`, as it is on the page of State." },
+    { "id": "view-update", "views": ["parts"],
+      "why": "A view that keeps its identity runs its body again only when a value that the body read changes.",
+      "whyInExample": "When line 23 gives the renderer a new `Screen`, nothing that the `body` of `Counter` read has changed, as `visits` changed nothing on the page of View update." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct Counter: View {",
+      "    @State private var taps = 0",
+      "    var body: some View {",
+      "        let _ = print(\"taps is\", taps)",
+      "        Text(\"\\(taps)\")",
+      "            .onAppear { taps += 1 }",
+      "    }",
+      "}",
+      "",
+      "struct Screen: View {",
+      "    let version: Int",
+      "    var body: some View {",
+      "        Counter().id(version)",
+      "    }",
+      "}",
+      "",
+      "let first = Screen(version: 1)",
+      "let renderer = ImageRenderer(content: first)",
+      "_ = renderer.cgImage",
+      "print(\"same id\")",
+      "renderer.content = Screen(version: 1)",
+      "_ = renderer.cgImage",
+      "print(\"new id\")",
+      "renderer.content = Screen(version: 2)",
+      "_ = renderer.cgImage"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A view's identity is how SwiftUI tells whether a view in a new description is the same view as before. The same view keeps its state, and a new view starts its state again. SwiftUI uses the view's place in its parent's `body`, and the value of its `id` modifier when it has one.",
+      "marks": [
+        { "line": 15, "text": "Counter()", "part": "structural-identity", "label": "its place" },
+        { "line": 15, "text": "id(version)", "part": "explicit-identity", "label": "its id" }
+      ],
+      "afterExample": "Lines 23 and 26 give the renderer a new `Screen`. With the same id, `Counter` is the same view, and `taps` stays 1. With a new id, `Counter` is a new view, so `taps` starts again at 0.",
+      "problem": "SwiftUI makes a new description of the screen each time a `body` runs, and each description is made of new values. SwiftUI must match each view in it with a view it already has, to keep that view's state, or else make a new view.",
+      "how": "Apple's documentation says that when the value given to a view's `id` changes, the view's identity, and with it its state, is reset. A view with no `id` is matched by its place: a view of the same type at the same place in its parent's `body` is the same view.",
+      "when": [
+        { "text": "Use `id` to start a view again on purpose, such as an editor when the user picks a different trip." },
+        { "text": "Don't give `id` a value that changes each time the `body` runs, such as a new random number. Every update would then make a new view, and its state would be lost each time." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "structural-identity", "name": "The place of `Counter()`, line 15",
+          "text": "The `body` of `Screen` has one view, `Counter()`, at its first place. In each new `Screen`, a `Counter` is at the same place, so by its place it is the same view." },
+        { "part": "explicit-identity", "name": "The id, line 15",
+          "text": "The modifier `id` gives `Counter` the value of `version` as its id. SwiftUI compares it as well as the place: while it stays 1, the view is the same view, and when it becomes 2, the view is a new view." }
+      ],
+      "marks": [
+        { "line": 15, "text": "Counter()", "part": "structural-identity", "label": "place" },
+        { "line": 15, "text": "id(version)", "part": "explicit-identity", "label": "id" }
+      ],
+      "steps": [
+        { "text": "Line 19 makes a `Screen` with version 1, and line 20 makes a renderer. Line 21 asks for the image, so SwiftUI makes a `Counter` with id 1, whose `taps` is 0.", "line": 21, "also": [19, 20, 15] },
+        { "text": "The `body` of `Counter` runs, and line 6 prints {{taps is 0}}.", "line": 6, "prints": ["taps is 0"] },
+        { "text": "The `Text` appears, and line 8 adds 1 to `taps`, so the `body` runs again, and line 6 prints {{taps is 1}}.", "line": 6, "also": [8], "prints": ["taps is 1"] },
+        { "text": "Line 22 prints {{same id}}.", "line": 22, "prints": ["same id"] },
+        { "text": "Line 23 gives the renderer a new `Screen`, with version 1 again, and line 24 draws it. The `Counter` is at the same place with the same id, so it is the same view, and `taps` is still 1. Nothing that its `body` read changed, so the `body` does not run.", "line": 23, "also": [24] },
+        { "text": "Line 25 prints {{new id}}.", "line": 25, "prints": ["new id"] },
+        { "text": "Line 26 gives the renderer a `Screen` with version 2, and line 27 draws it. The id changed, so SwiftUI removes the old `Counter` and makes a new one, whose `taps` starts at 0. Line 6 prints {{taps is 0}}.", "line": 6, "also": [26, 27], "prints": ["taps is 0"] },
+        { "text": "The new `Text` appears, line 8 adds 1 to `taps`, and line 6 prints {{taps is 1}}.", "line": 6, "also": [8], "prints": ["taps is 1"] }
+      ],
+      "end": { "kind": "answer", "text": "The same place and the same id kept the view and its state. A new id made a new view, whose state started again." }
+    }
+  }
+}

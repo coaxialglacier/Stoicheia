@@ -1,0 +1,6 @@
+{
+  "id": "animation-curve",
+  "name": "Animation curve",
+  "first": "The curve that an animation follows, which maps each moment of its duration to how far along the change is, from 0 to 1.",
+  "parts": []
+}

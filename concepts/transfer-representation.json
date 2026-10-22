@@ -1,0 +1,6 @@
+{
+  "id": "transfer-representation",
+  "name": "Transfer representation",
+  "first": "One way that a transferable type becomes data and back, for one content type, listed in the type's required property.",
+  "parts": []
+}

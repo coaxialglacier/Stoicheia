@@ -1,0 +1,6 @@
+{
+  "id": "sheet-content",
+  "name": "Sheet content",
+  "first": "The view in the braces of the sheet modifier, which SwiftUI presents as the sheet.",
+  "parts": []
+}

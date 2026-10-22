@@ -1,0 +1,6 @@
+{
+  "id": "drop-destination",
+  "name": "Drop destination",
+  "first": "The modifier that makes a view a place to drop values of one transferable type, with a closure that gets the dropped values and says whether it took them.",
+  "parts": []
+}

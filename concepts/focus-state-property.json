@@ -1,0 +1,6 @@
+{
+  "id": "focus-state-property",
+  "name": "Focus state property",
+  "first": "A property of a view marked with the FocusState attribute, which holds whether a field has the focus, or which field has it, and which SwiftUI changes as the focus moves.",
+  "parts": []
+}

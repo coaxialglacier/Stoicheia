@@ -1,0 +1,48 @@
+{
+  "id": "sheet",
+  "name": "Sheet",
+  "area": "ui",
+  "first": "A screen that SwiftUI presents over the current one while a binding is true, and takes away when it becomes false.",
+  "parts": ["sheet-binding", "sheet-content"],
+  "dependsOn": [
+    { "id": "binding", "views": ["what"],
+      "why": "A sheet is shown while a binding to a value of true or false is true.",
+      "whyInExample": "The value `$editing` is a binding to the state `editing`, as `$nights` is a binding to `nights` on the page of Binding." },
+    { "id": "view-modifier", "views": ["what"],
+      "why": "A sheet is added to a view with a modifier, which returns the view with the sheet attached.",
+      "whyInExample": "The call `sheet(isPresented:)` is a modifier of the `Text`, as `padding(8)` is a modifier of `city`." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct Planner: View {",
+      "    @State private var editing = true",
+      "    var body: some View {",
+      "        Text(\"Trips\")",
+      "            .sheet(isPresented: $editing) {",
+      "                Text(\"Editor\")",
+      "            }",
+      "    }",
+      "}",
+      "print(type(of: Planner().body))"
+    ],
+    "output": ["ModifiedContent<Text, SheetPresentationModifier<Text, NullSheetAnchor<Key>>>"]
+  },
+  "views": {
+    "what": {
+      "is": "A sheet is a screen that slides up over the current screen, which stays where it was underneath. The modifier `sheet(isPresented:)` is given a binding to a value of true or false. While the value is true, SwiftUI presents the view in the modifier's braces as a sheet.",
+      "marks": [
+        { "line": 7, "text": "isPresented: $editing", "part": "sheet-binding", "label": "shown while true" },
+        { "line": 8, "text": "Text(\"Editor\")", "part": "sheet-content", "label": "the sheet" }
+      ],
+      "afterExample": "The state `editing` starts true, as if the user had tapped a button that sets it, so in an app the editor would slide up over Trips. A program with no window presents no sheet, so line 12 prints the type of the `body`: the `Text`, with a modifier that holds the sheet's content, another `Text`.",
+      "problem": "A screen often needs a short task that the user finishes or cancels before going on, such as adding a trip. A sheet shows that task over the current screen, and the user comes back to the screen as it was.",
+      "how": "Apple's documentation says that the binding determines whether the sheet is presented. Setting the value to true presents the sheet, and setting it to false takes the sheet away. The sheet's content is a view of its own, so it gets the data it changes through bindings passed to it.",
+      "when": [
+        { "text": "Use a sheet for a task that the user finishes and leaves, such as adding or editing one trip." },
+        { "text": "Don't use a sheet for a screen that goes deeper from the current one and keeps a way back, such as the details of a trip. A navigation stack pushes that screen." }
+      ]
+    }
+  }
+}

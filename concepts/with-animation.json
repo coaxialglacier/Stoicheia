@@ -1,0 +1,6 @@
+{
+  "id": "with-animation",
+  "name": "Animated change",
+  "first": "A call that runs a closure and animates the changes of state that the closure makes, with the animation it is given.",
+  "parts": []
+}

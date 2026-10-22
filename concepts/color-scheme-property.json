@@ -1,0 +1,6 @@
+{
+  "id": "color-scheme-property",
+  "name": "Color scheme value",
+  "first": "The environment value that says whether a view is shown in light mode or in dark mode.",
+  "parts": []
+}

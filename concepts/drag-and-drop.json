@@ -1,0 +1,48 @@
+{
+  "id": "drag-and-drop",
+  "name": "Drag and drop",
+  "area": "ui",
+  "first": "Moving a value from one view, or from one app, to another, by dragging it and dropping it, with the value carried as data of a transferable type.",
+  "parts": ["draggable-modifier", "drop-destination"],
+  "dependsOn": [
+    { "id": "transferable", "views": ["what"],
+      "why": "A drag carries a value of a transferable type, as data, and the drop turns the data back into values.",
+      "whyInExample": "The constant `city` is a string, which is transferable, as `Trip` is on the page of Transferable." },
+    { "id": "gesture", "views": ["what"],
+      "why": "A drag starts with a touch that the view recognizes, which the drag modifier adds for it.",
+      "whyInExample": "The modifier `draggable(city)` adds to the `Text` the gestures for dragging it, as `gesture(drag)` adds a drag on the page of Gesture." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "let city = \"Lima\"",
+      "let card = Text(city).draggable(city)",
+      "let bin = Color.gray.dropDestination(",
+      "    for: String.self",
+      ") { cities, _ in",
+      "    print(\"dropped\", cities)",
+      "    return true",
+      "}",
+      "let data = try await city.exported(as: .plainText)",
+      "print(String(decoding: data, as: UTF8.self))"
+    ],
+    "output": ["Lima"]
+  },
+  "views": {
+    "what": {
+      "is": "Drag and drop moves a value from one view to another, or from one app to another. The modifier `draggable` makes a view the start of a drag, carrying a value of a transferable type. The modifier `dropDestination` makes a view a place to drop values of one type, and calls its closure with the values that were dropped.",
+      "marks": [
+        { "line": 4, "text": "draggable(city)", "part": "draggable-modifier", "label": "can be dragged" },
+        { "line": 5, "text": "dropDestination(", "part": "drop-destination", "label": "takes strings" }
+      ],
+      "afterExample": "The card Lima can be dragged, and the gray area takes strings that are dropped on it. A drag carries the string as data: line 11 turns it into plain text, as the drag would, and line 12 prints that data as text: {{Lima}}. A program with no window has no finger to drag, so the closure of the drop never runs.",
+      "problem": "Users expect to move things by dragging them, such as a photo into a trip, or a trip into another app. Both sides must agree on what the data is. Drag and drop carries the value as data of a transferable type, so any side that reads that kind of data can take it.",
+      "how": "Apple's documentation says that `draggable` adds the gestures for drag and drop to the view, and makes a picture of the view to show under the finger. When the user drops on a view with `dropDestination`, the data is turned back into values of the type it names, here `String`, and its closure gets them, with the point of the drop. The closure returns true when it took the values.",
+      "when": [
+        { "text": "Use it for moving items where people expect it, such as sorting trips, or adding a photo from another app." },
+        { "text": "Don't make dragging the only way to do something. Some users cannot drag, so give a button or a menu as well." }
+      ]
+    }
+  }
+}

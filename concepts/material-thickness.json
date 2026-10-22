@@ -1,0 +1,6 @@
+{
+  "id": "material-thickness",
+  "name": "Material thickness",
+  "first": "How thick a material is, from ultra thin to ultra thick: the thinner it is, the more of the colors behind it come through.",
+  "parts": []
+}

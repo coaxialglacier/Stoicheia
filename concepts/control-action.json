@@ -1,0 +1,6 @@
+{
+  "id": "control-action",
+  "name": "Action of a control",
+  "first": "The closure that a button or a menu item is given, which it calls each time the user taps it.",
+  "parts": []
+}

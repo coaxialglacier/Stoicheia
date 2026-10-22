@@ -1,0 +1,6 @@
+{
+  "id": "accessibility-label",
+  "name": "Accessibility label",
+  "first": "The words that VoiceOver reads for a view, which SwiftUI makes from the view's text, and a modifier can give or change.",
+  "parts": []
+}

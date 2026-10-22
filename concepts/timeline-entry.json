@@ -1,0 +1,6 @@
+{
+  "id": "timeline-entry",
+  "name": "Timeline entry",
+  "first": "One item of a widget's timeline: the date when the widget's view should be shown, and the data that the view needs at that date.",
+  "parts": []
+}

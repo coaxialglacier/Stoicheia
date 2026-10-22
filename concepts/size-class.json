@@ -1,0 +1,77 @@
+{
+  "id": "size-class",
+  "name": "Size class",
+  "area": "ui",
+  "first": "Whether a window has a regular or a compact amount of room across or down, which a view reads from the environment to choose its layout.",
+  "parts": ["compact-size-class", "regular-size-class"],
+  "dependsOn": [
+    { "id": "environment", "views": ["what", "parts"],
+      "why": "SwiftUI sets the size classes in the environment, and a view reads them from there.",
+      "whyInExample": "The property `@Environment(\\.horizontalSizeClass)` reads the size class, as `@Environment(\\.isEnabled)` reads whether views are enabled." },
+    { "id": "view-builder", "views": ["parts"],
+      "why": "The example chooses its views with an if statement in its body, which the view builder builds.",
+      "whyInExample": "The if statement on line 6 chooses a view, as the if statement in the `body` of `Card` does." }
+  ],
+  "example": {
+    "ios": true,
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct Trips: View {",
+      "    @Environment(\\.horizontalSizeClass) var width",
+      "    var body: some View {",
+      "        if width == .compact {",
+      "            let _ = print(\"one column\")",
+      "            Text(\"Trips\")",
+      "        } else {",
+      "            let _ = print(\"two columns\")",
+      "            Text(\"Trips and Lima\")",
+      "        }",
+      "    }",
+      "}",
+      "",
+      "let phone = Trips()",
+      "    .environment(\\.horizontalSizeClass, .compact)",
+      "_ = ImageRenderer(content: phone).cgImage",
+      "let pad = Trips()",
+      "    .environment(\\.horizontalSizeClass, .regular)",
+      "_ = ImageRenderer(content: pad).cgImage"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A size class says how much room a window has in one direction: compact, as across an iPhone held upright, or regular, as across an iPad. SwiftUI sets a horizontal and a vertical size class in the environment, and a view reads them with `@Environment` to choose its layout.",
+      "marks": [
+        { "line": 4, "text": "@Environment(\\.horizontalSizeClass) var width", "label": "reads the size class" },
+        { "line": 17, "text": ".compact", "part": "compact-size-class", "label": "compact" },
+        { "line": 20, "text": ".regular", "part": "regular-size-class", "label": "regular" }
+      ],
+      "afterExample": "The view `Trips` shows one column when the horizontal size class is compact, and two when it is regular. In an app, SwiftUI sets the size class. Here lines 17 and 20 set it, with `environment`, so that the program can show both. It runs on an iPhone in the simulator, because size classes come from iOS.",
+      "problem": "One app runs on an iPhone, upright or on its side, and on an iPad, full screen or beside another app. A layout for the room on an iPad is too wide for an iPhone. A size class tells a view which kind of room it has, so the view can choose a layout for it.",
+      "how": "Apple's documentation says that SwiftUI sets the size class from the device, its orientation, and how an iPad shares its screen, and that the size class can change while the app runs, such as when the device turns. A view that reads it runs its `body` again when it changes.",
+      "when": [
+        { "text": "Use it to choose between layouts for a little room and a lot of room, such as one column on an iPhone and two on an iPad." },
+        { "text": "Don't use it to tell which device the app runs on. An iPad shares its screen with another app, and is then compact across, as an iPhone is." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "compact-size-class", "name": "The size class `.compact`, line 17",
+          "text": "The value `.compact` means there is little room in that direction, as across an iPhone held upright. Line 17 sets it for `phone`, and the if statement on line 6 shows one column for it." },
+        { "part": "regular-size-class", "name": "The size class `.regular`, line 20",
+          "text": "The value `.regular` means there is a lot of room in that direction, as across an iPad. Line 20 sets it for `pad`, and the else branch on line 9 shows two columns for it." }
+      ],
+      "marks": [
+        { "line": 17, "text": ".compact", "part": "compact-size-class", "label": "compact" },
+        { "line": 20, "text": ".regular", "part": "regular-size-class", "label": "regular" }
+      ],
+      "steps": [
+        { "text": "Lines 16 and 17 make a `Trips` whose horizontal size class is compact, as on an iPhone, and line 18 draws it.", "line": 18, "also": [16, 17] },
+        { "text": "The `body` reads `width`, which is `.compact`, so the if statement on line 6 is true, and line 7 prints {{one column}}.", "line": 7, "also": [4, 6], "prints": ["one column"] },
+        { "text": "Lines 19 and 20 make a `Trips` whose horizontal size class is regular, as on an iPad, and line 21 draws it.", "line": 21, "also": [19, 20] },
+        { "text": "Now `width` is `.regular`, so the else branch runs, and line 10 prints {{two columns}}.", "line": 10, "also": [9], "prints": ["two columns"] }
+      ],
+      "end": { "kind": "answer", "text": "The same view chose one column for a compact size class and two for a regular one, from the value it read in the environment." }
+    }
+  }
+}

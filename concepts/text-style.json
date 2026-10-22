@@ -1,0 +1,6 @@
+{
+  "id": "text-style",
+  "name": "Text style",
+  "first": "A named role for text, such as body, headline, or caption, which has a font size for each text size the user can choose.",
+  "parts": []
+}

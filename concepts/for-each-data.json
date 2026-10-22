@@ -1,0 +1,6 @@
+{
+  "id": "for-each-data",
+  "name": "Data of a ForEach",
+  "first": "The collection whose elements a ForEach makes one view for, in the order of the collection.",
+  "parts": []
+}

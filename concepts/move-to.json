@@ -1,0 +1,6 @@
+{
+  "id": "move-to",
+  "name": "Start of an outline",
+  "first": "The point where a path's outline starts, which the path moves to without drawing.",
+  "parts": []
+}

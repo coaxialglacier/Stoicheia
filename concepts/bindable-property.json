@@ -1,0 +1,6 @@
+{
+  "id": "bindable-property",
+  "name": "Bindable property",
+  "first": "A property of a view marked with the Bindable attribute, which holds an observable class, and whose projected value makes bindings to that class's properties.",
+  "parts": []
+}

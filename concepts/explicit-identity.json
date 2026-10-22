@@ -1,0 +1,6 @@
+{
+  "id": "explicit-identity",
+  "name": "Explicit identity",
+  "first": "A value given to a view with the id modifier, which SwiftUI compares as well as the view's place: when the value changes, the view is a new view, and its state starts again.",
+  "parts": []
+}

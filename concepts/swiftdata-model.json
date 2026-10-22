@@ -1,0 +1,75 @@
+{
+  "id": "swiftdata-model",
+  "name": "SwiftData model",
+  "area": "ui",
+  "first": "A class whose instances SwiftData saves on the device, after a macro adds the code that saving them needs.",
+  "parts": ["model-macro", "persisted-property"],
+  "dependsOn": [
+    { "id": "observable", "views": ["what", "parts"],
+      "why": "A model is a class that a macro changes, as an observable class is, and a model is observable too.",
+      "whyInExample": "The attribute `@Model` before `Trip` is an attached macro, as `@Observable` is before `Trip` on the page of Observable." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftData",
+      "",
+      "@Model",
+      "class Trip {",
+      "    var city: String",
+      "    var nights: Int",
+      "    init(city: String, nights: Int) {",
+      "        self.city = city",
+      "        self.nights = nights",
+      "    }",
+      "}",
+      "",
+      "let trip = Trip(city: \"Lima\", nights: 3)",
+      "print(trip.city, trip.nights)",
+      "print(trip.modelContext == nil)"
+    ],
+    "sil": [
+      { "in": "Trip.init(city:nights:)", "has": "PersistentModel.createBackingData",
+        "shows": "The initializer, which the macro changed, first makes the trip's backing data, where SwiftData keeps its values." },
+      { "in": "Trip.city.getter", "has": "PersistentModel.getValue",
+        "shows": "The macro makes city a computed property, whose getter reads the value from the backing data with getValue(forKey:)." },
+      { "in": "Trip.city.getter", "has": "ObservationRegistrar.access",
+        "shows": "The getter also reports the read, as the getter of an observable class does." }
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A SwiftData model is a class marked with the macro `@Model`. The macro adds the code that SwiftData needs to save the class's instances on the device. Apple's documentation says that the macro makes the class conform to the protocols for saved models and for observation, so a model is also an observable class.",
+      "marks": [
+        { "line": 3, "text": "@Model", "part": "model-macro", "label": "a model" },
+        { "line": 5, "text": "var city: String", "part": "persisted-property", "label": "saved" },
+        { "line": 6, "text": "var nights: Int", "part": "persisted-property", "label": "saved" }
+      ],
+      "afterExample": "The class `Trip` is a model with a city and a number of nights. Line 13 makes one, which is used as any other class's instance. It is not saved yet: line 15 shows that it is in no model context, the object that saves models.",
+      "problem": "Trips that the user adds must still be there the next time the app opens, so they must be saved in a file on the device and read back. Writing that code for each class is long, and easy to get wrong. The macro writes it from the class's stored properties.",
+      "how": "When swiftc builds the program, the macro gives each instance backing data, where SwiftData keeps its values, and turns each stored property into a computed property. The getter reads the value from the backing data and reports the read, and the setter writes it there and reports the change. SwiftData saves what the backing data holds.",
+      "when": [
+        { "text": "Use it for the data that an app saves, such as trips, and the items packed for each one." },
+        { "text": "Don't use it for values that are not saved, such as what a screen shows while it is open. Those belong in state, or in an observable class." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "model-macro", "name": "The macro `@Model`, line 3",
+          "text": "An attached macro written before the class. When swiftc builds the program, it adds backing data to `Trip`, where SwiftData keeps the trip's values, and makes `Trip` a saved model and an observable class." },
+        { "part": "persisted-property", "name": "The saved properties, lines 5 and 6",
+          "text": "The properties `city` and `nights` are written as plain stored properties. The macro makes each one a computed property, whose getter reads its value from the backing data, and whose setter writes the value there. Each one is saved with the trip." }
+      ],
+      "marks": [
+        { "line": 3, "text": "@Model", "part": "model-macro", "label": "macro" },
+        { "line": 5, "text": "var city: String", "part": "persisted-property", "label": "saved property" },
+        { "line": 6, "text": "var nights: Int", "part": "persisted-property", "label": "saved property" }
+      ],
+      "steps": [
+        { "text": "Line 13 calls the initializer on line 7. The macro changed it, so it first makes the trip's backing data, and lines 8 and 9 put the city and the number of nights in it.", "line": 13, "also": [7, 8, 9] },
+        { "text": "Line 14 reads both properties, through the getters that the macro made, and prints {{Lima 3}}.", "line": 14, "prints": ["Lima 3"] },
+        { "text": "Line 15 reads `modelContext`, the model context that the trip is in. The trip has not been put in one, so it is nil, and line 15 prints {{true}}.", "line": 15, "prints": ["true"] }
+      ],
+      "end": { "kind": "answer", "text": "The macro made `city` and `nights` read and write the values that SwiftData keeps. The trip is saved only once it is put in a model context." }
+    }
+  }
+}

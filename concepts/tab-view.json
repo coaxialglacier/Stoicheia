@@ -1,0 +1,86 @@
+{
+  "id": "tab-view",
+  "name": "Tab view",
+  "area": "ui",
+  "first": "A view that shows one of several screens at a time, with a tab bar that the user chooses a screen from.",
+  "parts": ["tab", "tab-selection"],
+  "dependsOn": [
+    { "id": "view", "views": ["what", "parts"],
+      "why": "A tab view is a view, and each of its tabs shows a view.",
+      "whyInExample": "Each tab shows a `Screen`, a view, as `Greeting` is a view." },
+    { "id": "binding", "views": ["what", "parts"],
+      "why": "A tab view is given a binding to the value of the chosen tab, so that code can read and change which tab is shown.",
+      "whyInExample": "The value `$chosen` is a binding to the state `chosen`, as `$nights` is a binding to `nights` on the page of Binding." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct Screen: View {",
+      "    let name: String",
+      "    var body: some View {",
+      "        let _ = print(name, \"shows\")",
+      "        Text(name)",
+      "    }",
+      "}",
+      "",
+      "struct Tabs: View {",
+      "    @State private var chosen = 2",
+      "    var body: some View {",
+      "        TabView(selection: $chosen) {",
+      "            Tab(\"Trips\", systemImage: \"bag\",",
+      "                value: 1) {",
+      "                Screen(name: \"Trips\")",
+      "            }",
+      "            Tab(\"Map\", systemImage: \"map\",",
+      "                value: 2) {",
+      "                Screen(name: \"Map\")",
+      "            }",
+      "        }",
+      "        .onAppear { chosen = 1 }",
+      "    }",
+      "}",
+      "",
+      "let renderer = ImageRenderer(content: Tabs())",
+      "_ = renderer.cgImage",
+      "RunLoop.main.run(until: .now + 0.1)",
+      "_ = renderer.cgImage"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A `TabView` is a view that shows one of several screens at a time. Each `Tab` in its braces is one screen, with a title and a symbol in the tab bar, where the user chooses a screen. A binding to a value says which tab is chosen, so code can choose a tab too.",
+      "marks": [
+        { "line": 15, "text": "Tab", "part": "tab", "label": "a tab" },
+        { "line": 14, "text": "selection: $chosen", "part": "tab-selection", "label": "the chosen tab" }
+      ],
+      "afterExample": "The state `chosen` starts at 2, so the Map tab is shown first. When the tab view appears, line 24 sets `chosen` to 1, and the tab view shows the Trips tab.",
+      "problem": "An app often has a few separate areas, such as trips, a map, and settings, that the user moves between at any time. A tab view keeps them side by side, so the user moves to any of them with one tap, and shows the screen of only one at a time.",
+      "how": "Apple's documentation says that each tab should have a unique value, of the same type for all the tabs, and that when people select a tab, the tab view updates the selection binding to that tab's value. It also works the other way: changing the value shows the tab with that value.",
+      "when": [
+        { "text": "Use it for the few main areas of an app, which the user moves between at any time." },
+        { "text": "Don't use it for steps that follow one another, such as the screens of a sign-up. A navigation stack shows screens one on top of another, with a way back." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "tab", "name": "The tabs, lines 15 to 22",
+          "text": "Each `Tab` has a title, a symbol from Apple's symbols, a value, and the screen it shows, in its braces. The first tab's value is 1, and the second tab's value is 2." },
+        { "part": "tab-selection", "name": "The selection, line 14",
+          "text": "The argument `selection` gives the tab view a binding to `chosen`. The tab view shows the tab whose value is `chosen`, and when the user taps a tab, it writes that tab's value to `chosen`." }
+      ],
+      "marks": [
+        { "line": 15, "text": "Tab", "part": "tab", "label": "tab 1" },
+        { "line": 19, "text": "Tab", "part": "tab", "label": "tab 2" },
+        { "line": 14, "text": "selection: $chosen", "part": "tab-selection", "label": "selection" }
+      ],
+      "steps": [
+        { "text": "Line 28 makes a `Tabs` and a renderer, and line 29 asks for the image. The state `chosen` starts at 2.", "line": 29, "also": [28, 12] },
+        { "text": "The tab view shows the tab whose value is 2. It makes that tab's screen, and line 6 prints {{Map shows}}. It does not make the screen of the other tab.", "line": 6, "also": [20, 21], "prints": ["Map shows"] },
+        { "text": "The tab view appears, and line 24 sets `chosen` to 1.", "line": 24 },
+        { "text": "Line 30 runs the main run loop, the loop that does the work waiting on the main thread, and line 31 asks for the image again. The tab view now shows the tab whose value is 1, and line 6 prints {{Trips shows}}.", "line": 6, "also": [30, 31, 16], "prints": ["Trips shows"] }
+      ],
+      "end": { "kind": "answer", "text": "The tab view showed the tab whose value was in `chosen`, and changing `chosen` showed the other tab." }
+    }
+  }
+}

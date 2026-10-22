@@ -1,0 +1,81 @@
+{
+  "id": "pull-to-refresh",
+  "name": "Pull to refresh",
+  "area": "ui",
+  "first": "A modifier that lets the user pull a list down to run an async closure that loads its data again, with a spinner until the closure returns.",
+  "parts": ["refreshable-modifier", "refresh-action"],
+  "dependsOn": [
+    { "id": "list", "views": ["what"],
+      "why": "A list on iOS offers the pull, and shows the spinner, when it is given a refresh action.",
+      "whyInExample": "In an app, `Puller` would be a list, as `list` is on the page of List." },
+    { "id": "environment", "views": ["what", "parts"],
+      "why": "The modifier puts the refresh action in the environment, where the list reads it.",
+      "whyInExample": "The property `@Environment(\\.refresh)` reads the action, as `@Environment(\\.isEnabled)` reads whether views are enabled." },
+    { "id": "task-modifier", "views": ["parts"],
+      "why": "The example calls the refresh action from a task, which can wait for it.",
+      "whyInExample": "The closure of `task` on line 13 runs in a task, as the one on the page of Task modifier does." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "func reload() async {",
+      "    print(\"reloading\")",
+      "    try? await Task.sleep(for: .milliseconds(50))",
+      "    print(\"reloaded\")",
+      "}",
+      "",
+      "struct Puller: View {",
+      "    @Environment(\\.refresh) private var refresh",
+      "    var body: some View {",
+      "        Text(\"Trips\")",
+      "            .task {",
+      "                await refresh?()",
+      "                print(\"spinner hides\")",
+      "            }",
+      "    }",
+      "}",
+      "",
+      "let trips = Puller()",
+      "    .refreshable { await reload() }",
+      "_ = ImageRenderer(content: trips).cgImage",
+      "RunLoop.main.run(until: .now + 0.2)"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "Pull to refresh lets the user drag a list down to load its data again. The modifier `refreshable` gives it an async closure. Apple's documentation says that a list on iOS then offers the standard pull to refresh: when the user drags the top of the list down, it shows a spinner and runs the closure, and the spinner stays until the closure returns.",
+      "marks": [
+        { "line": 21, "text": "refreshable { await reload() }", "part": "refreshable-modifier", "label": "what a pull runs" },
+        { "line": 14, "text": "await refresh?()", "part": "refresh-action", "label": "what a pull does" }
+      ],
+      "afterExample": "No one pulls here, so `Puller` does what a list does when the user pulls: it reads the refresh action from the environment, and calls it with `await`. Line 15 runs only after `reload()` has returned, which is when a list hides its spinner.",
+      "problem": "Data in a list can change somewhere else, such as trips edited on another device. Users expect to pull a list down to get the newest data, and to see a spinner while it loads. The modifier gives a list that behavior with one closure.",
+      "how": "Apple's documentation says that `refreshable` sets the refresh value in the view's environment to an action that runs the closure, and that views that find the action there, such as a list, offer a way to refresh. The action is async, so the view that calls it waits with `await`, and knows that the refresh is done when the call returns.",
+      "when": [
+        { "text": "Use it on a list or a scroll view whose data can be loaded again, such as trips kept on a server." },
+        { "text": "Don't use it for data that only this device changes. That data is always up to date, so there is nothing to load again." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "refreshable-modifier", "name": "The modifier `refreshable`, line 21",
+          "text": "The modifier puts a refresh action in the environment of `Puller`, and of every view inside it. The action runs the closure after `refreshable`, which calls `reload()`." },
+        { "part": "refresh-action", "name": "The refresh action `refresh`, line 10",
+          "text": "The property `refresh` reads that action from the environment. Where no view put one, it is nil, so line 14 calls it with a question mark, which calls it only when it is there." }
+      ],
+      "marks": [
+        { "line": 21, "text": "refreshable", "part": "refreshable-modifier", "label": "modifier" },
+        { "line": 10, "text": "@Environment(\\.refresh) private var refresh", "part": "refresh-action", "label": "refresh action" }
+      ],
+      "steps": [
+        { "text": "Lines 20 and 21 make a `Puller` with a refresh action, and line 22 draws it.", "line": 22, "also": [20, 21] },
+        { "text": "Before the `Text` appears, its task starts. Line 14 calls the refresh action, as a list does when the user pulls, and waits.", "line": 14, "also": [13] },
+        { "text": "The action runs the closure on line 21, which calls `reload()`, and line 4 prints {{reloading}}.", "line": 4, "also": [21], "prints": ["reloading"] },
+        { "text": "Line 5 suspends for 50 milliseconds, while line 23 runs the main run loop. Then line 6 prints {{reloaded}}, and `reload()` returns.", "line": 6, "also": [5, 23], "prints": ["reloaded"] },
+        { "text": "The call on line 14 returns, so line 15 prints {{spinner hides}}, as a list hides its spinner at that moment.", "line": 15, "also": [14], "prints": ["spinner hides"] }
+      ],
+      "end": { "kind": "answer", "text": "The view that calls the refresh action waits until the closure has finished, so it knows how long to show the spinner." }
+    }
+  }
+}

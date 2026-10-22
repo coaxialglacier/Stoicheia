@@ -1,0 +1,6 @@
+{
+  "id": "gesture-callback",
+  "name": "Gesture closure",
+  "first": "A closure given to a gesture, which the gesture calls with its value as the touch changes or when it ends, such as how far a drag moved.",
+  "parts": []
+}

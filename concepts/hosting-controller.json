@@ -1,0 +1,69 @@
+{
+  "id": "hosting-controller",
+  "name": "Hosting controller",
+  "area": "ui",
+  "first": "A UIKit view controller that shows a SwiftUI view, so that a UIKit app can use SwiftUI one screen at a time.",
+  "parts": ["hosted-root-view"],
+  "dependsOn": [
+    { "id": "view", "views": ["what", "parts"],
+      "why": "A hosting controller shows a SwiftUI view, and runs its body as SwiftUI does in an app.",
+      "whyInExample": "The type `Greeting` is a view with a `body`, as `Greeting` is on the page of View." },
+    { "id": "class", "views": ["what"],
+      "why": "A UIKit view controller is a class, which UIKit code holds by reference.",
+      "whyInExample": "The constant `host` holds a reference to the controller, as `first` holds a reference to a `Counter` on the page of Class." }
+  ],
+  "example": {
+    "ios": true,
+    "code": [
+      "import SwiftUI",
+      "import UIKit",
+      "",
+      "struct Greeting: View {",
+      "    var body: some View {",
+      "        let _ = print(\"body runs\")",
+      "        Text(\"Trips\")",
+      "    }",
+      "}",
+      "",
+      "let host = UIHostingController(",
+      "    rootView: Greeting()",
+      ")",
+      "print(type(of: host.rootView))",
+      "let room = CGSize(width: 300, height: 300)",
+      "let size = host.sizeThatFits(in: room)",
+      "print(size.width > 0, size.height > 0)"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A `UIHostingController` is a UIKit view controller that shows a SwiftUI view, its root view. A UIKit app uses it as any other view controller, such as by pushing it or presenting it, so the app can add SwiftUI one screen at a time.",
+      "marks": [
+        { "line": 11, "text": "UIHostingController", "label": "a UIKit view controller" },
+        { "line": 12, "text": "rootView: Greeting()", "part": "hosted-root-view", "label": "the SwiftUI view it shows" }
+      ],
+      "afterExample": "The hosting controller holds a `Greeting` as its root view. When it is asked what size it needs, it lays out the SwiftUI view, which runs its `body`. The program runs on an iPhone in the simulator, because UIKit is a framework of iOS.",
+      "problem": "Many apps were written in UIKit, and cannot be written again all at once. A hosting controller lets a UIKit app show a new screen written in SwiftUI, beside its UIKit screens.",
+      "how": "Apple's documentation says that a hosting controller manages a SwiftUI view hierarchy, that its root view is given when it is made and can be changed later through `rootView`, and that it is used like any other view controller. Its view draws the SwiftUI views, and SwiftUI updates them as it does in a SwiftUI app.",
+      "when": [
+        { "text": "Use it to show SwiftUI in a UIKit app, such as a new settings screen pushed by a UIKit navigation controller." },
+        { "text": "Don't use it in an app that is all SwiftUI. There, views are already shown inside the app's scenes." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "hosted-root-view", "name": "The root view, line 12",
+          "text": "The argument `rootView` is the SwiftUI view that the controller shows: a `Greeting`. The property `rootView` reads it, and setting the property shows a different view." }
+      ],
+      "marks": [
+        { "line": 12, "text": "rootView: Greeting()", "part": "hosted-root-view", "label": "root view" }
+      ],
+      "steps": [
+        { "text": "Lines 11 to 13 make a hosting controller whose root view is a `Greeting`.", "line": 11, "also": [12] },
+        { "text": "Line 14 prints the type of its root view: {{Greeting}}.", "line": 14, "prints": ["Greeting"] },
+        { "text": "Line 16 asks the controller what size it needs inside 300 by 300 points, the size on line 15. It lays out its SwiftUI view, so the `body` of `Greeting` runs, and line 6 prints {{body runs}}.", "line": 6, "also": [15, 16], "prints": ["body runs"] },
+        { "text": "Line 17 prints whether the size is more than zero across and down: {{true true}}. It is the size of the text Trips.", "line": 17, "prints": ["true true"] }
+      ],
+      "end": { "kind": "answer", "text": "The UIKit view controller held a SwiftUI view, and laid it out, running its `body`, as SwiftUI would in an app." }
+    }
+  }
+}

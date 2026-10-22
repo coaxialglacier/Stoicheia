@@ -1,0 +1,6 @@
+{
+  "id": "alert-action",
+  "name": "Alert action",
+  "first": "A button of an alert, which runs its code when the user taps it and then dismisses the alert, and which can have a role, such as cancel.",
+  "parts": []
+}

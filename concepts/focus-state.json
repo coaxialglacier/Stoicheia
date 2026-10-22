@@ -1,0 +1,47 @@
+{
+  "id": "focus-state",
+  "name": "Focus state",
+  "area": "ui",
+  "first": "A property wrapper that holds whether a field has the keyboard, or which field has it, and moves the keyboard when code changes its value.",
+  "parts": ["focus-state-property", "focused-modifier"],
+  "dependsOn": [
+    { "id": "text-field", "views": ["what"],
+      "why": "Focus says which field the keyboard types into, such as one of the text fields of a screen.",
+      "whyInExample": "The `TextField` is the field that `editing` follows, as the `TextField` on the page of Text field edits `name`." },
+    { "id": "state", "views": ["what"],
+      "why": "Focus state is kept as state of a view, and its changes run the view's body again.",
+      "whyInExample": "The attribute `@FocusState` holds `editing` for `Signup`, as `@State` holds `taps` for `Counter`." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct Signup: View {",
+      "    @FocusState private var editing: Bool",
+      "    @State private var name = \"\"",
+      "    var body: some View {",
+      "        TextField(\"Name\", text: $name)",
+      "            .focused($editing)",
+      "    }",
+      "}",
+      "print(type(of: Signup().body))"
+    ],
+    "output": ["ModifiedContent<TextField<Text>, FocusStateBindingModifier<Bool>>"]
+  },
+  "views": {
+    "what": {
+      "is": "Focus is where the keyboard types: the field that has the focus gets the letters. A property marked `@FocusState` holds whether a field has the focus. The modifier `focused` links a field to it, so that the property changes when the user taps into the field or out of it, and the keyboard moves when code changes the property.",
+      "marks": [
+        { "line": 4, "text": "@FocusState private var editing: Bool", "part": "focus-state-property", "label": "has the focus?" },
+        { "line": 8, "text": "focused($editing)", "part": "focused-modifier", "label": "links the field" }
+      ],
+      "afterExample": "In an app, `editing` would become true when the user taps into the field, and setting it to true would bring up the keyboard in that field. A program with no window has no keyboard, so line 11 prints the type: the field, with a modifier that links it to a focus state of type {{Bool}}.",
+      "problem": "A screen with fields should put the keyboard where the user needs it: in the first field when the screen opens, in the next field after Return, and in an empty field when the user taps Save. Focus state lets code read and move the keyboard.",
+      "how": "Apple's documentation says that when focus enters a field, the property becomes the value the field is linked with, true here, and when focus leaves, it goes back to false, or nil when it holds which of several fields has the focus. Setting the property from code moves the focus to the field that is linked with the new value.",
+      "when": [
+        { "text": "Use it to move the keyboard from code, such as into the first field when a form opens, or into the next field when the user presses Return." },
+        { "text": "Don't keep it for a screen with one field that the user taps into. The field takes the focus on its own, with no code." }
+      ]
+    }
+  }
+}
