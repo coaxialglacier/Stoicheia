@@ -1,0 +1,6 @@
+{
+  "id": "window-group",
+  "name": "Window group",
+  "first": "A scene that presents windows that all show the same views, each window with state of its own.",
+  "parts": []
+}

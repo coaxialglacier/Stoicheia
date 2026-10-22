@@ -1,0 +1,6 @@
+{
+  "id": "stack-spacing",
+  "name": "Stack spacing",
+  "first": "The distance, in points, that a stack leaves between each two views it places.",
+  "parts": []
+}

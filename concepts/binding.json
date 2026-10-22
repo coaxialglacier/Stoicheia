@@ -1,0 +1,80 @@
+{
+  "id": "binding",
+  "name": "Binding",
+  "area": "ui",
+  "first": "A property wrapper that reads and writes a value that another view keeps, so that one view can change another view's state.",
+  "parts": ["binding-property", "dollar-sign"],
+  "dependsOn": [
+    { "id": "state", "views": ["what", "parts"],
+      "why": "A binding usually reads and writes the state of another view.",
+      "whyInExample": "The binding in `NightsEditor` reads and writes `nights`, the state of `Planner`." },
+    { "id": "projected-value", "views": ["what", "parts"],
+      "why": "A view gets a binding to its state by reading the state's projected value, with a dollar sign.",
+      "whyInExample": "`$nights` reads the projected value of the state property `nights`, which is a binding to it." },
+    { "id": "view-modifier", "views": ["parts"],
+      "why": "The example writes through the binding in the closure of a modifier that runs when a view appears.",
+      "whyInExample": "`onAppear` is a modifier of the `Text` in `NightsEditor`, and its closure adds 1 to `nights`." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct NightsEditor: View {",
+      "    @Binding var nights: Int",
+      "    var body: some View {",
+      "        Text(\"Nights: \\(nights)\")",
+      "            .onAppear {",
+      "                nights += 1",
+      "            }",
+      "    }",
+      "}",
+      "",
+      "struct Planner: View {",
+      "    @State private var nights = 3",
+      "    var body: some View {",
+      "        let _ = print(\"Planner has\", nights)",
+      "        NightsEditor(nights: $nights)",
+      "    }",
+      "}",
+      "",
+      "let renderer = ImageRenderer(content: Planner())",
+      "_ = renderer.cgImage"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A binding is a property marked `@Binding`. It holds no value of its own. Reading it reads a value that another view keeps, such as that view's state, and writing it writes that value.",
+      "marks": [
+        { "line": 4, "text": "@Binding var nights: Int", "part": "binding-property", "label": "binding" },
+        { "line": 17, "text": "$", "part": "dollar-sign", "label": "a binding to the state" }
+      ],
+      "afterExample": "`Planner` keeps `nights` in state, and gives `NightsEditor` a binding to it. When `NightsEditor` adds 1 to its `nights`, the value that `Planner` keeps changes, and line 16 prints it.",
+      "problem": "A value often belongs to one view but is changed in another, such as a number of nights that a planner keeps and an editor inside it changes. Passing the value itself would give the editor a copy, and the editor could change only that copy. A binding lets the editor change the planner's value, while the planner still keeps it.",
+      "how": "The projected value of a state property is a binding to it, written with a dollar sign, as `$nights`. `NightsEditor` stores that binding in its `nights`. Reading or writing `nights` in `NightsEditor` reads or writes the state of `Planner`, so SwiftUI runs the `body` of `Planner` again when it changes.",
+      "when": [
+        { "text": "Use a binding in a view that changes a value it does not keep, such as an editor. SwiftUI's own controls, such as its toggles and text fields, take a binding for the value they change." },
+        { "text": "Don't use a binding in a view that only shows a value. Pass the value itself, as a plain property, because the view never writes it." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "binding-property", "name": "The binding `nights`, line 4",
+          "text": "The attribute `@Binding` makes `nights` a wrapped property of `Binding`, a property wrapper that SwiftUI provides. It has no first value, because it keeps no value: it reads and writes the value that the binding it is given refers to." },
+        { "part": "dollar-sign", "name": "The dollar sign, in `$nights`, line 17",
+          "text": "A dollar sign before the name of a state property reads the state's projected value, which is a binding to the state. Line 17 passes `$nights`, a binding to the `nights` of `Planner`, to the `nights` of `NightsEditor`." }
+      ],
+      "marks": [
+        { "line": 4, "text": "@Binding var nights: Int", "part": "binding-property", "label": "binding" },
+        { "line": 17, "text": "$", "part": "dollar-sign", "label": "binding to the state" }
+      ],
+      "steps": [
+        { "text": "Line 21 makes a `Planner` and a renderer for it, and line 22 asks for the image, so SwiftUI draws `Planner`. Its state `nights` starts at 3.", "line": 21, "also": [22, 14] },
+        { "text": "The `body` of `Planner` runs, and line 16 prints {{Planner has 3}}.", "line": 16, "prints": ["Planner has 3"] },
+        { "text": "Line 17 makes a `NightsEditor`, and gives it `$nights`, a binding to the state `nights` of `Planner`.", "line": 17, "also": [4] },
+        { "text": "SwiftUI draws `NightsEditor`, and its `Text` appears, so SwiftUI calls the closure of `onAppear`. Line 8 adds 1 to the binding `nights`, which writes 4 to the state of `Planner`.", "line": 8, "also": [7] },
+        { "text": "The state of `Planner` changed, so SwiftUI runs its `body` again, and line 16 prints {{Planner has 4}}.", "line": 16, "prints": ["Planner has 4"] }
+      ],
+      "end": { "kind": "answer", "text": "`NightsEditor` changed the value that `Planner` keeps, through the binding that line 17 gave it." }
+    }
+  }
+}

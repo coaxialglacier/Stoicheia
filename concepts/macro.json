@@ -1,0 +1,71 @@
+{
+  "id": "macro",
+  "name": "Macro",
+  "area": "swift",
+  "first": "Code that swiftc runs while it builds a program, which adds Swift code to the program where the macro is used.",
+  "parts": ["freestanding-macro", "attached-macro"],
+  "dependsOn": [
+    { "id": "function", "views": ["what", "parts"],
+      "why": "The macro in the example is used inside a function, and expands to the function's name.",
+      "whyInExample": "`#function` is written inside the function `pack(_:)`, and expands to its name." }
+  ],
+  "example": {
+    "code": [
+      "func pack(_ item: String) {",
+      "    print(\"\\(#function) packs \\(item)\")",
+      "}",
+      "",
+      "pack(\"Socks\")",
+      "pack(\"Map\")"
+    ],
+    "sil": [
+      { "in": "pack(_:)", "has": "string_literal utf8 \"pack(_:)\"",
+        "shows": "swiftc replaced #function with the text pack(_:) when it built the program." }
+    ]
+  },
+  "snippets": {
+    "attached": {
+      "code": [
+        "import Observation",
+        "@Observable",
+        "final class Basket {",
+        "    var apples = 0",
+        "}",
+        "let basket = Basket()",
+        "basket.apples = 3",
+        "print(basket.apples)  // 3"
+      ],
+      "output": ["3"]
+    }
+  },
+  "views": {
+    "what": {
+      "is": "A macro is code that swiftc runs while it builds the program, and that adds Swift code where the macro is used. A freestanding macro is written with a number sign, as `#function`, and is replaced by the code it expands to. An attached macro is written with an at sign before a declaration, and adds code to that declaration.",
+      "marks": [
+        { "line": 2, "text": "#function", "part": "freestanding-macro", "label": "macro" }
+      ],
+      "afterExample": "`#function` is a macro from the Swift standard library. swiftc replaced it with the name of the function it is in, so each call prints {{pack(_:)}} first.",
+      "problem": "Some code follows the same pattern every time, such as code that writes a function's name, or code that tells SwiftUI when a property changes. Written by hand, it is repeated, and can fall out of date. A macro writes it when the program is built, from the code around it.",
+      "how": "When swiftc builds the program, it expands each macro: it runs the macro's own code, and puts the code that the macro writes into the program. Swift's documentation says that a macro only adds code, and never deletes or changes the code you wrote. swiftc then checks the added code, as it checks yours.",
+      "when": [
+        { "text": "Use the macros that Swift and SwiftUI provide where they save writing the same code by hand. `@Observable` is an attached macro: it adds code to the class it is written before, so that SwiftUI can tell when its properties change:", "snippet": "attached" },
+        { "text": "Don't expect to find the added code in your file: swiftc adds it while it builds the program. In Xcode, Expand Macro in the Editor menu shows the code that a macro adds." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "freestanding-macro", "name": "The macro `#function`, line 2",
+          "text": "A number sign before a name uses a freestanding macro. `#function` is a freestanding macro from the Swift standard library. swiftc expands it to a string that holds the name of the function it is in, `pack(_:)`." }
+      ],
+      "marks": [
+        { "line": 2, "text": "#function", "part": "freestanding-macro", "label": "freestanding macro" }
+      ],
+      "steps": [
+        { "text": "Line 5 calls `pack(_:)` with `\"Socks\"`.", "line": 5, "also": [1] },
+        { "text": "swiftc expanded `#function` on line 2 to the name of the function it is in, so line 2 prints {{pack(_:) packs Socks}}.", "line": 2, "prints": ["pack(_:) packs Socks"] },
+        { "text": "Line 6 calls `pack(_:)` again, and line 2 prints {{pack(_:) packs Map}}.", "line": 2, "also": [6], "prints": ["pack(_:) packs Map"] }
+      ],
+      "end": { "kind": "answer", "text": "`#function` was replaced by the name of the function it is in when swiftc built the program, not while the program ran." }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "id": "main-attribute",
+  "name": "Main attribute",
+  "first": "The attribute, written with an at sign before a type, that marks the type that the program starts from, by calling the type's static main method.",
+  "parts": []
+}

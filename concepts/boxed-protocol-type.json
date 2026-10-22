@@ -1,0 +1,70 @@
+{
+  "id": "boxed-protocol-type",
+  "name": "Boxed protocol type",
+  "area": "swift",
+  "first": "A type that can hold a value of any type that conforms to a protocol, whose real type is found only while the program runs. It is also called an existential type.",
+  "parts": ["any-keyword"],
+  "dependsOn": [
+    { "id": "protocol", "views": ["what", "parts"],
+      "why": "A boxed protocol type is written with a protocol's name, and holds values of the types that conform to it.",
+      "whyInExample": "`any Shape` holds values of `Square` and `Strip`, the two types that conform to `Shape`." },
+    { "id": "opaque-type", "views": ["what"],
+      "why": "A boxed protocol type is the other way to hide a value's type, and differs from an opaque type, which holds one real type." }
+  ],
+  "example": {
+    "code": [
+      "protocol Shape {",
+      "    func area() -> Int",
+      "}",
+      "struct Square: Shape {",
+      "    let side: Int",
+      "    func area() -> Int {",
+      "        return side * side",
+      "    }",
+      "}",
+      "struct Strip: Shape {",
+      "    let length: Int",
+      "    func area() -> Int {",
+      "        return length",
+      "    }",
+      "}",
+      "let tiles: [any Shape] = [",
+      "    Square(side: 3),",
+      "    Strip(length: 5)",
+      "]",
+      "for tile in tiles {",
+      "    print(type(of: tile), tile.area())",
+      "}"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A boxed protocol type is written as `any` followed by a protocol's name. A value of this type can be a value of any type that conforms to the protocol, and its real type is found only while the program runs. Swift's documentation also calls it an existential type.",
+      "marks": [
+        { "line": 16, "text": "any Shape", "part": "any-keyword", "label": "any shape" }
+      ],
+      "afterExample": "The array `tiles` holds a `Square` and a `Strip`, two different types, because the type of its elements is `any Shape`.",
+      "problem": "Code sometimes keeps values of different types together, such as the tiles of a floor, some square and some long. An array's elements all have one type. With `any Shape` as that type, each element can be a value of any type that conforms to `Shape`.",
+      "how": "Each value of type `any Shape` is kept together with its real type. When code calls `area()` on it, the program finds the real type while it runs, and calls the `area()` of that type.",
+      "when": [
+        { "text": "Use one when a value's type can differ from value to value, or change over time, such as the elements of `tiles`." },
+        { "text": "Don't use one when every value has the same real type. An opaque type, written with the keyword some, keeps that one type, so swiftc knows it." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "any-keyword", "name": "The keyword `any`, line 16",
+          "text": "The keyword `any` before `Shape` makes `any Shape` a boxed protocol type. The array's type, `[any Shape]`, lets each element be a value of a different type that conforms to `Shape`." }
+      ],
+      "marks": [
+        { "line": 16, "text": "any", "part": "any-keyword", "label": "keyword" }
+      ],
+      "steps": [
+        { "text": "Lines 16 to 19 make an array of two elements, a `Square` whose `side` is 3 and a `Strip` whose `length` is 5, and store it in `tiles`. Each element keeps its real type.", "line": 16, "also": [17, 18] },
+        { "text": "The loop on line 20 takes the first element. Line 21 prints its real type, `Square`, and calls `area()`, which runs the `area()` of `Square` on line 7: {{Square 9}}.", "line": 21, "also": [20, 7], "prints": ["Square 9"] },
+        { "text": "The loop takes the second element. This time `area()` runs the `area()` of `Strip` on line 13, and line 21 prints {{Strip 5}}.", "line": 21, "also": [13], "prints": ["Strip 5"] }
+      ],
+      "end": { "kind": "answer", "text": "Each element of `[any Shape]` keeps its own real type, and the call of `area()` on line 21 runs the method of that type." }
+    }
+  }
+}

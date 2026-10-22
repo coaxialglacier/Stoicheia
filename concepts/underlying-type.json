@@ -1,0 +1,6 @@
+{
+  "id": "underlying-type",
+  "name": "Underlying type",
+  "first": "The one real type behind an opaque type, which swiftc works out from the code that makes the value.",
+  "parts": []
+}

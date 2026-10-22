@@ -1,0 +1,6 @@
+{
+  "id": "stored-property",
+  "name": "Stored property",
+  "first": "A constant or variable declared in a type, of which every instance of the type holds its own value.",
+  "parts": []
+}

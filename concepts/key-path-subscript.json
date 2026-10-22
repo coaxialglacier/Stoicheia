@@ -1,0 +1,6 @@
+{
+  "id": "key-path-subscript",
+  "name": "Key path subscript",
+  "first": "The subscript that every type has, with the argument label keyPath, which reads or writes the property that a key path names.",
+  "parts": []
+}

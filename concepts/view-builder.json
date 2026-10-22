@@ -1,0 +1,73 @@
+{
+  "id": "view-builder",
+  "name": "View builder",
+  "area": "ui",
+  "first": "The result builder that SwiftUI provides for views, which builds a view's body from the views it lists, one per line, and from the if statements among them.",
+  "parts": ["view-builder-line", "view-builder-if"],
+  "dependsOn": [
+    { "id": "view", "views": ["what", "parts"],
+      "why": "The view builder builds the body of a view.",
+      "whyInExample": "The view builder builds the `body` of `Card`, a view." },
+    { "id": "result-builder", "views": ["what", "parts"],
+      "why": "The view builder is a result builder, so swiftc builds each body with its static methods.",
+      "whyInExample": "The `body` of `Card` lists its views with no `return`, as the body of `packing()` lists its strings." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct Card: View {",
+      "    let isFavorite: Bool",
+      "    var body: some View {",
+      "        Text(\"Lima\")",
+      "        if isFavorite {",
+      "            Text(\"Favorite\")",
+      "        }",
+      "    }",
+      "}",
+      "",
+      "print(type(of: Card(isFavorite: true).body))"
+    ],
+    "sil": [
+      { "in": "Card.body.getter", "has": "function_ref static ViewBuilder.buildIf<A>(_:)",
+        "shows": "swiftc built the if statement in body with the view builder's method for an if statement." },
+      { "in": "Card.body.getter", "has": "function_ref static ViewBuilder.buildBlock<each A>(_:)",
+        "shows": "swiftc combined the views of body with the view builder's buildBlock." }
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "The view builder is the result builder that SwiftUI provides for views. The protocol `View` marks `body` with it, so the `body` of every view can list its views one per line, with no return statement, and can use `if` statements to choose views. The view builder combines them into one view.",
+      "marks": [
+        { "line": 6, "text": "Text(\"Lima\")", "part": "view-builder-line", "label": "a view" },
+        { "line": 7, "text": "if", "part": "view-builder-if", "label": "a view only when true" }
+      ],
+      "afterExample": "The `body` of `Card` lists a `Text`, and another `Text` inside an `if`. Line 13 prints the type of the one view that the view builder made from them.",
+      "problem": "A view is usually made of several views, and some of them are shown only sometimes. Combined by hand, each combination would need code that names its type. The view builder lets `body` list the views and use `if`, and works out the type for it.",
+      "how": "When swiftc builds the program, it builds `body` with the view builder. Views on separate lines become one view that holds them all, of a type that SwiftUI calls a tuple view. A view inside an `if` becomes an optional view, which is there only when the condition is true.",
+      "when": [
+        { "text": "Use it in every `body`, without writing it: list the views in order, and use `if` for a view that is shown only sometimes." },
+        { "text": "Don't write a for loop in `body` to repeat a view. The view builder has no method for loops, so swiftc reports that a closure containing control flow statement cannot be used with result builder ViewBuilder. SwiftUI's ForEach repeats views instead." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "view-builder-line", "name": "The view on line 6",
+          "text": "The `Text` on line 6 is written on its own line, with no return statement. The view builder takes it as the first view of the block." },
+        { "part": "view-builder-if", "name": "The `if` statement, lines 7 to 9",
+          "text": "The `if` statement holds a second `Text`, which is in the view only when `isFavorite` is true. The view builder turns it into an optional view: a view that holds the `Text` when the condition is true, and nothing when it is false." }
+      ],
+      "marks": [
+        { "line": 6, "text": "Text(\"Lima\")", "part": "view-builder-line", "label": "view" },
+        { "line": 7, "text": "if", "part": "view-builder-if", "label": "if statement" }
+      ],
+      "steps": [
+        { "text": "Line 13 makes a `Card` whose `isFavorite` is true, and reads its `body`.", "line": 13, "also": [4] },
+        { "text": "swiftc built `body` with the view builder. The `Text` on line 6 is its first view.", "line": 6 },
+        { "text": "`isFavorite` is true, so the `if` statement on line 7 gives the `Text` from line 8, as an optional view that holds it.", "line": 7, "also": [8] },
+        { "text": "The view builder combines the two into one view, and line 13 prints its type: {{TupleView<(Text, Optional<Text>)>}}. It holds a `Text`, and an optional `Text`.", "line": 13, "prints": ["TupleView<(Text, Optional<Text>)>"] }
+      ],
+      "end": { "kind": "answer", "text": "The view builder combined the lines of `body` into one view, and turned the `if` statement into an optional view." }
+    }
+  }
+}

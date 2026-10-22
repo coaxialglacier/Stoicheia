@@ -1,0 +1,49 @@
+{
+  "id": "preview",
+  "name": "Preview",
+  "area": "ui",
+  "first": "A macro that tells Xcode which view to show in its canvas, beside the code, so the view can be seen while its code is written.",
+  "parts": [],
+  "dependsOn": [
+    { "id": "view", "views": ["what"],
+      "why": "A preview shows a view." },
+    { "id": "macro", "views": ["what"],
+      "why": "A preview is written with a freestanding macro, which adds code that Xcode's canvas calls." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct Greeting: View {",
+      "    let name: String",
+      "    var body: some View {",
+      "        Text(\"Hello, \\(name)\")",
+      "    }",
+      "}",
+      "",
+      "#Preview {",
+      "    Greeting(name: \"Ana\")",
+      "}"
+    ],
+    "sil": [
+      { "in": "static $s7Example0015mainswift_tzEGbfMX9_0_33_B384B672EB89465DCC67528E23350CF9Ll7PreviewfMf_15PreviewRegistryfMu_.makePreview()",
+        "has": "function_ref Preview.init(_:traits:body:)",
+        "shows": "The macro added a type whose method makePreview() makes a Preview from the code between the braces." }
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A preview is the macro `#Preview` followed by braces that make a view. Xcode shows that view in its canvas, next to the code, and draws it again as the code changes, without running the app.",
+      "marks": [
+        { "line": 10, "text": "#Preview", "label": "preview" }
+      ],
+      "afterExample": "The braces after `#Preview` make a `Greeting` with the name `\"Ana\"`. Xcode's canvas shows it, and a change to `Greeting` shows in the canvas as soon as Xcode builds the code again.",
+      "problem": "Seeing a view by running the app takes time, and reaching a screen deep inside the app takes more. A preview shows one view, with the values that the preview gives it, right beside its code.",
+      "how": "`#Preview` is a freestanding macro. When swiftc builds the program, the macro adds a type with a method that makes a preview from the code between the braces, and Xcode's canvas calls it. Nothing in the app calls it.",
+      "when": [
+        { "text": "Use one for each view, with the values that show its different states, such as a long name and a short one. A file can have several, and the canvas lets you choose which one it shows." },
+        { "text": "Don't rely on a preview for behavior that needs the whole app, such as data that another screen loads. A preview shows one view, with only what its braces give it." }
+      ]
+    }
+  }
+}

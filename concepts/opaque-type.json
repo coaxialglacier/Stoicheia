@@ -1,0 +1,80 @@
+{
+  "id": "opaque-type",
+  "name": "Opaque type",
+  "area": "swift",
+  "first": "A return type that names only a protocol, while swiftc still knows the one real type that the function returns.",
+  "parts": ["some-keyword", "underlying-type"],
+  "dependsOn": [
+    { "id": "protocol", "views": ["what", "parts"],
+      "why": "An opaque type names a protocol, and the code that gets the value can use only what the protocol requires.",
+      "whyInExample": "`some Shape` names the protocol `Shape`, so the code that calls `makeTile()` can call only `area()`, which `Shape` requires." }
+  ],
+  "example": {
+    "code": [
+      "protocol Shape {",
+      "    func area() -> Int",
+      "}",
+      "struct Square: Shape {",
+      "    let side: Int",
+      "    func area() -> Int {",
+      "        return side * side",
+      "    }",
+      "}",
+      "func makeTile() -> some Shape {",
+      "    return Square(side: 3)",
+      "}",
+      "let tile = makeTile()",
+      "print(tile.area())",
+      "print(type(of: tile))"
+    ]
+  },
+  "snippets": {
+    "body": {
+      "code": [
+        "import SwiftUI",
+        "struct Greeting: View {",
+        "    var body: some View {",
+        "        Text(\"Hello\")",
+        "    }",
+        "}",
+        "print(type(of: Greeting().body))  // Text"
+      ],
+      "output": ["Text"]
+    }
+  },
+  "views": {
+    "what": {
+      "is": "An opaque type is a return type written as `some` followed by a protocol's name. The function returns a value of one real type, which swiftc knows when it builds the program. The code that calls the function knows only that the value conforms to the protocol.",
+      "marks": [
+        { "line": 10, "text": "some", "part": "some-keyword", "label": "opaque type" },
+        { "line": 11, "text": "Square(side: 3)", "part": "underlying-type", "label": "the real type" }
+      ],
+      "afterExample": "`makeTile()` returns a `Square`, but its return type says only `some Shape`. Line 14 can call `area()`, which every `Shape` has, and line 15 shows that the value is still a `Square`.",
+      "problem": "A function sometimes returns a value whose real type is long, private, or likely to change, while its callers need only what one protocol offers. With an opaque type, the function's declaration names the protocol, and the real type can change without a change to the code that calls the function.",
+      "how": "swiftc works out the real type from the function's return statement when it builds the program, and checks that it conforms to the protocol. Every call returns that one type. The code that calls the function can use only what the protocol requires.",
+      "when": [
+        { "text": "Use one where SwiftUI asks for it. Every view's `body` has the type `some View`, and swiftc knows that this one is a `Text`:", "snippet": "body" },
+        { "text": "Don't use one when a function must return values of different types on different calls, such as a square on one call and a circle on the next. An opaque type is one real type, so that function does not build. A boxed protocol type, written with the keyword any, can hold a value of any conforming type." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "some-keyword", "name": "The keyword `some`, line 10",
+          "text": "The keyword `some`, before the protocol's name `Shape`, makes the return type of `makeTile()` an opaque type. It says that the function returns a value of one type that conforms to `Shape`, without saying which type." },
+        { "part": "underlying-type", "name": "The real type, `Square`",
+          "text": "The value that line 11 returns is a `Square`, so `Square` is the real type behind `some Shape`. Swift's documentation calls it the underlying type. swiftc knows it, and checks that it conforms to `Shape`. The code on lines 13 to 15 knows only that `tile` is a `Shape`." }
+      ],
+      "marks": [
+        { "line": 10, "text": "some", "part": "some-keyword", "label": "keyword" },
+        { "line": 11, "text": "Square(side: 3)", "part": "underlying-type", "label": "underlying type" }
+      ],
+      "steps": [
+        { "text": "Line 13 calls `makeTile()`.", "line": 13, "also": [10] },
+        { "text": "Line 11 makes a `Square` whose `side` is 3, and returns it. `tile` holds that `Square`, though the function's return type says only `some Shape`.", "line": 11, "also": [13] },
+        { "text": "Line 14 calls `area()`, which `Shape` requires, so code can call it on any `Shape`. Line 7 returns 3 times 3, and line 14 prints {{9}}.", "line": 14, "also": [7], "prints": ["9"] },
+        { "text": "Line 15 prints the type of the value in `tile` while the program runs: {{Square}}. The opaque type hid the type from the code that called `makeTile()`, but did not change it.", "line": 15, "prints": ["Square"] }
+      ],
+      "end": { "kind": "answer", "text": "`makeTile()` returns one real type, `Square`. The code that calls it uses the value only through `Shape`." }
+    }
+  }
+}

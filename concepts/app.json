@@ -1,0 +1,68 @@
+{
+  "id": "app",
+  "name": "App",
+  "area": "ui",
+  "first": "The type that a SwiftUI app starts from, whose body lists the app's scenes.",
+  "parts": ["conformance", "scene-body", "main-attribute"],
+  "dependsOn": [
+    { "id": "scene", "views": ["what"],
+      "why": "An app's body lists its scenes." },
+    { "id": "structure", "views": ["what"],
+      "why": "An app is usually a structure." },
+    { "id": "protocol", "views": ["what"],
+      "why": "An app is a type that conforms to SwiftUI's app protocol." },
+    { "id": "opaque-type", "views": ["what"],
+      "why": "The type of an app's body is an opaque type that names the scene protocol." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct TripsApp: App {",
+      "    var body: some Scene {",
+      "        WindowGroup {",
+      "            Text(\"Trips\")",
+      "        }",
+      "    }",
+      "}",
+      "",
+      "let app = TripsApp()",
+      "print(type(of: app.body))"
+    ],
+    "output": ["WindowGroup<Text>"]
+  },
+  "snippets": {
+    "main": {
+      "app": true,
+      "code": [
+        "import SwiftUI",
+        "",
+        "@main",
+        "struct TripsApp: App {",
+        "    var body: some Scene {",
+        "        WindowGroup {",
+        "            Text(\"Trips\")",
+        "        }",
+        "    }",
+        "}"
+      ],
+      "output": []
+    }
+  },
+  "views": {
+    "what": {
+      "is": "An app is a type that conforms to the protocol `App`. Its `body` lists the scenes that the app has, such as a window group. In an app, it is the type that the app starts from.",
+      "marks": [
+        { "line": 3, "text": "App", "part": "conformance", "label": "an app" },
+        { "line": 4, "text": "body", "part": "scene-body", "label": "its scenes" }
+      ],
+      "afterExample": "`TripsApp` has one scene, a window group that shows a `Text`. Line 12 reads its `body`, as SwiftUI does when the app starts, and prints {{WindowGroup<Text>}}.",
+      "problem": "Every app needs a place to start, and a list of what it shows. In UIKit, an app delegate and a scene delegate made the windows in code. In SwiftUI, an app is a type whose `body` lists its scenes, and SwiftUI makes them.",
+      "how": "The protocol `App` gives each app a static method that starts the app. When the app starts, SwiftUI makes an instance of the app's type, reads its `body`, and makes its scenes, which show their views.",
+      "when": [
+        { "text": "Use it once in each app, with the attribute `@main` before it. `@main` marks the type that the app starts from, and the system then calls the static method that `App` gives it, which starts the app:", "snippet": "main" },
+        { "text": "Don't put the app's screens in it. Its `body` lists scenes, and each scene shows a view, which is where the screens are." }
+      ]
+    }
+  }
+}

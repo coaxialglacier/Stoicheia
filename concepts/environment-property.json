@@ -1,0 +1,6 @@
+{
+  "id": "environment-property",
+  "name": "Environment property",
+  "first": "A property of a view marked with the Environment attribute and a key path, which reads one value from the environment that SwiftUI keeps for the view.",
+  "parts": []
+}

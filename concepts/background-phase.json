@@ -1,0 +1,6 @@
+{
+  "id": "background-phase",
+  "name": "Background phase",
+  "first": "The phase of a scene that is not visible, which can come right before the app is ended.",
+  "parts": []
+}

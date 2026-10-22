@@ -1,0 +1,66 @@
+{
+  "id": "structure",
+  "name": "Structure",
+  "area": "swift",
+  "first": "A type that groups values under one name, and whose instances are copied when they are assigned or passed to a function.",
+  "parts": ["struct-keyword", "stored-property", "memberwise-initializer"],
+  "dependsOn": [
+    { "id": "function", "views": ["what", "parts"],
+      "why": "An instance of a structure is made by calling its initializer, which takes arguments after argument labels, as a function does.",
+      "whyInExample": "`Trip(city: \"Lima\", nights: 3)` calls the initializer of `Trip` with two arguments, each after its argument label, as a call of a function does." }
+  ],
+  "example": {
+    "code": [
+      "struct Trip {",
+      "    var city: String",
+      "    var nights: Int",
+      "}",
+      "let first = Trip(city: \"Lima\", nights: 3)",
+      "var second = first",
+      "second.nights = 5",
+      "print(first.nights)",
+      "print(second.nights)"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A structure is a type that groups values under one name. Each instance of a structure, one value of its type, holds its own copy of those values. Assigning an instance to a variable, or passing it to a function, copies it.",
+      "marks": [
+        { "line": 1, "text": "struct", "part": "struct-keyword", "label": "structure" },
+        { "line": 2, "text": "var city: String", "part": "stored-property", "label": "a value it groups" },
+        { "line": 3, "text": "var nights: Int", "part": "stored-property", "label": "a value it groups" }
+      ],
+      "afterExample": "`Trip` groups a city and a number of nights. Line 6 copies `first` into `second`, so when line 7 changes `second`, `first` still has 3 nights.",
+      "problem": "Values that belong together, such as the city and the number of nights of one trip, are easier to use as one value. A structure gives them one name, so code passes one `Trip` instead of a separate `String` and `Int`.",
+      "how": "Each instance holds a value for every stored property of the structure. Assigning the instance to another variable copies all of those values, so `first` and `second` are separate instances after line 6.",
+      "when": [
+        { "text": "Use a structure for a group of values that should be copied, such as the details of a trip that a screen shows, so that changing one copy never changes another." },
+        { "text": "Don't use one when several parts of a program must share one instance and see each other's changes. A class does that: assigning an instance of a class copies only its address." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "struct-keyword", "name": "The keyword `struct`, line 1",
+          "text": "The keyword `struct` declares a structure. The structure's name, `Trip`, comes right after it, and its stored properties are between the braces on lines 1 and 4." },
+        { "part": "stored-property", "name": "The stored properties, lines 2 and 3",
+          "text": "Lines 2 and 3 declare the stored properties of `Trip`: `city`, of type `String`, and `nights`, of type `Int`. Every instance of `Trip` holds its own value for each one. They are declared with `var`, so an instance in a variable can change them." },
+        { "part": "memberwise-initializer", "name": "The memberwise initializer, line 5",
+          "text": "An initializer is code that makes a new instance of a type. `Trip` declares none, so swiftc writes one for it, called the memberwise initializer. It has a parameter for each stored property, with the property's name as its argument label. Line 5 calls it with `\"Lima\"` and 3." }
+      ],
+      "marks": [
+        { "line": 1, "text": "struct", "part": "struct-keyword", "label": "keyword" },
+        { "line": 2, "text": "var city: String", "part": "stored-property", "label": "stored property" },
+        { "line": 3, "text": "var nights: Int", "part": "stored-property", "label": "stored property" },
+        { "line": 5, "text": "Trip(city: \"Lima\", nights: 3)", "part": "memberwise-initializer", "label": "memberwise initializer" }
+      ],
+      "steps": [
+        { "text": "Line 5 calls the memberwise initializer of `Trip`. It makes an instance whose `city` is `\"Lima\"` and whose `nights` is 3, and stores it in the constant `first`.", "line": 5, "also": [2, 3] },
+        { "text": "Line 6 copies the instance in `first`, and stores the copy in the variable `second`. There are now two instances of `Trip`, with the same values.", "line": 6 },
+        { "text": "Line 7 sets `nights` of `second` to 5. Only the instance in `second` changes.", "line": 7, "value": { "line": 7, "name": "second.nights", "is": "5" } },
+        { "text": "Line 8 prints the `nights` of `first`, which is still 3: {{3}}.", "line": 8, "prints": ["3"] },
+        { "text": "Line 9 prints the `nights` of `second`: {{5}}.", "line": 9, "prints": ["5"] }
+      ],
+      "end": { "kind": "answer", "text": "Each instance of a structure holds its own values. Line 6 made a copy, so the change on line 7 did not reach `first`." }
+    }
+  }
+}

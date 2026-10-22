@@ -6,3 +6,7 @@ _site/
 ui-ideas/audio/*.mp3
 ui-ideas/audio/*.js
 !ui-ideas/audio/songs.js
+# SwiftUI Quest, read by library/quest.js. The repo is public, and this is another site's course, so git keeps only the list
+# of which pieces are implementation details, which has no text from the course.
+sources/*/*
+!sources/*/implementation.json

@@ -1,0 +1,6 @@
+{
+  "id": "attached-macro",
+  "name": "Attached macro",
+  "first": "A macro written with an at sign before a declaration, which adds code to that declaration when swiftc builds the program.",
+  "parts": []
+}

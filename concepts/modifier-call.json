@@ -1,0 +1,6 @@
+{
+  "id": "modifier-call",
+  "name": "Modifier call",
+  "first": "A call of a view modifier on a view, written after a dot, which returns a new view and leaves the first one as it was.",
+  "parts": []
+}

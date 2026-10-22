@@ -1,0 +1,50 @@
+{
+  "id": "any-view",
+  "name": "Type-erased view",
+  "area": "ui",
+  "first": "A view that holds any other view and hides its type, so that code can give one type where different types of view are possible.",
+  "parts": [],
+  "dependsOn": [
+    { "id": "view", "views": ["what"],
+      "why": "A type-erased view is a view that holds another view." },
+    { "id": "opaque-type", "views": ["what"],
+      "why": "A view's body has an opaque type, which must be one real type, so a body that can give two types of view needs them to be one type." },
+    { "id": "boxed-protocol-type", "views": ["what"],
+      "why": "A boxed protocol type of the view protocol is not itself a view, so it cannot be the type of a body, and a type-erased view is used instead." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct Badge: View {",
+      "    let isNew: Bool",
+      "    var body: some View {",
+      "        if isNew {",
+      "            return AnyView(Text(\"New\"))",
+      "        }",
+      "        return AnyView(Image(systemName: \"star\"))",
+      "    }",
+      "}",
+      "",
+      "print(type(of: Badge(isNew: true).body))",
+      "print(type(of: Badge(isNew: false).body))"
+    ],
+    "output": ["AnyView", "AnyView"]
+  },
+  "views": {
+    "what": {
+      "is": "A type-erased view, `AnyView`, is a view that holds any other view. Its type is always `AnyView`, whichever view it holds, so code can give one type where different types of view are possible.",
+      "marks": [
+        { "line": 7, "text": "AnyView", "label": "holds a Text" },
+        { "line": 9, "text": "AnyView", "label": "holds an Image" }
+      ],
+      "afterExample": "`body` returns a `Text` when `isNew` is true, and an `Image` when it is not. Wrapping each one in `AnyView` gives both the same type, so lines 13 and 14 both print {{AnyView}}.",
+      "problem": "The type of `body` is an opaque type, so all of its return statements must return the same real type. A `Text` and an `Image` are two types, so without `AnyView` this `body` does not build. Giving `body` a boxed protocol type, the keyword any before `View`, does not build either, because a boxed protocol type of `View` does not itself conform to `View`.",
+      "how": "`AnyView` keeps the view it is given, and hides that view's type. When SwiftUI draws an `AnyView`, it finds the type of the view inside while the app runs. Apple's documentation says that when that type changes, SwiftUI removes the old views and makes new ones, so the state inside them starts again.",
+      "when": [
+        { "text": "Use it when a value must hold one of several types of view that only the running app can tell apart, such as a view chosen from data that the app loads." },
+        { "text": "Don't use it when an `if` statement in a view builder can choose between the views. `AnyView` hides the type from SwiftUI, so SwiftUI cannot tell that the view inside is the same as before, and its state can start again." }
+      ]
+    }
+  }
+}

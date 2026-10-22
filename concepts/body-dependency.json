@@ -1,0 +1,6 @@
+{
+  "id": "body-dependency",
+  "name": "Dependency of a body",
+  "first": "A value that a view's body read the last time it ran, such as a state property, whose change makes SwiftUI run the body again.",
+  "parts": []
+}

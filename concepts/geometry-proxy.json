@@ -1,0 +1,6 @@
+{
+  "id": "geometry-proxy",
+  "name": "Geometry proxy",
+  "first": "The value that a geometry reader gives its content, which holds the size that the reader chose.",
+  "parts": []
+}

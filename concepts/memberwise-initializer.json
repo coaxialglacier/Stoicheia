@@ -1,0 +1,6 @@
+{
+  "id": "memberwise-initializer",
+  "name": "Memberwise initializer",
+  "first": "An initializer that swiftc writes for a structure that declares none of its own, with a parameter for its stored properties, each labeled with the property's name.",
+  "parts": []
+}

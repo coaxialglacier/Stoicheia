@@ -1,0 +1,41 @@
+{
+  "id": "text",
+  "name": "Text",
+  "area": "ui",
+  "first": "A view that shows one or more lines of text that the user cannot edit.",
+  "parts": [],
+  "dependsOn": [
+    { "id": "view", "views": ["what"],
+      "why": "A text is a view that SwiftUI provides and draws itself." },
+    { "id": "view-modifier", "views": ["what"],
+      "why": "A text has modifiers of its own, which return a text, beside the modifiers of every view, which return a new view around it." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "let city = Text(\"Lima\").bold()",
+      "let line = Text(\"\\(city) for 3 nights\")",
+      "print(type(of: city))",
+      "print(type(of: line))",
+      "print(type(of: city.padding(4)))"
+    ],
+    "output": ["Text", "Text", "ModifiedContent<Text, _PaddingLayout>"]
+  },
+  "views": {
+    "what": {
+      "is": "A `Text` is a view that shows one or more lines of text that the user cannot edit. SwiftUI draws it in the system's font, with the size and color that the environment gives it, and wraps it onto more lines when it does not fit.",
+      "marks": [
+        { "line": 3, "text": "bold()", "label": "returns a Text" },
+        { "line": 7, "text": "padding(4)", "label": "returns a new view" }
+      ],
+      "afterExample": "`bold()` is a modifier of `Text` that returns a `Text`, so line 4 can put `city` inside another `Text`. `padding(4)` is a modifier of every view, which returns a new view around the text, as line 7 prints.",
+      "problem": "Almost every screen shows words: names, numbers, dates, and labels. A `Text` shows a string in a font that suits the platform, in the reader's language when the app has a translation, and in the size the reader chose in Settings.",
+      "how": "Apple's documentation says that a text view draws a string in a font that is right for the current platform. A string written straight in the parentheses, as `\"Lima\"`, is also a key that SwiftUI looks up in the app's translations. Modifiers of `Text`, such as `bold()`, return a `Text`, so styled text can be joined into one.",
+      "when": [
+        { "text": "Use it for any words a screen shows, and use its own modifiers, such as `bold()`, for the style of part of a line." },
+        { "text": "Don't use it for words the user types or changes. A text field edits a string, through a binding." }
+      ]
+    }
+  }
+}

@@ -13,7 +13,9 @@
 //   They hold the values that the drawings of memory show;
 // - the SIL that swiftc makes at -Onone has, or lacks, the text that each of the example's SIL checks names;
 // - the LLVM IR that swiftc makes at -Onone has, or lacks, the text that each of the example's IR checks names;
-// - each snippet builds, and prints its output.
+// - each snippet builds, and prints its output. A snippet with "app": true is a file of an app, such as one with @main before
+//   a type that conforms to App: it is built as an app's file is, with -parse-as-library, and not run, because running it would
+//   start the app. Its output is an empty list.
 
 const fs = require('fs');
 const os = require('os');
@@ -28,13 +30,14 @@ let jobs = 0;
 const run = (cmd, args, opts = {}) => new Promise(resolve => {
   execFile(cmd, args, { maxBuffer: 64 * 1024 * 1024, timeout: 120000, ...opts }, (err, stdout, stderr) => resolve({ ok: !err, stdout, stderr, err }));
 });
-// Builds a program and runs it. Returns the lines it printed, or the compiler's error.
-async function buildAndRun(lines) {
+// Builds a program and runs it. Returns the lines it printed, or the compiler's error. An app's file is only built.
+async function buildAndRun(lines, app = false) {
   const dir = path.join(work, String(jobs++));
   fs.mkdirSync(dir);
   fs.writeFileSync(path.join(dir, 'main.swift'), lines.join('\n') + '\n');
-  const built = await run('swiftc', [...SWIFTC, 'main.swift', '-o', 'program'], { cwd: dir });
+  const built = await run('swiftc', [...SWIFTC, ...(app ? ['-parse-as-library'] : []), 'main.swift', '-o', 'program'], { cwd: dir });
   if (!built.ok) return { error: built.stderr.trim() };
+  if (app) return { output: [] };
   const ran = await run(path.join(dir, 'program'), [], { cwd: dir });
   if (!ran.ok) return { error: `it stopped with an error: ${ran.stderr.trim() || ran.err.message}` };
   return { output: ran.stdout.replace(/\n$/, '').split('\n').filter((l, i, all) => all.length > 1 || l !== '') };
@@ -169,8 +172,9 @@ async function checkEntry(e) {
 
   // Each snippet prints its output.
   for (const [name, sn] of Object.entries(e.snippets || {})) {
-    const got = await buildAndRun(sn.code);
-    if (got.error) fail(`snippet "${name}" does not build or run: ${got.error}`);
+    const got = await buildAndRun(sn.code, sn.app === true);
+    if (got.error) fail(`snippet "${name}" does not build${sn.app ? ' as a file of an app' : ' or run'}: ${got.error}`);
+    else if (sn.app) same(sn.output, []) ? pass(`snippet "${name}" builds as a file of an app`) : fail(`snippet "${name}" is a file of an app, which is not run, so its output must be empty`);
     else same(got.output, sn.output) ? pass(`snippet "${name}" prints ${show(sn.output)}`) : fail(`snippet "${name}" should print ${show(sn.output)}, but prints ${show(got.output)}`);
   }
   return results;

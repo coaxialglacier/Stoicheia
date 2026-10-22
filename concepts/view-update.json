@@ -1,0 +1,83 @@
+{
+  "id": "view-update",
+  "name": "View update",
+  "area": "ui",
+  "first": "SwiftUI running a view's body again when a value that the body read changes, and not when a value it did not read changes.",
+  "parts": ["body-dependency"],
+  "dependsOn": [
+    { "id": "state", "views": ["what", "parts"],
+      "why": "The example changes state, one of the values that make SwiftUI run a body again.",
+      "whyInExample": "`taps` and `visits` are state properties, as `taps` is in `Counter` on the page of State." },
+    { "id": "view-modifier", "views": ["parts"],
+      "why": "The example changes its state in the closure of a modifier that runs when a view appears.",
+      "whyInExample": "`onAppear` is a modifier of each `Text`, whose closure changes the state." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct Welcome: View {",
+      "    @State private var visits = 0",
+      "    var body: some View {",
+      "        let _ = print(\"Welcome body runs\")",
+      "        Text(\"Welcome\")",
+      "            .onAppear {",
+      "                visits += 1",
+      "            }",
+      "    }",
+      "}",
+      "",
+      "struct Counter: View {",
+      "    @State private var taps = 0",
+      "    var body: some View {",
+      "        let _ = print(\"Counter body runs:\", taps)",
+      "        Text(\"Taps: \\(taps)\")",
+      "            .onAppear {",
+      "                taps += 1",
+      "            }",
+      "    }",
+      "}",
+      "",
+      "let welcome = ImageRenderer(content: Welcome())",
+      "_ = welcome.cgImage",
+      "let counter = ImageRenderer(content: Counter())",
+      "_ = counter.cgImage"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A view update is SwiftUI running a view's `body` again, to get a new description of the view. SwiftUI does it when a value that `body` read the last time it ran changes, such as a state property. A change to a value that `body` did not read does not run it again.",
+      "marks": [
+        { "line": 9, "text": "visits", "label": "never read by body" },
+        { "line": 17, "text": "taps", "part": "body-dependency", "label": "read by body" }
+      ],
+      "afterExample": "Both views change a state property when they appear. Only `Counter` reads its state in `body`, so only the `body` of `Counter` runs a second time.",
+      "problem": "A screen must show the newest data, but running every view's `body` after every change would do work that changes nothing. SwiftUI runs again only the bodies that read what changed.",
+      "how": "Apple's documentation says that when a state value changes, SwiftUI updates the parts of the view hierarchy that depend on it. A `body` depends on the values it read when it last ran. Here, `body` of `Welcome` never read `visits`, so its change ran nothing, while `body` of `Counter` read `taps`, so its change ran that `body` again.",
+      "when": [
+        { "text": "Use it to keep updates small: read in `body` only the values that the view shows, and give each view inside it only the values that it needs." },
+        { "text": "Don't count on `body` running a set number of times. SwiftUI runs it whenever it needs a new description, so `body` should not do work with effects, such as saving data." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "body-dependency", "name": "The value `taps`, read on line 17",
+          "text": "The `body` of `Counter` reads `taps` on lines 17 and 18, so `taps` is a value that this `body` depends on. The `body` of `Welcome` never reads `visits`, so it does not depend on `visits`." }
+      ],
+      "marks": [
+        { "line": 17, "text": "taps", "part": "body-dependency", "label": "read by body" },
+        { "line": 18, "text": "taps", "part": "body-dependency", "label": "read by body" }
+      ],
+      "steps": [
+        { "text": "Line 25 makes a `Welcome` and a renderer for it, and line 26 asks for its image, so SwiftUI draws it.", "line": 25, "also": [26] },
+        { "text": "The `body` of `Welcome` runs, and line 6 prints {{Welcome body runs}}.", "line": 6, "prints": ["Welcome body runs"] },
+        { "text": "The `Text` appears, and line 9 adds 1 to `visits`. The `body` did not read `visits`, so SwiftUI does not run it again.", "line": 9, "also": [8] },
+        { "text": "Line 27 makes a `Counter` and a renderer for it, and line 28 asks for its image.", "line": 27, "also": [28] },
+        { "text": "The `body` of `Counter` runs, and line 17 reads `taps` and prints {{Counter body runs: 0}}.", "line": 17, "prints": ["Counter body runs: 0"] },
+        { "text": "The `Text` appears, and line 20 adds 1 to `taps`, which the `body` read.", "line": 20, "also": [19] },
+        { "text": "A value that the `body` read changed, so SwiftUI runs it again, and line 17 prints {{Counter body runs: 1}}.", "line": 17, "prints": ["Counter body runs: 1"] }
+      ],
+      "end": { "kind": "answer", "text": "SwiftUI ran a `body` again only when a value it had read changed: `taps`, and not `visits`." }
+    }
+  }
+}

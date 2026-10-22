@@ -1,0 +1,6 @@
+{
+  "id": "flexible-frame",
+  "name": "Flexible frame",
+  "first": "A frame with a smallest or a largest width or height, which lets its size change with the proposal, but only between those limits.",
+  "parts": []
+}

@@ -1,0 +1,68 @@
+{
+  "id": "stack-view",
+  "name": "Stack view",
+  "area": "ui",
+  "first": "A view that places the views inside it in a row, in a column, or one on top of another.",
+  "parts": ["stack-content", "stack-spacing"],
+  "dependsOn": [
+    { "id": "layout-process", "views": ["what", "parts"],
+      "why": "A stack proposes a size to each view inside it, and chooses its own size from theirs.",
+      "whyInExample": "The renderer proposes 300 by 100 to `row`, as it proposes 300 by 200 to each color on the page of Layout process." },
+    { "id": "view-builder", "views": ["parts"],
+      "why": "The views of a stack are listed in a view builder block.",
+      "whyInExample": "The two colors in the braces of `HStack` are views on their own lines, as the `Text` is in the `body` of `Card`." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "let row = HStack(spacing: 10) {",
+      "    Color.blue.aspectRatio(1, contentMode: .fit)",
+      "    Color.green.aspectRatio(1, contentMode: .fit)",
+      "}",
+      "let size = CGSize(width: 300, height: 100)",
+      "let renderer = ImageRenderer(content: row)",
+      "renderer.proposedSize = ProposedViewSize(size)",
+      "let image = renderer.cgImage!",
+      "print(image.width, image.height)"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A stack is a view that places the views inside it one after another. `HStack` places them in a row, from the leading edge to the trailing edge. SwiftUI's other stacks place them in a column, or one on top of another.",
+      "marks": [
+        { "line": 3, "text": "HStack", "label": "a row" },
+        { "line": 3, "text": "spacing: 10", "part": "stack-spacing", "label": "space between" },
+        { "line": 4, "text": "Color.blue.aspectRatio(1, contentMode: .fit)", "part": "stack-content", "label": "first view" },
+        { "line": 5, "text": "Color.green.aspectRatio(1, contentMode: .fit)", "part": "stack-content", "label": "second view" }
+      ],
+      "afterExample": "The stack is proposed 300 by 100 points. Each square chooses 100 by 100, and the stack chooses the width of both and the space between them: 210 by 100.",
+      "problem": "Most screens are rows and columns of views, such as an icon beside a name, or a title above a date. Stacks arrange views in rows and columns without fixed positions, so the views move together when the space changes. In UIKit, Auto Layout constraints did most of this work.",
+      "how": "A stack proposes a size to each view inside it. It then chooses its own size from the sizes they chose and the spacing between them, and places them one after another in its direction.",
+      "when": [
+        { "text": "Use a stack for a few views that sit side by side or one above another, such as an icon beside a name." },
+        { "text": "Don't use a plain stack for hundreds of rows. Apple's documentation says that it renders all of its views at once, whether or not they are on the screen. A lazy stack makes only the views that are about to be shown." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "stack-content", "name": "The views in the braces, lines 4 and 5",
+          "text": "The braces after `HStack` hold the views of the stack, one per line, as a view builder block. The stack places them in that order, from leading to trailing. Each is a `Color` with an aspect ratio of 1, so it chooses a square." },
+        { "part": "stack-spacing", "name": "The spacing, line 3",
+          "text": "The argument `spacing: 10` makes the stack leave 10 points between each two views. Without it, the stack uses a spacing that SwiftUI chooses for the views." }
+      ],
+      "marks": [
+        { "line": 3, "text": "spacing: 10", "part": "stack-spacing", "label": "spacing" },
+        { "line": 4, "text": "Color.blue.aspectRatio(1, contentMode: .fit)", "part": "stack-content", "label": "view" },
+        { "line": 5, "text": "Color.green.aspectRatio(1, contentMode: .fit)", "part": "stack-content", "label": "view" }
+      ],
+      "steps": [
+        { "text": "Line 3 makes an `HStack` that holds two colors, each with an aspect ratio of 1, and stores it in `row`.", "line": 3, "also": [4, 5] },
+        { "text": "Line 8 makes a renderer for `row`, and line 9 proposes 300 by 100, the size on line 7.", "line": 8, "also": [7, 9] },
+        { "text": "Line 10 asks for the image. The stack proposes a size to each color, and each chooses a square as tall as the stack: 100 by 100.", "line": 10, "also": [4, 5] },
+        { "text": "The stack chooses the width of both squares and the 10 points between them, 210 by 100, and places the squares side by side. Line 11 prints {{210 100}}.", "line": 11, "prints": ["210 100"] }
+      ],
+      "end": { "kind": "answer", "text": "The stack chose its size from the views inside it, 100 plus 10 plus 100 points wide, and placed them in a row." }
+    }
+  }
+}

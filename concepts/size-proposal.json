@@ -1,0 +1,6 @@
+{
+  "id": "size-proposal",
+  "name": "Size proposal",
+  "first": "The size, as a width and a height, that a parent view offers a child view during layout, which the child takes into account when it chooses its own size.",
+  "parts": []
+}

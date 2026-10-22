@@ -1,0 +1,6 @@
+{
+  "id": "scene-body",
+  "name": "Scene body",
+  "first": "The computed property of an app or of a scene, whose value is the scenes that it is made of.",
+  "parts": []
+}

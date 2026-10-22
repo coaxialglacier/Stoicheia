@@ -1,0 +1,37 @@
+{
+  "id": "scene",
+  "name": "Scene",
+  "area": "ui",
+  "first": "A part of an app's user interface whose life cycle the system manages, such as a window, which holds the views it shows.",
+  "parts": ["window-group"],
+  "dependsOn": [
+    { "id": "view", "views": ["what"],
+      "why": "A scene holds the views that it shows." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "let scene = WindowGroup {",
+      "    Text(\"Trips\")",
+      "}",
+      "print(type(of: scene))"
+    ],
+    "output": ["WindowGroup<Text>"]
+  },
+  "views": {
+    "what": {
+      "is": "A scene is a part of an app's user interface whose life cycle the system manages, such as a window. It holds a view, and the system decides when to show it, how many there are, and when they go to the background.",
+      "marks": [
+        { "line": 3, "text": "WindowGroup", "part": "window-group", "label": "a scene" }
+      ],
+      "afterExample": "`WindowGroup` is the scene that SwiftUI provides for an app's windows. It holds a `Text`, and line 6 prints its type, {{WindowGroup<Text>}}.",
+      "problem": "An app's views need somewhere to be shown, and the system decides where: in one window on an iPhone, in several windows on an iPad or a Mac. A scene tells the system which views go in each window, and the system makes and removes the windows.",
+      "how": "The views given to a `WindowGroup` are the template for each window that the app makes from it. Apple's documentation says that each window keeps its own state: the system makes new storage for the state of the views in each window.",
+      "when": [
+        { "text": "Use a window group for an app's main windows. On an iPad or a Mac, a person can open more than one window from the same group." },
+        { "text": "Don't make a scene to show a view inside a screen. A scene is a whole window, or a part of the system's interface such as a settings window. Inside it, the parts of the screen are views." }
+      ]
+    }
+  }
+}

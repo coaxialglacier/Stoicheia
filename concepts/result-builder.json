@@ -1,0 +1,79 @@
+{
+  "id": "result-builder",
+  "name": "Result builder",
+  "area": "swift",
+  "first": "A type whose static methods swiftc calls to combine the lines of a body of code into one value, so that the body lists its parts with no return.",
+  "parts": ["result-builder-attribute", "build-block", "builder-attribute"],
+  "dependsOn": [
+    { "id": "function", "views": ["what", "parts"],
+      "why": "A result builder changes how swiftc builds the body of a function, and its methods are functions.",
+      "whyInExample": "`@ListBuilder` changes how swiftc builds the body of the function `packing()`." },
+    { "id": "structure", "views": ["parts"],
+      "why": "The result builder in the example is a structure.",
+      "whyInExample": "`ListBuilder` is declared with `struct`, as `Trip` is." }
+  ],
+  "example": {
+    "code": [
+      "@resultBuilder",
+      "struct ListBuilder {",
+      "    static func buildBlock(",
+      "        _ items: String...",
+      "    ) -> [String] {",
+      "        return items",
+      "    }",
+      "}",
+      "",
+      "@ListBuilder",
+      "func packing() -> [String] {",
+      "    \"Socks\"",
+      "    \"Map\"",
+      "    \"Tickets\"",
+      "}",
+      "",
+      "print(packing())"
+    ],
+    "sil": [
+      { "in": "packing()", "has": "function_ref static ListBuilder.buildBlock(_:)",
+        "shows": "swiftc built the body of packing() as a call of buildBlock." }
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A result builder is a type marked `@resultBuilder`, whose static methods combine several values into one. Writing the builder's name as an attribute before a function, as `@ListBuilder`, lets the function's body list values one per line, with no `return`. swiftc turns those lines into a call of the builder's `buildBlock`.",
+      "marks": [
+        { "line": 1, "text": "@resultBuilder", "part": "result-builder-attribute", "label": "result builder" },
+        { "line": 10, "text": "@ListBuilder", "part": "builder-attribute", "label": "built with ListBuilder" }
+      ],
+      "afterExample": "The body of `packing()` lists three strings and has no `return`. `ListBuilder` combines them into one array, which line 17 prints.",
+      "problem": "Some values are built from many parts, such as a list of things to pack, or the views of a screen. Written as one call, they need commas, brackets, and a `return`. A result builder lets the code list the parts one per line, and builds the value from them.",
+      "how": "When swiftc builds the program, it changes the body of `packing()`: it collects the value of each line, and passes them all to the `buildBlock` of `ListBuilder`, whose result the function returns. A builder can have more static methods, such as one for if statements, and swiftc calls each one where the body needs it.",
+      "when": [
+        { "text": "Use one where a value is a list of parts that read more clearly one per line than as one call. SwiftUI builds the body of every view with its own result builder, the view builder." },
+        { "text": "Don't write one for a list that ordinary code makes as clearly, such as an array literal in brackets: the builder is one more type to read." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "result-builder-attribute", "name": "The attribute `@resultBuilder`, line 1",
+          "text": "The attribute `@resultBuilder` makes `ListBuilder` a result builder. Its name can then be written as an attribute, and swiftc calls its methods. They are marked `static`: a static method belongs to the type itself, so swiftc calls it without making an instance of `ListBuilder`." },
+        { "part": "build-block", "name": "The method `buildBlock`, lines 3 to 7",
+          "text": "The static method `buildBlock` combines the values of a block, such as the body of `packing()`. Its parameter `items`, on line 4, has the type `String...`: the three dots let a call pass any number of strings, which the method gets as an array. It returns that array." },
+        { "part": "builder-attribute", "name": "The attribute `@ListBuilder`, line 10",
+          "text": "Writing a result builder's name as an attribute before a function makes swiftc build the function's body with that builder. Each line of the body, such as `\"Socks\"`, is a value for the builder, and the body needs no `return`." }
+      ],
+      "marks": [
+        { "line": 1, "text": "@resultBuilder", "part": "result-builder-attribute", "label": "attribute" },
+        { "line": 3, "text": "buildBlock", "part": "build-block", "label": "build block method" },
+        { "line": 10, "text": "@ListBuilder", "part": "builder-attribute", "label": "builder attribute" },
+        { "line": 12, "text": "\"Socks\"", "part": "builder-attribute", "label": "a value for the builder" }
+      ],
+      "steps": [
+        { "text": "Line 17 calls `packing()`.", "line": 17, "also": [11] },
+        { "text": "swiftc built the body of `packing()` with `ListBuilder`, so the three strings on lines 12 to 14 are not separate statements. They are the arguments of one call of `buildBlock`.", "line": 12, "also": [13, 14, 3] },
+        { "text": "`buildBlock` gets the three strings as the array `items`, and line 6 returns it. `packing()` returns that array.", "line": 6, "value": { "line": 6, "name": "items", "is": "[\"Socks\", \"Map\", \"Tickets\"]" } },
+        { "text": "Line 17 prints the array: {{[\"Socks\", \"Map\", \"Tickets\"]}}.", "line": 17, "prints": ["[\"Socks\", \"Map\", \"Tickets\"]"] }
+      ],
+      "end": { "kind": "answer", "text": "swiftc turned the body of `packing()` into one call of `buildBlock`, which combined its three lines into one array." }
+    }
+  }
+}

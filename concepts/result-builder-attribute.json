@@ -1,0 +1,6 @@
+{
+  "id": "result-builder-attribute",
+  "name": "Result builder attribute",
+  "first": "The attribute, written with an at sign before the declaration of a type, that makes the type a result builder.",
+  "parts": []
+}

@@ -1,0 +1,79 @@
+{
+  "id": "scene-phase",
+  "name": "Scene phase",
+  "area": "ui",
+  "first": "Whether a scene is active, inactive, or in the background, which a view reads from the environment to save or pause its work.",
+  "parts": ["active-phase", "inactive-phase", "background-phase"],
+  "dependsOn": [
+    { "id": "scene", "views": ["what", "parts"],
+      "why": "A phase belongs to a scene, and the system moves each scene through its phases.",
+      "whyInExample": "In an app, `Saver` would be inside a scene, such as a `WindowGroup`, and would read that scene's phase." },
+    { "id": "environment", "views": ["what", "parts"],
+      "why": "A view reads its scene's phase from the environment.",
+      "whyInExample": "`@Environment(\\.scenePhase)` reads the phase, as `@Environment(\\.isEnabled)` reads whether views are enabled." },
+    { "id": "closure", "views": ["parts"],
+      "why": "The code that runs when the phase changes is a closure, which SwiftUI calls with the old and the new phase.",
+      "whyInExample": "The braces after `onChange(of: phase)` hold a closure with two parameters, `old` and `new`." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct Saver: View {",
+      "    @Environment(\\.scenePhase) private var phase",
+      "    var body: some View {",
+      "        let _ = print(\"phase is\", phase)",
+      "        Text(\"Saver\")",
+      "            .onChange(of: phase) { old, new in",
+      "                print(\"from\", old, \"to\", new)",
+      "            }",
+      "    }",
+      "}",
+      "",
+      "let active = Saver()",
+      "    .environment(\\.scenePhase, .active)",
+      "let renderer = ImageRenderer(content: active)",
+      "_ = renderer.cgImage",
+      "renderer.content = Saver()",
+      "    .environment(\\.scenePhase, .background)",
+      "_ = renderer.cgImage"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A scene's phase says whether the scene is active, inactive, or in the background. The system sets it in the environment of each view in the scene, so a view reads it with `@Environment(\\.scenePhase)`, and can run code when it changes.",
+      "marks": [
+        { "line": 4, "text": "@Environment(\\.scenePhase) private var phase", "label": "reads the phase" },
+        { "line": 15, "text": ".active", "part": "active-phase", "label": "active" },
+        { "line": 19, "text": ".background", "part": "background-phase", "label": "in the background" }
+      ],
+      "afterExample": "`Saver` reads the phase, and prints each change. In an app, the system sets the phase. Here lines 15 and 19 set it, with `environment`, so that the program can show what happens.",
+      "problem": "An app should save its work when a person leaves it, and pause work that no one can see. In UIKit, the app delegate heard about this. In SwiftUI, each view can read its scene's phase, and run code when it changes.",
+      "how": "The system moves each scene through its phases, and sets the phase in the environment of the scene's views. Apple's documentation says that a view reads the phase of the scene it is in, while an app reads one phase for all its scenes, which is active when any scene is active. The modifier `onChange(of:)` calls its closure each time the value it watches changes.",
+      "when": [
+        { "text": "Use it to save data when the phase becomes background. Apple's documentation says to expect an app in the background to be ended, so the work must be done right away." },
+        { "text": "Don't treat inactive as the background. Apple's documentation says that an inactive scene is still in the foreground, such as one shown in the app switcher, and should only pause its work." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "active-phase", "name": "The phase `.active`, line 15",
+          "text": "The phase `.active` means the scene is in the foreground, and a person can use it. Line 15 sets it, as the system does for a scene on the screen." },
+        { "part": "background-phase", "name": "The phase `.background`, line 19",
+          "text": "The phase `.background` means the scene is not visible. Line 19 sets it, as the system does when a person leaves the app." }
+      ],
+      "marks": [
+        { "line": 15, "text": ".active", "part": "active-phase", "label": "active" },
+        { "line": 19, "text": ".background", "part": "background-phase", "label": "background" }
+      ],
+      "steps": [
+        { "text": "Line 14 makes a `Saver`, and line 15 sets the phase in its environment to `.active`. Line 16 makes a renderer for it, and line 17 asks for the image, so SwiftUI draws it.", "line": 15, "also": [14, 16, 17] },
+        { "text": "The `body` of `Saver` runs, and line 6 prints {{phase is active}}.", "line": 6, "also": [4], "prints": ["phase is active"] },
+        { "text": "Line 18 gives the renderer a new `Saver`, whose phase line 19 sets to `.background`, and line 20 asks for the image again.", "line": 19, "also": [18, 20] },
+        { "text": "SwiftUI keeps the view it drew, and gives it the new phase. Its `body` runs again, and line 6 prints {{phase is background}}.", "line": 6, "prints": ["phase is background"] },
+        { "text": "The phase changed, so SwiftUI calls the closure of `onChange(of:)` with the old and the new phase. Line 9 prints {{from active to background}}.", "line": 9, "also": [8], "prints": ["from active to background"] }
+      ],
+      "end": { "kind": "answer", "text": "A view reads its scene's phase from the environment, and `onChange(of:)` runs code each time the phase changes, such as when the scene goes to the background." }
+    }
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "id": "state",
+  "name": "State",
+  "area": "ui",
+  "first": "A value that SwiftUI keeps for a view while the view is on the screen, and that makes SwiftUI run the view's body again when it changes.",
+  "parts": ["state-property"],
+  "dependsOn": [
+    { "id": "view", "views": ["what", "parts"],
+      "why": "State belongs to a view, and a change to it makes SwiftUI run that view's body again.",
+      "whyInExample": "`taps` is state of `Counter`, a view, and its `body` reads `taps`." },
+    { "id": "property-wrapper", "views": ["what", "parts"],
+      "why": "State is a property wrapper that SwiftUI provides, so a state property is a wrapped property.",
+      "whyInExample": "`@State` before `taps` makes `taps` a wrapped property of the property wrapper `State`." },
+    { "id": "view-modifier", "views": ["parts"],
+      "why": "The example changes its state in the closure of a modifier that runs when the view appears.",
+      "whyInExample": "`onAppear` is a modifier of the `Text`, and its closure adds 1 to `taps`." },
+    { "id": "closure", "views": ["parts"],
+      "why": "The code that changes the state is a closure, which SwiftUI calls later.",
+      "whyInExample": "The braces after `onAppear` hold a closure, which SwiftUI calls when the view appears." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct Counter: View {",
+      "    @State private var taps = 0",
+      "    var body: some View {",
+      "        let _ = print(\"Taps:\", taps)",
+      "        Text(\"Taps: \\(taps)\")",
+      "            .onAppear {",
+      "                taps += 1",
+      "            }",
+      "    }",
+      "}",
+      "",
+      "let renderer = ImageRenderer(content: Counter())",
+      "_ = renderer.cgImage"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "State is a value that SwiftUI keeps for a view. A property marked `@State` keeps its value while SwiftUI makes the view's structure again and again. When code changes the value, SwiftUI runs the view's `body` again, so that what the view shows matches the new value.",
+      "marks": [
+        { "line": 4, "text": "@State private var taps = 0", "part": "state-property", "label": "state" }
+      ],
+      "afterExample": "`Counter` keeps `taps` in state. When the view appears, line 9 adds 1 to `taps`, and SwiftUI runs `body` again, so line 6 prints the new value.",
+      "problem": "SwiftUI can make a view's structure again whenever it needs it, so a plain stored property would start from its first value each time. The code in `body` cannot change a stored property either. State keeps a value while the view is on the screen, lets code change it, and shows each change.",
+      "how": "SwiftUI keeps the value of a state property in storage of its own, outside the structure. Reading `taps` reads that storage. Writing `taps` changes the storage, and makes SwiftUI run `body` again.",
+      "when": [
+        { "text": "Use state for a value that only this view and the views inside it use, such as how many times a button was tapped. Mark it `private`, because only the view itself sets it." },
+        { "text": "Don't use state for data that several screens share, or that must still be there after the app quits. A state property lasts only while its view is on the screen." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "state-property", "name": "The state property `taps`, line 4",
+          "text": "The attribute `@State` makes `taps` a wrapped property of `State`, the property wrapper that SwiftUI provides. Its first value is 0, and it is `private`, so only `Counter` reads and writes it. SwiftUI keeps its value, so each time `body` runs, `taps` reads the value that SwiftUI kept." }
+      ],
+      "marks": [
+        { "line": 4, "text": "@State private var taps = 0", "part": "state-property", "label": "state" }
+      ],
+      "steps": [
+        { "text": "Line 14 makes a `Counter`, and an `ImageRenderer` for it. An `ImageRenderer` draws a view into an image, as a window draws it on a screen, so this program can run SwiftUI without a window.", "line": 14 },
+        { "text": "Line 15 asks the renderer for its image, so SwiftUI starts to draw `Counter`. It makes the storage for `taps`, with the value 0, and runs `body`.", "line": 15, "also": [4, 5] },
+        { "text": "Line 6 reads `taps`, and prints {{Taps: 0}}.", "line": 6, "prints": ["Taps: 0"] },
+        { "text": "The `Text` appears, so SwiftUI calls the closure of `onAppear`. Line 9 adds 1 to `taps`, and the storage that SwiftUI keeps now holds 1.", "line": 9, "also": [8] },
+        { "text": "The state changed, so SwiftUI runs `body` again. Line 6 reads `taps`, which is now 1, and prints {{Taps: 1}}.", "line": 6, "prints": ["Taps: 1"] }
+      ],
+      "end": { "kind": "answer", "text": "SwiftUI keeps the value of `taps`. The change on line 9 made SwiftUI run `body` again, with the new value." }
+    }
+  }
+}

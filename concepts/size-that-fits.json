@@ -1,0 +1,6 @@
+{
+  "id": "size-that-fits",
+  "name": "Sizing method",
+  "first": "The method of a layout that gets a proposal and the views inside the layout, and returns the size that the layout chooses.",
+  "parts": []
+}

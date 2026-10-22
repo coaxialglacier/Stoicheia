@@ -1,0 +1,6 @@
+{
+  "id": "grid-row",
+  "name": "Grid row",
+  "first": "One row of a grid, whose first view goes in the grid's first column, its second view in the second column, and so on.",
+  "parts": []
+}

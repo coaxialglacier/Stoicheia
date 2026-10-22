@@ -1,0 +1,6 @@
+{
+  "id": "inactive-phase",
+  "name": "Inactive phase",
+  "first": "The phase of a scene that is in the foreground but should pause its work, such as while it is shown in the app switcher.",
+  "parts": []
+}

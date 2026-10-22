@@ -1,0 +1,69 @@
+{
+  "id": "grid",
+  "name": "Grid",
+  "area": "ui",
+  "first": "A view that places its views in rows and columns, and makes each column as wide as the widest view in it.",
+  "parts": ["grid-row"],
+  "dependsOn": [
+    { "id": "stack-view", "views": ["what", "parts"],
+      "why": "A grid places views in rows and columns, as stacks place them in one row or one column, but lines up the columns across the rows.",
+      "whyInExample": "Each `GridRow` holds its views in a row, as `HStack` does, and the grid lines up their columns." },
+    { "id": "frame", "views": ["parts"],
+      "why": "The cells in the example have fixed frames, so that the widths are easy to add up.",
+      "whyInExample": "Each cell is a color in a fixed frame, such as `frame(width: 80, height: 20)`, as the color in `frame(width: 80, height: 40)` is." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "let grid = Grid(",
+      "    horizontalSpacing: 10, verticalSpacing: 10",
+      ") {",
+      "    GridRow {",
+      "        Color.blue.frame(width: 80, height: 20)",
+      "        Color.red.frame(width: 30, height: 20)",
+      "    }",
+      "    GridRow {",
+      "        Color.green.frame(width: 50, height: 20)",
+      "        Color.yellow.frame(width: 60, height: 20)",
+      "    }",
+      "}",
+      "let renderer = ImageRenderer(content: grid)",
+      "let image = renderer.cgImage!",
+      "print(image.width, image.height)"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A grid is a view that places its views in rows and columns. Each `GridRow` is one row: its first view goes in the first column, and its second view in the second column. The grid makes each column as wide as the widest view in it, so the columns line up from row to row.",
+      "marks": [
+        { "line": 6, "text": "GridRow", "part": "grid-row", "label": "row 1" },
+        { "line": 10, "text": "GridRow", "part": "grid-row", "label": "row 2" }
+      ],
+      "afterExample": "The first column holds views 80 and 50 points wide, so it is 80 wide. The second holds views 30 and 60 wide, so it is 60 wide. With 10 points between the columns and between the rows, the grid is 150 by 50.",
+      "problem": "A table of labels and values, such as a trip's dates and prices, needs its columns to line up. Rows made of separate stacks size each row on its own, so their columns do not line up. A grid sizes each column across all of the rows.",
+      "how": "Apple's documentation says that a grid handles rows and columns as one operation, and applies alignment and spacing to cells, rather than first to rows and then to columns. Each column is as wide as its widest cell, and each row as tall as its tallest cell.",
+      "when": [
+        { "text": "Use it for a small table whose columns should line up, such as labels beside their values." },
+        { "text": "Don't use it for a long collection that scrolls. A grid makes all of its views at once. A lazy grid makes only the cells that are about to be shown." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "grid-row", "name": "The rows, lines 6 to 13",
+          "text": "Each `GridRow` holds one row of the grid. Its first view goes in the grid's first column, and its second view in the second column. So the views of lines 7 and 11 are in the first column, and the views of lines 8 and 12 are in the second." }
+      ],
+      "marks": [
+        { "line": 6, "text": "GridRow", "part": "grid-row", "label": "grid row" },
+        { "line": 10, "text": "GridRow", "part": "grid-row", "label": "grid row" }
+      ],
+      "steps": [
+        { "text": "Lines 3 to 5 make a grid with 10 points between the columns and between the rows. It has two rows, each with two colors in fixed frames.", "line": 3, "also": [4, 6, 10] },
+        { "text": "Line 15 makes a renderer, and line 16 asks for the image, so SwiftUI lays out the grid.", "line": 16, "also": [15] },
+        { "text": "The first column holds the views of lines 7 and 11, which are 80 and 50 points wide, so it is 80 wide. The second column holds the views of lines 8 and 12, 30 and 60 wide, so it is 60 wide.", "line": 7, "also": [11, 8, 12] },
+        { "text": "The grid is 80 plus 10 plus 60 points wide, and 20 plus 10 plus 20 points tall, so line 17 prints {{150 50}}.", "line": 17, "prints": ["150 50"] }
+      ],
+      "end": { "kind": "answer", "text": "Each column took the width of its widest view, from either row, so the columns line up." }
+    }
+  }
+}

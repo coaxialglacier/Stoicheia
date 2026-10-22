@@ -1,0 +1,83 @@
+{
+  "id": "environment",
+  "name": "Environment",
+  "area": "ui",
+  "first": "Values that SwiftUI passes from a view to every view inside it, such as whether views are enabled, without passing them through each view's initializer.",
+  "parts": ["environment-property", "environment-modifier"],
+  "dependsOn": [
+    { "id": "view", "views": ["what", "parts"],
+      "why": "The environment passes values from a view to the views inside it.",
+      "whyInExample": "`SaveLabel` is a view inside `Toolbar`, and reads a value from its environment." },
+    { "id": "key-path", "views": ["what", "parts"],
+      "why": "Each environment value is named by a key path to a property of SwiftUI's environment values.",
+      "whyInExample": "`\\.isEnabled` is a key path to the property `isEnabled` of the environment values, as `\\Trip.nights` is a key path to `nights`." },
+    { "id": "property-wrapper", "views": ["parts"],
+      "why": "A view reads the environment through a property wrapper that SwiftUI provides.",
+      "whyInExample": "`@Environment` before `isEnabled` makes it a wrapped property of the property wrapper `Environment`." },
+    { "id": "view-modifier", "views": ["what", "parts"],
+      "why": "A view sets an environment value with a modifier.",
+      "whyInExample": "`environment(\\.isEnabled, false)` is a modifier that returns a new view around `Toolbar`." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct SaveLabel: View {",
+      "    @Environment(\\.isEnabled) var isEnabled",
+      "    var body: some View {",
+      "        let _ = print(\"isEnabled:\", isEnabled)",
+      "        Text(\"Save\")",
+      "    }",
+      "}",
+      "",
+      "struct Toolbar: View {",
+      "    var body: some View {",
+      "        SaveLabel()",
+      "    }",
+      "}",
+      "",
+      "let normal = ImageRenderer(content: Toolbar())",
+      "_ = normal.cgImage",
+      "let off = Toolbar()",
+      "    .environment(\\.isEnabled, false)",
+      "let turnedOff = ImageRenderer(content: off)",
+      "_ = turnedOff.cgImage"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "The environment is a set of values that SwiftUI passes from a view to every view inside it. A view reads one value with a property marked `@Environment`, and sets one, for the views inside it, with the modifier `environment`. The system sets many of the values, such as the color scheme.",
+      "marks": [
+        { "line": 4, "text": "@Environment(\\.isEnabled) var isEnabled", "part": "environment-property", "label": "reads a value" },
+        { "line": 20, "text": "environment(\\.isEnabled, false)", "part": "environment-modifier", "label": "sets a value" }
+      ],
+      "afterExample": "`Toolbar` never mentions `isEnabled`, but `SaveLabel` inside it still reads the value that line 20 sets on `Toolbar`.",
+      "problem": "Some values matter to many views deep inside a screen, such as whether controls are enabled, or the reader's language. Passing them through the initializer of every view on the way would add a parameter to views that never use it. The environment passes them past those views.",
+      "how": "Apple's documentation says that a value set with `environment` applies to the view it is called on and every view inside it, up to a place that sets the value again. A property marked `@Environment` reads one value, named by a key path, and SwiftUI updates the view when that value changes.",
+      "when": [
+        { "text": "Use it for a value that many views inside one part of the app need, or that the system sets, such as whether controls are enabled." },
+        { "text": "Don't use it for a value that one view gives to the view right inside it. A plain parameter shows where the value comes from." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "environment-property", "name": "The environment property `isEnabled`, line 4",
+          "text": "The attribute `@Environment`, with the key path `\\.isEnabled`, makes `isEnabled` read one environment value: whether views are enabled. This key path leaves out the type's name, because swiftc knows that it starts from SwiftUI's environment values. The property reads the value that SwiftUI keeps for this view, and cannot set it." },
+        { "part": "environment-modifier", "name": "The modifier `environment`, line 20",
+          "text": "The modifier `environment` sets one environment value, named by a key path, for the view it is called on and every view inside it. Line 20 sets `isEnabled` to false for `Toolbar`, and so for `SaveLabel` inside it." }
+      ],
+      "marks": [
+        { "line": 4, "text": "@Environment(\\.isEnabled) var isEnabled", "part": "environment-property", "label": "environment property" },
+        { "line": 20, "text": "environment(\\.isEnabled, false)", "part": "environment-modifier", "label": "environment modifier" }
+      ],
+      "steps": [
+        { "text": "Line 17 makes a `Toolbar` and a renderer for it, and line 18 asks for the image, so SwiftUI draws `Toolbar`.", "line": 17, "also": [18] },
+        { "text": "The `body` of `Toolbar` makes a `SaveLabel`, and passes it nothing.", "line": 13 },
+        { "text": "SwiftUI draws `SaveLabel`. Nothing set `isEnabled`, so it reads the default value, true, and line 6 prints {{isEnabled: true}}.", "line": 6, "also": [4], "prints": ["isEnabled: true"] },
+        { "text": "Line 19 makes another `Toolbar`, and line 20 calls `environment` on it, which sets `isEnabled` to false for it and every view inside it. Line 21 makes a renderer for it, and line 22 asks for its image.", "line": 20, "also": [19, 21, 22] },
+        { "text": "`SaveLabel` is inside that `Toolbar`, so its `isEnabled` reads false, and line 6 prints {{isEnabled: false}}. `Toolbar` never passed the value on.", "line": 6, "prints": ["isEnabled: false"] }
+      ],
+      "end": { "kind": "answer", "text": "The value that line 20 set on `Toolbar` reached `SaveLabel` inside it, through the environment, without a parameter." }
+    }
+  }
+}

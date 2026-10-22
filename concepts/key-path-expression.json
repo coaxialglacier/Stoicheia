@@ -1,0 +1,6 @@
+{
+  "id": "key-path-expression",
+  "name": "Key path expression",
+  "first": "A backslash, a type's name, a dot, and a property's name, which make a key path to that property.",
+  "parts": []
+}

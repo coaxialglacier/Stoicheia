@@ -1,0 +1,67 @@
+{
+  "id": "view",
+  "name": "View",
+  "area": "ui",
+  "first": "A type that describes part of an app's user interface, with a body that says which views it is made of.",
+  "parts": ["conformance", "view-body"],
+  "dependsOn": [
+    { "id": "structure", "views": ["what", "parts"],
+      "why": "The views of a SwiftUI app are usually structures, whose stored properties hold the values they show.",
+      "whyInExample": "`Greeting` is a structure, and its stored property `name` holds the name that it shows." },
+    { "id": "protocol", "views": ["what", "parts"],
+      "why": "A view is a type that conforms to SwiftUI's view protocol, which requires a body.",
+      "whyInExample": "`Greeting` conforms to the protocol `View`, and has the `body` that `View` requires." },
+    { "id": "opaque-type", "views": ["what", "parts"],
+      "why": "The type of a view's body is an opaque type, so the body can return any view while its declaration names only the view protocol.",
+      "whyInExample": "The type of `body` is `some View`. Its real type is `Text`, which swiftc works out from the body." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct Greeting: View {",
+      "    let name: String",
+      "    var body: some View {",
+      "        Text(\"Hello, \\(name)\")",
+      "    }",
+      "}",
+      "",
+      "let greeting = Greeting(name: \"Ana\")",
+      "print(type(of: greeting.body))"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A view is a type that describes part of an app's user interface. It conforms to the protocol `View`, which requires one property, `body`, whose value is the views that this view is made of. A view is a description: SwiftUI reads it, and draws what it describes.",
+      "marks": [
+        { "line": 3, "text": "View", "part": "conformance", "label": "a view" },
+        { "line": 5, "text": "body", "part": "view-body", "label": "what it is made of" }
+      ],
+      "afterExample": "`Greeting` describes a text that says hello to `name`. Its `body` returns a `Text`, a view that SwiftUI provides and draws itself.",
+      "problem": "A screen is built from many parts, such as a title, a list, and a button. A view lets each part be written once, as a type, and used inside other views. SwiftUI reads the views and draws the screen from them, so the code says what the screen shows, not the steps that draw it.",
+      "how": "SwiftUI reads a view's `body` to learn what the view is made of, and reads the `body` of each view inside it, down to views that SwiftUI draws itself, such as `Text`. Reading `body` makes no window and draws nothing: it returns a value that describes the views.",
+      "when": [
+        { "text": "Use a view for each part of a screen that has a name and a job, such as a greeting, so that other views can use it by name, as `Greeting(name: \"Ana\")`." },
+        { "text": "Don't put work that takes long, or that changes data, in `body`. SwiftUI reads `body` each time it needs the description again, which can be often." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "conformance", "name": "The conformance to `View`, line 3",
+          "text": "The colon and the name `View` after `Greeting` say that `Greeting` conforms to the protocol `View`. `View` requires one property, `body`. SwiftUI can show any type that conforms to `View`." },
+        { "part": "view-body", "name": "The property `body`, lines 5 to 7",
+          "text": "A computed property runs its code each time it is read, and returns a value. Lines 5 to 7 declare `body`, the computed property that `View` requires. Its type is `some View`, and here it returns a `Text` that says hello to `name`." }
+      ],
+      "marks": [
+        { "line": 3, "text": "View", "part": "conformance", "label": "conformance" },
+        { "line": 5, "text": "body", "part": "view-body", "label": "body" }
+      ],
+      "steps": [
+        { "text": "Line 10 makes a `Greeting` with the name `\"Ana\"`, and stores it in `greeting`. Nothing is drawn: `greeting` is a value that holds one string.", "line": 10, "also": [4] },
+        { "text": "Line 11 reads `greeting.body`. The code of `body` runs, and line 6 returns a `Text` that says hello to `name`.", "line": 11, "also": [6] },
+        { "text": "Line 11 prints the type of the value that `body` returned: {{Text}}.", "line": 11, "prints": ["Text"] }
+      ],
+      "end": { "kind": "answer", "text": "A view is a value that describes part of a user interface. Its `body` returns the views it is made of, and SwiftUI draws from that description." }
+    }
+  }
+}

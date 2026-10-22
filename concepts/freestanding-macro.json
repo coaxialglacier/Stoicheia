@@ -1,0 +1,6 @@
+{
+  "id": "freestanding-macro",
+  "name": "Freestanding macro",
+  "first": "A macro written with a number sign before its name, which swiftc replaces, where it is written, with the code that the macro expands to.",
+  "parts": []
+}

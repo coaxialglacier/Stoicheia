@@ -1,0 +1,6 @@
+{
+  "id": "fixed-frame",
+  "name": "Fixed frame",
+  "first": "A frame with a width, a height, or both, which chooses that size whatever it is proposed.",
+  "parts": []
+}

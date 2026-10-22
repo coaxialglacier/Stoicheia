@@ -1,0 +1,86 @@
+{
+  "id": "lazy-grid",
+  "name": "Lazy grid",
+  "area": "ui",
+  "first": "A grid that grows in one direction inside a scroll view, and makes each cell only when the cell is about to be shown.",
+  "parts": ["grid-item"],
+  "dependsOn": [
+    { "id": "grid", "views": ["what", "parts"],
+      "why": "A lazy grid places views in rows and columns, as a grid does, but sets its columns from their descriptions, not from its cells.",
+      "whyInExample": "`LazyVGrid` places its cells in two columns, as `Grid` places its views in columns." },
+    { "id": "lazy-stack", "views": ["what", "parts"],
+      "why": "A lazy grid makes its cells only when they are about to be shown, as a lazy stack makes its rows.",
+      "whyInExample": "Only the cells that fit add their `number` to `made`, as only the rows that fit add theirs in the example of Lazy stack." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "var made: [Int] = []",
+      "",
+      "struct Cell: View {",
+      "    let number: Int",
+      "    var body: some View {",
+      "        Color.blue",
+      "            .aspectRatio(1, contentMode: .fit)",
+      "            .onAppear { made.append(number) }",
+      "    }",
+      "}",
+      "",
+      "let column = GridItem(.flexible(), spacing: 0)",
+      "let columns = [column, column]",
+      "let grid = ScrollView {",
+      "    LazyVGrid(columns: columns, spacing: 0) {",
+      "        Cell(number: 1)",
+      "        Cell(number: 2)",
+      "        Cell(number: 3)",
+      "        Cell(number: 4)",
+      "        Cell(number: 5)",
+      "        Cell(number: 6)",
+      "    }",
+      "}",
+      "let size = CGSize(width: 100, height: 100)",
+      "let renderer = ImageRenderer(content: grid)",
+      "renderer.proposedSize = ProposedViewSize(size)",
+      "let image = renderer.cgImage!",
+      "print(image.width, image.height)",
+      "print(made.sorted())"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A lazy grid places its views in a set number of columns, filling each row from leading to trailing before the next one, and grows down as far as its views need. Apple's documentation says that it creates items only as needed: it makes a cell only when the cell is about to be shown.",
+      "marks": [
+        { "line": 14, "text": "GridItem(.flexible(), spacing: 0)", "part": "grid-item", "label": "a column" },
+        { "line": 17, "text": "LazyVGrid", "label": "lazy grid" }
+      ],
+      "afterExample": "Two flexible columns share 100 points, so each cell is 50 by 50. Two rows fit in the 100 points that are shown, and the grid made only their four cells.",
+      "problem": "A long collection shown in columns, such as a photo of every trip, would make every cell at once in a plain grid. A lazy grid makes the cells on the screen, and makes more as the user scrolls, as a lazy stack does for rows.",
+      "how": "The array of grid items says how many columns there are, and how wide each one is: a flexible column shares the width with the other flexible columns. The grid places its views into those columns, row by row, and makes only the rows that are about to be shown.",
+      "when": [
+        { "text": "Use it inside a scroll view for a long collection shown in columns, such as photos." },
+        { "text": "Don't use it when each column must be as wide as its widest cell. A lazy grid sets the width of its columns from its grid items, while a grid sets it from its cells." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "grid-item", "name": "The columns, lines 14 and 15",
+          "text": "Line 14 describes one flexible column with no space after it, and line 15 makes `columns`, an array of two of them. A flexible column shares the grid's width with the other flexible columns, so in 100 points each column is 50 points wide." }
+      ],
+      "marks": [
+        { "line": 14, "text": "GridItem(.flexible(), spacing: 0)", "part": "grid-item", "label": "grid item" },
+        { "line": 15, "text": "[column, column]", "part": "grid-item", "label": "two columns" }
+      ],
+      "steps": [
+        { "text": "Line 3 makes an empty array, `made`, which will hold the number of each cell that is made.", "line": 3 },
+        { "text": "Lines 5 to 12 declare `Cell`, a view: a blue square that adds its `number` to `made` in the closure of `onAppear`.", "line": 5, "also": [10] },
+        { "text": "Lines 14 and 15 describe two flexible columns, and store them in `columns`.", "line": 14, "also": [15] },
+        { "text": "Line 16 makes a scroll view whose content is a lazy grid of six cells, numbered 1 to 6.", "line": 16, "also": [17, 18] },
+        { "text": "Line 27 makes a renderer, and line 28 proposes 100 by 100, the size on line 26.", "line": 27, "also": [26, 28] },
+        { "text": "Line 29 asks for the image, and line 30 prints the size of the scroll view: {{100 100}}.", "line": 30, "also": [29], "prints": ["100 100"] },
+        { "text": "Each cell is 50 by 50, two to a row, so rows 1 and 2, with cells 1 to 4, fill the 100 points that are shown. The lazy grid made only those, and line 31 prints {{[1, 2, 3, 4]}}.", "line": 31, "prints": ["[1, 2, 3, 4]"] }
+      ],
+      "end": { "kind": "answer", "text": "The lazy grid made only the four cells that were about to be shown, and would make cells 5 and 6 when the user scrolled to them." }
+    }
+  }
+}

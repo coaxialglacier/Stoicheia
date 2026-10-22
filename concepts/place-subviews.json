@@ -1,0 +1,6 @@
+{
+  "id": "place-subviews",
+  "name": "Placing method",
+  "first": "The method of a layout that places each view inside it at a point, with a proposal for that view's size.",
+  "parts": []
+}

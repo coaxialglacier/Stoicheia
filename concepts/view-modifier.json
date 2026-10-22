@@ -1,0 +1,59 @@
+{
+  "id": "view-modifier",
+  "name": "View modifier",
+  "area": "ui",
+  "first": "A method of a view that returns a new view, which holds the original view and one change to it, such as space around it.",
+  "parts": ["modifier-call"],
+  "dependsOn": [
+    { "id": "view", "views": ["what", "parts"],
+      "why": "A modifier is called on a view, and returns a view.",
+      "whyInExample": "`city` is a `Text`, a view, and `padding(8)` returns a new view that holds it." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "let city = Text(\"Lima\")",
+      "let padded = city.padding(8)",
+      "let faded = padded.opacity(0.5)",
+      "print(type(of: city))",
+      "print(type(of: padded))",
+      "print(type(of: faded))"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A view modifier is a method that every view has, such as `padding(8)` or `opacity(0.5)`. It does not change the view it is called on. It returns a new view that holds that view and the change.",
+      "marks": [
+        { "line": 4, "text": "padding(8)", "part": "modifier-call", "label": "modifier" },
+        { "line": 5, "text": "opacity(0.5)", "part": "modifier-call", "label": "modifier" }
+      ],
+      "afterExample": "Lines 6 to 8 print the type of each view. `padded` is a new view that holds `city`, and `faded` is a new view that holds `padded`.",
+      "problem": "Views need many small changes, such as space around them, a color, or a size. A modifier adds one change at a time to any view, so no new type of view is needed for each mix of changes.",
+      "how": "Each modifier returns a new view, of a type that SwiftUI calls modified content, which holds the view it was called on and the change. Calling several modifiers in a row puts each new view around the one before, so the order of the calls is the order of the nesting.",
+      "when": [
+        { "text": "Use modifiers to change how a view looks or behaves, in the order the changes should happen. Space added before a background is inside the background, and space added after it is outside." },
+        { "text": "Don't expect a modifier to change the view in a variable. `city` is still a plain `Text` after line 4: the change is in the new view, `padded`." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "modifier-call", "name": "The modifier calls, lines 4 and 5",
+          "text": "Line 4 calls `padding(8)` on `city`, which returns a new view with 8 points of space around `city`. Line 5 calls `opacity(0.5)` on that new view, which returns another view that draws it half transparent. Neither call changes the view it is called on." }
+      ],
+      "marks": [
+        { "line": 4, "text": "padding(8)", "part": "modifier-call", "label": "modifier" },
+        { "line": 5, "text": "opacity(0.5)", "part": "modifier-call", "label": "modifier" }
+      ],
+      "steps": [
+        { "text": "Line 3 makes a `Text` that shows `\"Lima\"`, and stores it in `city`.", "line": 3 },
+        { "text": "Line 4 calls `padding(8)` on `city`. It returns a new view that holds `city` and the padding, and line 4 stores it in `padded`.", "line": 4 },
+        { "text": "Line 5 calls `opacity(0.5)` on `padded`, and stores the new view, which holds `padded`, in `faded`.", "line": 5 },
+        { "text": "Line 6 prints the type of `city`, which is still {{Text}}.", "line": 6, "prints": ["Text"] },
+        { "text": "Line 7 prints the type of `padded`: {{ModifiedContent<Text, _PaddingLayout>}}. It holds a `Text` and the padding.", "line": 7, "prints": ["ModifiedContent<Text, _PaddingLayout>"] },
+        { "text": "Line 8 prints the type of `faded`, which holds the type of `padded` inside it: {{ModifiedContent<ModifiedContent<Text, _PaddingLayout>, _OpacityEffect>}}.", "line": 8, "prints": ["ModifiedContent<ModifiedContent<Text, _PaddingLayout>, _OpacityEffect>"] }
+      ],
+      "end": { "kind": "answer", "text": "A modifier returns a new view around the view it is called on. Each modifier in a row adds one more layer, in the order they are written." }
+    }
+  }
+}

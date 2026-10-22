@@ -1,0 +1,6 @@
+{
+  "id": "builder-attribute",
+  "name": "Builder attribute",
+  "first": "A result builder's name written as an attribute before a function, a property, or a closure's parameter, which makes swiftc build its body with that builder.",
+  "parts": []
+}

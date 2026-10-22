@@ -1,0 +1,6 @@
+{
+  "id": "struct-keyword",
+  "name": "struct",
+  "first": "The keyword that declares a structure. The structure's name comes right after it.",
+  "parts": []
+}

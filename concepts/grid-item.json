@@ -1,0 +1,6 @@
+{
+  "id": "grid-item",
+  "name": "Grid item",
+  "first": "The description of one column of a lazy grid, such as a flexible column that shares the grid's width with the other flexible columns.",
+  "parts": []
+}

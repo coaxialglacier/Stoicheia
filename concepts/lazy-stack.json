@@ -1,0 +1,82 @@
+{
+  "id": "lazy-stack",
+  "name": "Lazy stack",
+  "area": "ui",
+  "first": "A stack that makes each of its views only when the view is about to be shown, so that a long list makes only the views on the screen.",
+  "parts": ["stack-content"],
+  "dependsOn": [
+    { "id": "stack-view", "views": ["what", "parts"],
+      "why": "A lazy stack places its views as a stack does, and differs only in when it makes them.",
+      "whyInExample": "`LazyVStack` places its rows in a column, as `HStack` places its views in a row." },
+    { "id": "scroll-view", "views": ["what", "parts"],
+      "why": "A lazy stack is used inside a scroll view, which shows only part of it at a time.",
+      "whyInExample": "The example is the scroll view of the page of Scroll view, with `LazyVStack` in place of `VStack`." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "var made: [Int] = []",
+      "",
+      "struct Row: View {",
+      "    let number: Int",
+      "    var body: some View {",
+      "        Color.blue",
+      "            .aspectRatio(2, contentMode: .fit)",
+      "            .onAppear { made.append(number) }",
+      "    }",
+      "}",
+      "",
+      "let list = ScrollView {",
+      "    LazyVStack(spacing: 0) {",
+      "        Row(number: 1)",
+      "        Row(number: 2)",
+      "        Row(number: 3)",
+      "        Row(number: 4)",
+      "    }",
+      "}",
+      "let size = CGSize(width: 100, height: 100)",
+      "let renderer = ImageRenderer(content: list)",
+      "renderer.proposedSize = ProposedViewSize(size)",
+      "let image = renderer.cgImage!",
+      "print(image.width, image.height)",
+      "print(made.sorted())"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A lazy stack places its views in a column or a row, as a stack does, but makes each view only when it is about to be shown. Apple's documentation says that the stack does not create items until it needs to render them on the screen.",
+      "marks": [
+        { "line": 15, "text": "LazyVStack", "label": "lazy stack" }
+      ],
+      "afterExample": "This is the scroll view of the page of Scroll view, with `LazyVStack` in place of its plain stack. Only rows 1 and 2 fit in 100 points, and only they were made.",
+      "problem": "A list of a thousand trips in a plain stack makes a thousand views at once, though a screen shows only a few. A lazy stack makes the ones on the screen, and makes more as the user scrolls.",
+      "how": "Inside a scroll view, a lazy stack finds which of its views fall inside the part that is shown, and makes only those. When the user scrolls, it makes the views that come into view.",
+      "when": [
+        { "text": "Use it inside a scroll view for a long list of views, such as one row for each trip." },
+        { "text": "Don't use it for a few views that always fit on the screen. A plain stack is simpler, and making a few views costs little." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "stack-content", "name": "The rows, lines 16 to 19",
+          "text": "The braces after `LazyVStack` hold four rows. The lazy stack makes a row only when it is about to be shown, so a row's `onAppear` runs only then." }
+      ],
+      "marks": [
+        { "line": 16, "text": "Row(number: 1)", "part": "stack-content", "label": "row 1" },
+        { "line": 17, "text": "Row(number: 2)", "part": "stack-content", "label": "row 2" },
+        { "line": 18, "text": "Row(number: 3)", "part": "stack-content", "label": "row 3" },
+        { "line": 19, "text": "Row(number: 4)", "part": "stack-content", "label": "row 4" }
+      ],
+      "steps": [
+        { "text": "Line 3 makes an empty array, `made`, which will hold the number of each row that is made.", "line": 3 },
+        { "text": "Lines 5 to 12 declare `Row`, a view: a blue color twice as wide as it is tall, which adds its `number` to `made` in the closure of `onAppear`.", "line": 5, "also": [10] },
+        { "text": "Line 14 makes a scroll view whose content is a lazy stack of four rows, numbered 1 to 4.", "line": 14, "also": [15, 16] },
+        { "text": "Line 23 makes a renderer for the scroll view, and line 24 proposes 100 by 100, the size on line 22.", "line": 23, "also": [22, 24] },
+        { "text": "Line 25 asks for the image, and line 26 prints the size of the scroll view: {{100 100}}.", "line": 26, "also": [25], "prints": ["100 100"] },
+        { "text": "Rows 1 and 2, 50 points tall each, fill the 100 points that are shown. The lazy stack made only those two, so line 27 prints {{[1, 2]}}.", "line": 27, "prints": ["[1, 2]"] }
+      ],
+      "end": { "kind": "answer", "text": "The lazy stack made only the rows that were about to be shown. Rows 3 and 4 would be made when the user scrolled to them." }
+    }
+  }
+}

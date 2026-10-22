@@ -1,0 +1,6 @@
+{
+  "id": "view-body",
+  "name": "View body",
+  "first": "The computed property that every view has, whose value is the views that the view is made of.",
+  "parts": []
+}

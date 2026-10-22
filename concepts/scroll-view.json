@@ -1,0 +1,83 @@
+{
+  "id": "scroll-view",
+  "name": "Scroll view",
+  "area": "ui",
+  "first": "A view whose content can be larger than the view itself, and that moves the content as the user scrolls.",
+  "parts": ["scroll-content"],
+  "dependsOn": [
+    { "id": "stack-view", "views": ["what", "parts"],
+      "why": "The content of the scroll view in the example is a stack, which makes all of its views at once.",
+      "whyInExample": "The content is a `VStack`, a stack that places its rows in a column, as `HStack` places its views in a row." },
+    { "id": "layout-process", "views": ["what", "parts"],
+      "why": "A scroll view lets its content choose a length longer than the scroll view itself.",
+      "whyInExample": "The renderer proposes 100 by 100 to the scroll view, and each row chooses its size, as each color does on the page of Layout process." },
+    { "id": "closure", "views": ["parts"],
+      "why": "Each row records that it appeared in a closure, which SwiftUI calls when the row appears.",
+      "whyInExample": "The braces after `onAppear` hold a closure that adds the row's `number` to `made`." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "var made: [Int] = []",
+      "",
+      "struct Row: View {",
+      "    let number: Int",
+      "    var body: some View {",
+      "        Color.blue",
+      "            .aspectRatio(2, contentMode: .fit)",
+      "            .onAppear { made.append(number) }",
+      "    }",
+      "}",
+      "",
+      "let list = ScrollView {",
+      "    VStack(spacing: 0) {",
+      "        Row(number: 1)",
+      "        Row(number: 2)",
+      "        Row(number: 3)",
+      "        Row(number: 4)",
+      "    }",
+      "}",
+      "let size = CGSize(width: 100, height: 100)",
+      "let renderer = ImageRenderer(content: list)",
+      "renderer.proposedSize = ProposedViewSize(size)",
+      "let image = renderer.cgImage!",
+      "print(image.width, image.height)",
+      "print(made.sorted())"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A scroll view is a view whose content can be larger than the scroll view itself. It shows the part of the content that fits, and moves the content when the user scrolls. It can scroll vertically, horizontally, or both.",
+      "marks": [
+        { "line": 14, "text": "ScrollView", "label": "scroll view" },
+        { "line": 15, "text": "VStack(spacing: 0)", "part": "scroll-content", "label": "content" }
+      ],
+      "afterExample": "The scroll view is 100 by 100 points. Its four rows are 50 points tall each, 200 in all, so only two fit at a time. The `VStack` inside it made all four rows, as the list `made` shows.",
+      "problem": "Content is often longer than the screen, such as a list of trips. A scroll view lets the content be as long as it needs, and the user moves through it.",
+      "how": "A scroll view lets its content choose its full length in the direction it scrolls: here the rows choose 200 points, though the scroll view is 100 points tall. The scroll view itself chooses the size it is proposed, and shows the part of the content that fits.",
+      "when": [
+        { "text": "Use it for content that can be longer than the space it has, such as a list of trips." },
+        { "text": "Don't put hundreds of rows in a plain stack inside it. The stack makes every row at once, as `made` shows here. A lazy stack makes only the rows that are about to be shown." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "scroll-content", "name": "The content, lines 15 to 20",
+          "text": "The braces after `ScrollView` hold its content: a `VStack` of four rows. Each `Row` is a blue color twice as wide as it is tall. The scroll view lets the stack be as tall as its rows need, 200 points, though the scroll view is 100 points tall." }
+      ],
+      "marks": [
+        { "line": 15, "text": "VStack(spacing: 0)", "part": "scroll-content", "label": "content" }
+      ],
+      "steps": [
+        { "text": "Line 3 makes an empty array, `made`, which will hold the number of each row that appears.", "line": 3 },
+        { "text": "Lines 5 to 12 declare `Row`, a view: a blue color twice as wide as it is tall, which adds its `number` to `made` in the closure of `onAppear`.", "line": 5, "also": [10] },
+        { "text": "Line 14 makes a scroll view whose content is a stack of four rows, numbered 1 to 4.", "line": 14, "also": [15, 16] },
+        { "text": "Line 23 makes a renderer for the scroll view, and line 24 proposes 100 by 100, the size on line 22.", "line": 23, "also": [22, 24] },
+        { "text": "Line 25 asks for the image. The scroll view chooses the size it is proposed, and line 26 prints {{100 100}}.", "line": 26, "also": [25], "prints": ["100 100"] },
+        { "text": "Each row chose 100 by 50, so only rows 1 and 2 fit in the scroll view. But the stack made all four rows, and each one's `onAppear` ran, so line 27 prints {{[1, 2, 3, 4]}}.", "line": 27, "prints": ["[1, 2, 3, 4]"] }
+      ],
+      "end": { "kind": "answer", "text": "The content was 200 points tall inside a scroll view 100 points tall, and the plain stack made every row, including the two that did not fit." }
+    }
+  }
+}

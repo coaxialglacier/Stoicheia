@@ -1,0 +1,6 @@
+{
+  "id": "any-keyword",
+  "name": "any",
+  "first": "The keyword written before a protocol's name to make a boxed protocol type, which can hold a value of any type that conforms to the protocol.",
+  "parts": []
+}

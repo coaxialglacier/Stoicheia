@@ -1,0 +1,6 @@
+{
+  "id": "view-builder-if",
+  "name": "If statement in a view builder",
+  "first": "An if statement in a block that the view builder builds, whose views are there only when its condition is true.",
+  "parts": []
+}

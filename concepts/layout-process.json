@@ -1,0 +1,67 @@
+{
+  "id": "layout-process",
+  "name": "Layout process",
+  "area": "ui",
+  "first": "How SwiftUI sizes every view, in three steps: the parent proposes a size, the child chooses its own size, and the parent places the child.",
+  "parts": ["size-proposal"],
+  "dependsOn": [
+    { "id": "view", "views": ["what", "parts"],
+      "why": "Layout sizes and places views.",
+      "whyInExample": "A `Color` is a view that SwiftUI provides, and the renderers lay it out." },
+    { "id": "view-modifier", "views": ["what", "parts"],
+      "why": "A modifier can change the size that a view chooses.",
+      "whyInExample": "`aspectRatio(1, contentMode: .fit)` is a modifier that returns a new view around the color, which chooses a square." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "let size = CGSize(width: 300, height: 200)",
+      "",
+      "let filler = ImageRenderer(content: Color.blue)",
+      "filler.proposedSize = ProposedViewSize(size)",
+      "let first = filler.cgImage!",
+      "print(first.width, first.height)",
+      "",
+      "let square = Color.blue",
+      "    .aspectRatio(1, contentMode: .fit)",
+      "let fitter = ImageRenderer(content: square)",
+      "fitter.proposedSize = ProposedViewSize(size)",
+      "let second = fitter.cgImage!",
+      "print(second.width, second.height)"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "Layout is how SwiftUI decides the size and the place of every view, in three steps. The parent proposes a size to the child. The child chooses its own size, which can differ from the proposal. Then the parent places the child in its own space.",
+      "marks": [
+        { "line": 6, "text": "ProposedViewSize(size)", "part": "size-proposal", "label": "a proposal" }
+      ],
+      "afterExample": "Both views get the same proposal, 300 by 200 points. The color chooses all of it. The color with an aspect ratio of 1 chooses the largest square that fits, 200 by 200.",
+      "problem": "Views must fit screens of many sizes, held either way, with words of many lengths. Fixed sizes and positions for every view break when the screen changes. In SwiftUI, each parent proposes a size and each child chooses its own, so the same views fit any space.",
+      "how": "Apple's documentation says that views choose their own size, in response to a size proposal from their parent. Each kind of view has its own rule: a color chooses the whole proposal, and the modifier `aspectRatio(1, contentMode: .fit)` chooses the largest square that fits it. The parent then places the child in its own space.",
+      "when": [
+        { "text": "Use the three steps to explain a size you did not expect: find what the parent proposed, and then what the child chose." },
+        { "text": "Don't expect a view to fill the space it is offered. Each view chooses its own size, and many choose less than the proposal." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "size-proposal", "name": "The proposal, lines 3 and 6",
+          "text": "A proposal is the size that a parent offers a child, as a width and a height. Line 3 makes `size`, 300 points across and 200 points down, and `ProposedViewSize(size)` makes it a proposal. Here each renderer is the parent: lines 6 and 13 give it this proposal for the view it draws." }
+      ],
+      "marks": [
+        { "line": 3, "text": "CGSize(width: 300, height: 200)", "part": "size-proposal", "label": "300 by 200" },
+        { "line": 6, "text": "ProposedViewSize(size)", "part": "size-proposal", "label": "proposal" },
+        { "line": 13, "text": "ProposedViewSize(size)", "part": "size-proposal", "label": "proposal" }
+      ],
+      "steps": [
+        { "text": "Line 5 makes a renderer for a blue `Color`, and line 6 gives it the proposal of 300 by 200 from line 3.", "line": 6, "also": [5, 3] },
+        { "text": "Line 7 asks for the image. The renderer proposes 300 by 200, and the color chooses all of it, so line 8 prints {{300 200}}.", "line": 8, "also": [7], "prints": ["300 200"] },
+        { "text": "Lines 10 and 11 make a blue `Color` with the modifier `aspectRatio(1, contentMode: .fit)`. Line 12 makes a renderer for it, and line 13 gives it the same proposal.", "line": 12, "also": [10, 11, 13] },
+        { "text": "Line 14 asks for the image. The view with the modifier chooses the largest square that fits in 300 by 200, which is 200 by 200, and line 15 prints {{200 200}}.", "line": 15, "also": [14], "prints": ["200 200"] }
+      ],
+      "end": { "kind": "answer", "text": "Both views got the same proposal, and each chose its own size: the color took all of it, and the square took what fit its shape." }
+    }
+  }
+}

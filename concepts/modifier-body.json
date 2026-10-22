@@ -1,0 +1,6 @@
+{
+  "id": "modifier-body",
+  "name": "Modifier body",
+  "first": "The method of a custom modifier that gets the view it is applied to, as its content, and returns the new view.",
+  "parts": []
+}

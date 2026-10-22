@@ -1,0 +1,6 @@
+{
+  "id": "binding-property",
+  "name": "Binding property",
+  "first": "A property of a view marked with the Binding attribute, which keeps no value of its own, and reads and writes a value that another view keeps.",
+  "parts": []
+}

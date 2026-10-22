@@ -1,0 +1,6 @@
+{
+  "id": "environment-modifier",
+  "name": "Environment modifier",
+  "first": "The modifier that sets one environment value, named by a key path, for the view it is called on and every view inside it.",
+  "parts": []
+}

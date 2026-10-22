@@ -1,0 +1,6 @@
+{
+  "id": "view-builder-line",
+  "name": "View on its own line",
+  "first": "A view written on its own line in a block that the view builder builds, which becomes one of the views that the block combines.",
+  "parts": []
+}

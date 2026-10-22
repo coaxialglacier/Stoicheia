@@ -1,0 +1,66 @@
+{
+  "id": "geometry-reader",
+  "name": "Geometry reader",
+  "area": "ui",
+  "first": "A view that takes all the space proposed to it, and gives its content that size, so that the content can use the numbers.",
+  "parts": ["geometry-proxy"],
+  "dependsOn": [
+    { "id": "layout-process", "views": ["what", "parts"],
+      "why": "A geometry reader takes part in the steps of layout, and passes its chosen size on to its content.",
+      "whyInExample": "Line 11 proposes 300 by 200 to the reader, as the renderers propose 300 by 200 on the page of Layout process." },
+    { "id": "closure", "views": ["what", "parts"],
+      "why": "The content of a geometry reader is a closure, which SwiftUI calls with the reader's size.",
+      "whyInExample": "The braces after `GeometryReader` hold a closure whose parameter is `proxy`." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "let reader = GeometryReader { proxy in",
+      "    Color.blue",
+      "        .onAppear {",
+      "            print(\"proposed\", proxy.size)",
+      "        }",
+      "}",
+      "let size = CGSize(width: 300, height: 200)",
+      "let renderer = ImageRenderer(content: reader)",
+      "renderer.proposedSize = ProposedViewSize(size)",
+      "let image = renderer.cgImage!",
+      "print(image.width, image.height)"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A geometry reader is a view whose content is a closure. SwiftUI calls the closure with a geometry proxy, a value that holds the reader's own size, so the content can use that size. Apple's documentation says that the reader returns a flexible size to its parent: it takes all the space it is proposed.",
+      "marks": [
+        { "line": 3, "text": "GeometryReader", "label": "geometry reader" },
+        { "line": 3, "text": "proxy", "part": "geometry-proxy", "label": "its size" }
+      ],
+      "afterExample": "The reader is proposed 300 by 200 points, takes all of it, and gives its content that size through `proxy`.",
+      "problem": "Sometimes a view must know its size in numbers, such as a bar whose width is a share of the space, or a drawing that scales to fit. Layout gives sizes to views, not to code. A geometry reader gives its size to the code of its content.",
+      "how": "In the steps of layout, the reader chooses the whole size it is proposed. It then calls its closure with a proxy that holds that size, and lays out the views that the closure returns inside it.",
+      "when": [
+        { "text": "Use it when a view's content must be sized as a share of the space, such as a bar that is 40 percent as wide as its container." },
+        { "text": "Don't use it only to read the size of a view that should choose its own. The reader takes all the space it is proposed, so a reader in a stack can take the space of the views beside it." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "geometry-proxy", "name": "The proxy, line 3",
+          "text": "The closure's parameter, `proxy`, is a geometry proxy: a value that SwiftUI makes for the reader, which holds its size. `proxy.size` is the size that the reader chose, as a width and a height." }
+      ],
+      "marks": [
+        { "line": 3, "text": "proxy", "part": "geometry-proxy", "label": "geometry proxy" },
+        { "line": 6, "text": "proxy.size", "part": "geometry-proxy", "label": "its size" }
+      ],
+      "steps": [
+        { "text": "Line 3 makes a geometry reader whose content is a blue `Color` with an `onAppear`, and stores it in `reader`. The closure has not run yet.", "line": 3, "also": [4] },
+        { "text": "Line 10 makes a renderer for `reader`, and line 11 proposes 300 by 200, the size on line 9.", "line": 10, "also": [9, 11] },
+        { "text": "Line 12 asks for the image. The reader takes all of the proposal, and calls its closure with a proxy that holds 300 by 200.", "line": 12, "also": [3] },
+        { "text": "The color appears, and line 6 prints the size that the proxy holds: {{proposed (300.0, 200.0)}}.", "line": 6, "also": [5], "prints": ["proposed (300.0, 200.0)"] },
+        { "text": "The image has the size that the reader chose, and line 13 prints {{300 200}}.", "line": 13, "prints": ["300 200"] }
+      ],
+      "end": { "kind": "answer", "text": "The reader took the whole proposal, 300 by 200, and gave that size to its content through `proxy`." }
+    }
+  }
+}

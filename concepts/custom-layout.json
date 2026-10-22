@@ -1,0 +1,95 @@
+{
+  "id": "custom-layout",
+  "name": "Custom layout",
+  "area": "ui",
+  "first": "A type of your own that sizes and places the views inside it by a rule that SwiftUI's own containers do not have.",
+  "parts": ["conformance", "size-that-fits", "place-subviews"],
+  "dependsOn": [
+    { "id": "layout-process", "views": ["what", "parts"],
+      "why": "A custom layout is the parent in the steps of layout: it chooses its own size, and proposes a size to each view and places it.",
+      "whyInExample": "`place(at:proposal:)` proposes `step`, 30 by 30, to each color, as each renderer proposes a size on the page of Layout process." },
+    { "id": "protocol", "views": ["what", "parts"],
+      "why": "A custom layout is a type that conforms to SwiftUI's layout protocol.",
+      "whyInExample": "`Stairs` conforms to the protocol `Layout`, and has the two methods that it requires." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct Stairs: Layout {",
+      "    func sizeThatFits(",
+      "        proposal: ProposedViewSize,",
+      "        subviews: Subviews,",
+      "        cache: inout ()",
+      "    ) -> CGSize {",
+      "        let side = 30.0 * Double(subviews.count)",
+      "        return CGSize(width: side, height: side)",
+      "    }",
+      "    func placeSubviews(",
+      "        in bounds: CGRect,",
+      "        proposal: ProposedViewSize,",
+      "        subviews: Subviews,",
+      "        cache: inout ()",
+      "    ) {",
+      "        var corner = bounds.origin",
+      "        for view in subviews {",
+      "            view.place(at: corner, proposal: step)",
+      "            corner.x += 30",
+      "            corner.y += 30",
+      "        }",
+      "    }",
+      "}",
+      "",
+      "let step = ProposedViewSize(width: 30, height: 30)",
+      "let stairs = Stairs {",
+      "    Color.blue",
+      "    Color.green",
+      "    Color.red",
+      "}",
+      "let renderer = ImageRenderer(content: stairs)",
+      "let image = renderer.cgImage!",
+      "print(image.width, image.height)"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A custom layout is a type that conforms to the protocol `Layout`. It is the parent in the steps of layout: its method `sizeThatFits` chooses its size, and its method `placeSubviews` places each view inside it, with a proposal for that view's size. Used with braces, as on line 28, it lays out the views listed in them.",
+      "marks": [
+        { "line": 3, "text": "Layout", "part": "conformance", "label": "a layout" },
+        { "line": 4, "text": "sizeThatFits", "part": "size-that-fits", "label": "chooses its size" },
+        { "line": 12, "text": "placeSubviews", "part": "place-subviews", "label": "places each view" }
+      ],
+      "afterExample": "`Stairs` makes each view 30 by 30 points, and places each one 30 points further right and further down than the one before. Three views make stairs of 90 by 90.",
+      "problem": "Stacks and grids cover most layouts, but not every one, such as a row of chips that wraps onto the next line, or views in a circle. A custom layout writes that rule once, and any views can use it.",
+      "how": "SwiftUI calls `sizeThatFits` with the proposal from the layout's parent, and with the views inside it, as `subviews`, and uses the size it returns. Then it calls `placeSubviews` with `bounds`, the space that the layout got, and the layout calls `place(at:proposal:)` on each view, which gives the view a proposal and a place.",
+      "when": [
+        { "text": "Use one for a rule of placement that stacks and grids cannot express, such as a row that wraps, or stairs." },
+        { "text": "Don't use one when a stack or a grid does the job: they are already written, and they handle spacing and alignment for you." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "conformance", "name": "The conformance to `Layout`, line 3",
+          "text": "The colon and the name `Layout` after `Stairs` say that `Stairs` conforms to the protocol `Layout`, which requires two methods, `sizeThatFits` and `placeSubviews`. Their last parameter, `cache`, can keep values between calls. `Stairs` keeps none, so the type of `cache` is `inout ()`, an empty value." },
+        { "part": "size-that-fits", "name": "The method `sizeThatFits`, lines 4 to 11",
+          "text": "The method `sizeThatFits` returns the size that the layout chooses. It gets the proposal from its parent, and `subviews`, the views inside the layout. Line 9 multiplies 30 by the number of views, and line 10 returns a square of that side, whatever the proposal." },
+        { "part": "place-subviews", "name": "The method `placeSubviews`, lines 12 to 24",
+          "text": "The method `placeSubviews` gets `bounds`, the space that the layout got, and places each view in it. Line 18 starts at the top leading corner of `bounds`. For each view, line 20 calls `place(at:proposal:)`, which puts the view at `corner` and proposes it `step`, 30 by 30, from line 27. Lines 21 and 22 move `corner` 30 points right and 30 points down." }
+      ],
+      "marks": [
+        { "line": 3, "text": "Layout", "part": "conformance", "label": "conformance" },
+        { "line": 4, "text": "sizeThatFits", "part": "size-that-fits", "label": "sizing method" },
+        { "line": 12, "text": "placeSubviews", "part": "place-subviews", "label": "placing method" },
+        { "line": 20, "text": "place(at: corner, proposal: step)", "part": "place-subviews", "label": "places one view" }
+      ],
+      "steps": [
+        { "text": "Line 27 makes `step`, a proposal of 30 by 30, and line 28 makes a `Stairs` that lays out the three colors listed in its braces.", "line": 28, "also": [27, 29] },
+        { "text": "Line 33 makes a renderer, and line 34 asks for the image, so SwiftUI lays out `stairs`.", "line": 34, "also": [33] },
+        { "text": "SwiftUI calls `sizeThatFits`. There are 3 views, so line 9 works out 90, and line 10 chooses 90 by 90.", "line": 10, "also": [4, 9] },
+        { "text": "SwiftUI calls `placeSubviews`. Line 20 places the blue color at the top leading corner, proposed `step`, the green one 30 points right and down from it, and the red one 60 points right and down.", "line": 20, "also": [18, 21, 22] },
+        { "text": "Line 35 prints the size of the image, which is the size that `Stairs` chose: {{90 90}}.", "line": 35, "prints": ["90 90"] }
+      ],
+      "end": { "kind": "answer", "text": "`Stairs` chose its own size from the number of its views, and placed each one by its own rule, one step down and to the right." }
+    }
+  }
+}

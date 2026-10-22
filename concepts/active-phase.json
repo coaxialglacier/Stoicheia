@@ -1,0 +1,6 @@
+{
+  "id": "active-phase",
+  "name": "Active phase",
+  "first": "The phase of a scene that is in the foreground, where a person can use it.",
+  "parts": []
+}

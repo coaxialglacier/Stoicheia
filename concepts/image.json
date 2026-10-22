@@ -1,0 +1,58 @@
+{
+  "id": "image",
+  "name": "Image",
+  "area": "ui",
+  "first": "A view that shows a picture or a symbol, at the picture's own size unless it is made resizable.",
+  "parts": [],
+  "dependsOn": [
+    { "id": "view", "views": ["what"],
+      "why": "An image is a view that SwiftUI provides." },
+    { "id": "view-modifier", "views": ["what"],
+      "why": "An image is made to fit its space with modifiers." },
+    { "id": "layout-process", "views": ["what"],
+      "why": "Whether an image takes the size it is proposed, or keeps its own, is the image's choice in the steps of layout." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "let star = Image(systemName: \"star\")",
+      "let size = CGSize(width: 300, height: 200)",
+      "",
+      "let plain = ImageRenderer(content: star)",
+      "plain.proposedSize = ProposedViewSize(size)",
+      "let first = plain.cgImage!",
+      "print(first.width, first.height)",
+      "",
+      "let resized = star.resizable()",
+      "let grown = ImageRenderer(content: resized)",
+      "grown.proposedSize = ProposedViewSize(size)",
+      "let second = grown.cgImage!",
+      "print(second.width, second.height)",
+      "",
+      "let fitted = resized.scaledToFit()",
+      "let kept = ImageRenderer(content: fitted)",
+      "kept.proposedSize = ProposedViewSize(size)",
+      "let third = kept.cgImage!",
+      "print(third.width, third.height)"
+    ],
+    "output": ["17 16", "300 200", "215 200"]
+  },
+  "views": {
+    "what": {
+      "is": "An `Image` is a view that shows a picture, from the app's assets or from a file, or one of Apple's symbols. Unless it is made resizable, it keeps the picture's own size, whatever size it is proposed.",
+      "marks": [
+        { "line": 3, "text": "Image(systemName: \"star\")", "label": "a symbol" },
+        { "line": 11, "text": "resizable()", "label": "takes the proposal" },
+        { "line": 17, "text": "scaledToFit()", "label": "keeps its shape" }
+      ],
+      "afterExample": "Each renderer proposes 300 by 200 points. The plain star keeps its own size, 17 by 16. With `resizable()` it takes the whole proposal, 300 by 200, and stretches. With `scaledToFit()` as well, it grows as far as it can while it keeps its shape: 215 by 200.",
+      "problem": "Pictures come in their own sizes, and screens do not. An image shows a picture at its own size, and two modifiers let it grow or shrink to the space it is given, without stretching it out of shape.",
+      "how": "In the steps of layout, a plain `Image` chooses the picture's own size. The modifier `resizable()` makes it choose the size it is proposed. `scaledToFit()` then keeps the picture's shape, and chooses the largest size of that shape that fits the proposal.",
+      "when": [
+        { "text": "Use `resizable()` with `scaledToFit()` for a picture that should fill as much of its space as it can, and still keep its shape." },
+        { "text": "Don't use `resizable()` alone on a picture that has a shape to keep: it stretches the picture to the proposal, as the star at 300 by 200." }
+      ]
+    }
+  }
+}

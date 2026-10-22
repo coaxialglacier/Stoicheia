@@ -1,0 +1,6 @@
+{
+  "id": "state-property",
+  "name": "State property",
+  "first": "A property of a view marked with the State attribute, whose value SwiftUI keeps in storage of its own, and whose changes make SwiftUI run the view's body again.",
+  "parts": []
+}

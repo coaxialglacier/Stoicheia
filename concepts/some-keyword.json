@@ -1,0 +1,6 @@
+{
+  "id": "some-keyword",
+  "name": "some",
+  "first": "The keyword written before a protocol's name in a type, which makes it an opaque type: one real type that conforms to the protocol, which the code that uses it does not see.",
+  "parts": []
+}

@@ -1,0 +1,69 @@
+{
+  "id": "frame",
+  "name": "Frame",
+  "area": "ui",
+  "first": "A modifier that puts a view inside an invisible view of a given size, or of a size between a smallest and a largest, and places the view inside it.",
+  "parts": ["fixed-frame", "flexible-frame"],
+  "dependsOn": [
+    { "id": "view-modifier", "views": ["what", "parts"],
+      "why": "A frame is a modifier, which returns a new view around the view it is called on.",
+      "whyInExample": "`frame(width: 80, height: 40)` returns a new view around the color, as `padding(8)` returns a new view around `city`." },
+    { "id": "layout-process", "views": ["what", "parts"],
+      "why": "A frame takes part in the steps of layout: it proposes a size to the view inside it, and chooses its own.",
+      "whyInExample": "Line 13 proposes 300 by 200 to the frame, as the renderers propose 300 by 200 on the page of Layout process." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "let fixed = Color.blue",
+      "    .frame(width: 80, height: 40)",
+      "let small = ImageRenderer(content: fixed)",
+      "let first = small.cgImage!",
+      "print(first.width, first.height)",
+      "",
+      "let capped = Color.blue",
+      "    .frame(maxWidth: 100)",
+      "let wide = ImageRenderer(content: capped)",
+      "let size = CGSize(width: 300, height: 200)",
+      "wide.proposedSize = ProposedViewSize(size)",
+      "let second = wide.cgImage!",
+      "print(second.width, second.height)"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A frame is a modifier that puts a view inside an invisible view of a given size. `frame(width: 80, height: 40)` makes a view of exactly 80 by 40 points. `frame(maxWidth: 100)` makes a view at most 100 points across, which in the other direction lets the view inside choose.",
+      "marks": [
+        { "line": 4, "text": "frame(width: 80, height: 40)", "part": "fixed-frame", "label": "always 80 by 40" },
+        { "line": 10, "text": "frame(maxWidth: 100)", "part": "flexible-frame", "label": "at most 100 across" }
+      ],
+      "afterExample": "The first frame is 80 by 40, whatever it is proposed. The second is proposed 300 by 200, and chooses at most 100 across, and the whole 200 down.",
+      "problem": "Sometimes a view must have a set size, or must not grow past one, such as a picture 80 points wide, or a column of text no wider than 600 points. A frame gives a view that size, without changing the view.",
+      "how": "In the steps of layout, the frame is the parent of the view it holds. A frame with a width and a height chooses that size, and proposes it to the view inside. A frame with a largest width proposes no more than that width to the view inside, and in a direction it gives no size for, passes on the proposal it got.",
+      "when": [
+        { "text": "Use a fixed frame for a view that must be one size, and a frame with a smallest or a largest size for a view that should grow or shrink only so far." },
+        { "text": "Don't use a frame to make a view's content bigger. A frame changes the space around the view: a text in a large frame keeps the size of its font." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "fixed-frame", "name": "The fixed frame, line 4",
+          "text": "The modifier `frame(width: 80, height: 40)` returns a view that is always 80 by 40 points. It proposes that size to the color inside it, and the color chooses all of it." },
+        { "part": "flexible-frame", "name": "The frame with a largest width, line 10",
+          "text": "The modifier `frame(maxWidth: 100)` returns a view that is never wider than 100 points. It gives no height, so in that direction it passes on the proposal, and the color takes the whole height." }
+      ],
+      "marks": [
+        { "line": 4, "text": "frame(width: 80, height: 40)", "part": "fixed-frame", "label": "fixed frame" },
+        { "line": 10, "text": "frame(maxWidth: 100)", "part": "flexible-frame", "label": "flexible frame" }
+      ],
+      "steps": [
+        { "text": "Lines 3 and 4 make a color in a frame of 80 by 40, and line 5 makes a renderer for it.", "line": 4, "also": [3, 5] },
+        { "text": "Line 6 asks for the image. The frame chooses 80 by 40, and proposes that size to the color, which takes it. Line 7 prints {{80 40}}.", "line": 7, "also": [6], "prints": ["80 40"] },
+        { "text": "Lines 9 and 10 make a color in a frame whose largest width is 100. Line 11 makes a renderer for it, and line 13 proposes 300 by 200, the size on line 12.", "line": 10, "also": [9, 11, 12, 13] },
+        { "text": "The frame proposes 100 points across to the color, and the whole 200 points down. The color takes both, and the frame chooses the same, so line 15 prints {{100 200}}.", "line": 15, "also": [14], "prints": ["100 200"] }
+      ],
+      "end": { "kind": "answer", "text": "The fixed frame chose its own size. The flexible frame chose from the proposal, but no more than its largest width." }
+    }
+  }
+}

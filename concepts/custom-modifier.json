@@ -1,0 +1,74 @@
+{
+  "id": "custom-modifier",
+  "name": "Custom modifier",
+  "area": "ui",
+  "first": "A type of your own that applies the same modifiers to any view, so that they can be used again under one name.",
+  "parts": ["conformance", "modifier-body", "modifier-call"],
+  "dependsOn": [
+    { "id": "view-modifier", "views": ["what", "parts"],
+      "why": "A custom modifier is applied as a modifier, and returns a new view around the view it is applied to.",
+      "whyInExample": "`modifier(Tile())` returns a new view around the `Text`, as `padding(8)` returns a new view around `city`." },
+    { "id": "protocol", "views": ["what", "parts"],
+      "why": "A custom modifier is a type that conforms to SwiftUI's view modifier protocol.",
+      "whyInExample": "`Tile` conforms to the protocol `ViewModifier`, and has the method `body(content:)` that it requires." }
+  ],
+  "example": {
+    "code": [
+      "import SwiftUI",
+      "",
+      "struct Tile: ViewModifier {",
+      "    func body(content: Content) -> some View {",
+      "        let _ = print(\"Tile adds its padding\")",
+      "        content",
+      "            .padding(10)",
+      "            .background(Color.gray)",
+      "    }",
+      "}",
+      "",
+      "let card = Text(\"Lima\").modifier(Tile())",
+      "print(type(of: card))",
+      "let renderer = ImageRenderer(content: card)",
+      "_ = renderer.cgImage"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A custom modifier is a type that conforms to the protocol `ViewModifier`. Its method `body(content:)` gets the view that it is applied to, as `content`, and returns that view with the modifiers it adds. Calling `modifier(Tile())` on any view applies them.",
+      "marks": [
+        { "line": 3, "text": "ViewModifier", "part": "conformance", "label": "a modifier" },
+        { "line": 4, "text": "body(content: Content)", "part": "modifier-body", "label": "what it adds" },
+        { "line": 12, "text": "modifier(Tile())", "part": "modifier-call", "label": "applies it" }
+      ],
+      "afterExample": "`Tile` adds padding and a gray background. Line 12 applies it to a `Text`, and the new view holds the text and `Tile`.",
+      "problem": "The same few modifiers are often repeated on many views, such as the padding and background of every tile. Written out each time, they can drift apart when one copy changes. A custom modifier names them once, and every view uses that name.",
+      "how": "Calling `modifier(Tile())` returns a new view that holds the view and the modifier, as every modifier does. When SwiftUI draws it, it calls `body(content:)` of `Tile`, with the view as `content`, and draws the view that `body(content:)` returns.",
+      "when": [
+        { "text": "Use one for a group of modifiers that several views share, such as the style of a tile or a chip." },
+        { "text": "Don't make one for a single modifier that is used once: calling that modifier is shorter." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "conformance", "name": "The conformance to `ViewModifier`, line 3",
+          "text": "The colon and the name `ViewModifier` after `Tile` say that `Tile` conforms to the protocol `ViewModifier`, which requires one method, `body(content:)`." },
+        { "part": "modifier-body", "name": "The method `body(content:)`, lines 4 to 9",
+          "text": "The method `body(content:)` gets the view that `Tile` is applied to, as its parameter `content`, and returns the new view. Lines 6 to 8 return `content` with 10 points of padding, and a gray background behind both." },
+        { "part": "modifier-call", "name": "The call `modifier(Tile())`, line 12",
+          "text": "The modifier `modifier` applies a custom modifier to a view. Line 12 applies a new `Tile` to a `Text`." }
+      ],
+      "marks": [
+        { "line": 3, "text": "ViewModifier", "part": "conformance", "label": "conformance" },
+        { "line": 4, "text": "body(content: Content)", "part": "modifier-body", "label": "modifier body" },
+        { "line": 12, "text": "modifier(Tile())", "part": "modifier-call", "label": "applies it" }
+      ],
+      "steps": [
+        { "text": "Line 12 makes a `Text`, and calls `modifier(Tile())` on it. That returns a new view that holds the text and a `Tile`, which line 12 stores in `card`.", "line": 12 },
+        { "text": "Line 13 prints the type of `card`: {{ModifiedContent<Text, Tile>}}. The method of `Tile` has not run yet.", "line": 13, "prints": ["ModifiedContent<Text, Tile>"] },
+        { "text": "Line 14 makes a renderer for `card`, and line 15 asks for the image, so SwiftUI draws it.", "line": 14, "also": [15] },
+        { "text": "SwiftUI calls `body(content:)` of `Tile`, with the text as `content`, and line 5 prints {{Tile adds its padding}}.", "line": 5, "also": [4], "prints": ["Tile adds its padding"] },
+        { "text": "Lines 6 to 8 return the text with padding and a gray background, which SwiftUI draws in place of the plain text.", "line": 6, "also": [7, 8] }
+      ],
+      "end": { "kind": "answer", "text": "Applying `Tile` made a new view at once, and SwiftUI ran its `body(content:)` when it drew that view." }
+    }
+  }
+}

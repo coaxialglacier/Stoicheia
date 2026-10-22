@@ -1,0 +1,6 @@
+{
+  "id": "stack-content",
+  "name": "Stack content",
+  "first": "The views listed in a stack's braces, which the stack places one after another, in the order they are written.",
+  "parts": []
+}

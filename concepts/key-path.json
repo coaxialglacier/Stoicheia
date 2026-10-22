@@ -1,0 +1,67 @@
+{
+  "id": "key-path",
+  "name": "Key path",
+  "area": "swift",
+  "first": "A value that names a property of a type, so that code can read or write that property of any instance later.",
+  "parts": ["key-path-expression", "key-path-subscript"],
+  "dependsOn": [
+    { "id": "structure", "views": ["what", "parts"],
+      "why": "A key path names a stored property of a type, such as a structure.",
+      "whyInExample": "`\\Trip.nights` names the stored property `nights` of the structure `Trip`." },
+    { "id": "generics", "views": ["parts"],
+      "why": "The type of a key path is generic: its type arguments are the type it starts from, and the type of the value it leads to.",
+      "whyInExample": "The type of `path` gets two type arguments: `Trip`, the type it starts from, and `Int`, the type of `nights`." }
+  ],
+  "example": {
+    "code": [
+      "struct Trip {",
+      "    var city: String",
+      "    var nights: Int",
+      "}",
+      "",
+      "let path = \\Trip.nights",
+      "var trip = Trip(city: \"Lima\", nights: 3)",
+      "print(trip[keyPath: path])",
+      "trip[keyPath: path] = 5",
+      "print(trip.nights)",
+      "print(type(of: path))"
+    ]
+  },
+  "views": {
+    "what": {
+      "is": "A key path is a value that names a property of a type, without an instance. It is written with a backslash, the type's name, a dot, and the property's name, as `\\Trip.nights`. Code can use it later to read or write that property of any instance of the type.",
+      "marks": [
+        { "line": 6, "text": "\\Trip.nights", "part": "key-path-expression", "label": "key path" }
+      ],
+      "afterExample": "`path` names the property `nights` of `Trip`. Line 8 reads that property from `trip` through `path`, and line 9 writes it.",
+      "problem": "Some code works with a property that it is given, not one that it names itself, such as code that sorts trips by whichever property a person picks. A key path passes the property itself, as a value.",
+      "how": "Swift's documentation says that swiftc replaces a key path expression with an instance of a key path class, whose type says what it starts from and what it leads to. The subscript written as `[keyPath: path]`, which every type has, reads or writes the property that the key path names.",
+      "when": [
+        { "text": "Use one where SwiftUI asks for a property by name, such as a value of the environment, or where code is given a property to sort or compare by." },
+        { "text": "Don't use one where code can name the property directly, as `trip.nights` on line 10. That is shorter, and does the same." }
+      ]
+    },
+    "parts": {
+      "parts": [
+        { "part": "key-path-expression", "name": "The key path expression, line 6",
+          "text": "A backslash, a type's name, a dot, and a property's name make a key path expression. `\\Trip.nights` names the property `nights` of `Trip`. It reads no value: no instance of `Trip` exists yet when line 6 runs." },
+        { "part": "key-path-subscript", "name": "The key path subscript, lines 8 and 9",
+          "text": "Every type has a subscript whose argument label is `keyPath`. Given a key path, it reads the property that the key path names, as on line 8, or writes it, as on line 9." }
+      ],
+      "marks": [
+        { "line": 6, "text": "\\Trip.nights", "part": "key-path-expression", "label": "key path expression" },
+        { "line": 8, "text": "[keyPath: path]", "part": "key-path-subscript", "label": "reads through it" },
+        { "line": 9, "text": "[keyPath: path]", "part": "key-path-subscript", "label": "writes through it" }
+      ],
+      "steps": [
+        { "text": "Line 6 makes a key path to the property `nights` of `Trip`, and stores it in `path`.", "line": 6, "also": [3] },
+        { "text": "Line 7 makes a `Trip` whose `nights` is 3, and stores it in `trip`.", "line": 7 },
+        { "text": "Line 8 reads `trip` through the key path in `path`, which reads its `nights`, and prints {{3}}.", "line": 8, "prints": ["3"] },
+        { "text": "Line 9 writes 5 through the same key path, which sets the `nights` of `trip` to 5.", "line": 9, "value": { "line": 9, "name": "trip.nights", "is": "5" } },
+        { "text": "Line 10 reads `trip.nights` directly, and prints {{5}}.", "line": 10, "prints": ["5"] },
+        { "text": "Line 11 prints the type of `path`: {{WritableKeyPath<Trip, Int>}}. The key path starts from a `Trip`, leads to an `Int`, and can write, because `nights` is a `var`.", "line": 11, "prints": ["WritableKeyPath<Trip, Int>"] }
+      ],
+      "end": { "kind": "answer", "text": "`path` named the property `nights` before any `Trip` existed. Lines 8 and 9 used it to read and write that property of `trip`." }
+    }
+  }
+}

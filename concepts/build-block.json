@@ -1,0 +1,6 @@
+{
+  "id": "build-block",
+  "name": "Build block method",
+  "first": "The static method of a result builder that combines the values of one block of code into one value.",
+  "parts": []
+}
