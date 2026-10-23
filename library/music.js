@@ -112,7 +112,8 @@ function notes(sound) {
 // frame of the 60.
 const LEVEL_RATE = 44100, FFT = 1024, LEVEL_FPS = 30, LEVEL_BANDS = Array.from({ length: 10 }, (_, j) => Math.round(j / 9 * 47));
 function levels(file, gain) {
-  const channels = +execFileSync('ffprobe', ['-v', 'error', '-select_streams', 'a:0', '-show_entries', 'stream=channels', '-of', 'csv=p=0', file], { encoding: 'utf8' }).trim();
+  // parseInt, because ffprobe writes "2," for an mp3 that LAME made, whose LAME tag gives the stream a field of side data.
+  const channels = parseInt(execFileSync('ffprobe', ['-v', 'error', '-select_streams', 'a:0', '-show_entries', 'stream=channels', '-of', 'csv=p=0', file], { encoding: 'utf8' }));
   const mix = channels > 1 ? ['-af', 'pan=mono|c0=0.5*c0+0.5*c1'] : [];
   const raw = execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-i', file, ...mix, '-ar', String(LEVEL_RATE), '-f', 'f32le', '-'], { maxBuffer: 1 << 30 });
   const sound = new Float32Array(raw.buffer, raw.byteOffset, raw.byteLength / 4);
