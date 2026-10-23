@@ -49,9 +49,9 @@ const SONGS = [
   "notes": [ 48, 55, 57, 60, 62, 65, 67, 69]
  },
  {
-  "title": "Ere Before Ere After",
+  "title": "Ere Before E're After",
   "file": "ere-before-ere-after",
-  "source": "6 Ere Before Ere After.mp3",
+  "source": "6 Ere Before E're After.mp3",
   "seconds": 326.4,
   "gain": 0.473,
   "volume": 1,
