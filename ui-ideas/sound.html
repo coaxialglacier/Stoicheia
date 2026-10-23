@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#05070f">
 <title>Stoicheia</title>
 <!-- The sound of the star theme. This page stays open and shows Home, Expand to Parts, and Graph and Page in an iframe, so
      its sound keeps playing when the iframe loads the next page. A full page load would stop every sound. Each of those pages,
@@ -15,10 +16,13 @@
      the volumes. Both send each change here as a message. The media keys of the keyboard work here too, as sound.js says.
      When this page opens, loading.js shows a loading view over the iframe until the first song has loaded and played for 5
      seconds, and the page in the iframe waits to arrive until then.
-     On a phone, on a tablet, and in a browser that is not Google Chrome, blocker.js shows its own view instead, which says that
-     Wardens of the Swift is made for a computer, or for Chrome, and this page loads no page in the iframe, shows no loading
-     view, and plays no sound. -->
+     On a phone, on a tablet, and in a browser that is not Google Chrome, blocker.js shows its own view instead, and this page
+     loads no page in the iframe, shows no loading view, and plays none of the sound of sound.js. On a phone or a tablet, the
+     view is the music player of player.js and player.css, which plays the songs itself. In another browser, it says that
+     Wardens of the Swift is made for Chrome. The viewport covers the whole screen of a phone, and the player keeps its parts
+     out of the notch and the rounded corners. -->
 <link rel="stylesheet" href="sky.css">
+<link rel="stylesheet" href="player.css">
 <script src="blocker.js"></script>
 <style>
 #view{position:fixed;inset:0;width:100%;height:100%;border:0;display:block}
@@ -64,8 +68,9 @@
 
 /* The view on a phone, on a tablet, and in a browser that is not Chrome, which blocker.js fills. The class blocked on the root
    element hides the iframe and the loading view. Behind the view is the Milky Way of galaxy.js, over a dark sky for a browser without WebGL. The view scrolls
-   when the window is too short for it. Its parts rise in one after another, the computer in the emblem is drawn in, and the
-   stars on its screen light up one after another. */
+   when the window is too short for it. On a phone or a tablet, player.js fills it with the music player, which player.css
+   draws. In another browser, its parts rise in one after another, the browser in the emblem is drawn in, and the stars in
+   its window light up one after another. */
 #blocker{display:none}
 .blocked #view,.blocked #loading{display:none}
 .blocked body{background:radial-gradient(ellipse at 50% 40%,#0b1230,#060918 50%,#020308)}
@@ -109,7 +114,7 @@
 /* In a browser that is not Chrome, a quiet link under the button downloads Chrome. */
 .bk-get{margin-top:18px;font-family:Jost;font-size:10.5px;letter-spacing:.26em;margin-right:-.26em;text-transform:uppercase;color:var(--ink2);text-decoration:none;border-bottom:1px solid var(--goldDim);padding-bottom:3px;transition:color .25s,border-color .25s}
 .bk-get:hover{color:var(--gold2);border-color:var(--gold)}
-/* In a phone held on its side, the title and the emblem are on the left, and the words on the right. */
+/* In a short, wide window, the title and the emblem are on the left, and the words on the right. */
 @media (orientation:landscape) and (max-height:560px){
   .bk-page{padding:20px 28px}
   .bk-col{flex-direction:row;align-items:center;gap:clamp(24px,6vw,64px);width:auto}
@@ -151,6 +156,7 @@
 <script src="sound.js"></script>
 <script src="title.js"></script>
 <script src="loading.js"></script>
+<script src="player.js"></script>
 <script>
 const view = document.getElementById('view');
 

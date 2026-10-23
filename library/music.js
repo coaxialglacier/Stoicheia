@@ -5,10 +5,11 @@
 // - the same bytes in base64, as a script, such as starlit-hush.js, which sets window.SONG_DATA. sound.js loads it when sound.html
 //   is opened as a file, because Chrome gives Web Audio only silence from an mp3 at a file:// address, and a script at a
 //   file:// address still loads,
+// - the song's levels, such as starlit-hush.levels, which the music player on a phone draws its picture of the music from,
 // and it writes ui-ideas/audio/songs.js, the list of songs that sound.js reads, with each song's volume preset from
-// music/volumes.json. It removes from ui-ideas/audio/ the copies of
+// music/volumes.json. It removes from ui-ideas/audio/ the copies and the levels of
 // songs that are no longer in music/. It needs ffmpeg, which measures each song. Run it after adding, removing, or changing a
-// song, and after cloning the repository, because git keeps only music/ and songs.js, not the copies:
+// song, and after cloning the repository, because git keeps only music/, songs.js, and the levels, not the copies:
 //   node library/music.js
 
 const fs = require('fs');
@@ -95,6 +96,45 @@ function notes(sound) {
   return [root, ...rest];
 }
 
+// The levels of a song, for the picture of the music in the music player on a phone, player.js. On a computer, sound.js
+// measures the music while it plays, with an analyser node of the Web Audio API. A phone plays each song with an audio element
+// alone, because an iPhone stops Web Audio when its screen locks and does not let a page set an audio element's volume, so no
+// analyser can hear it. So the levels are measured here, as that analyser measures them, and the phone reads them as the song
+// plays.
+// The analyser of sound.js takes the last 1024 samples, 44100 a second, of the song at its gain, in one channel, the mean of
+// the left and the right. It multiplies them by a Blackman window, finds their frequencies with a Fourier transform divided by
+// 1024, and keeps each frequency's size as 0.75 of what it kept the frame before plus 0.25 of the new size. It gives each one
+// in decibels, from -100 dB at 0 to -30 dB at 255, and sky.js reads it 60 times a second. sound.js splits 60 Hz to 12000 Hz
+// into 48 bands, spaced evenly in pitch, and a band's level is its loudest frequency. The picture's 72 rays use only 10 of the
+// 48 bands, LEVEL_BANDS, as sky.js picks them: the band round(h * 47) for a ray at h, from 0 at a low point of the star to 1 at
+// a diagonal, where h is a ninth, two ninths, and so on.
+// The file is one byte for each of the 10 bands, from 0 to 255, for each frame, LEVEL_FPS frames a second: every second
+// frame of the 60.
+const LEVEL_RATE = 44100, FFT = 1024, LEVEL_FPS = 30, LEVEL_BANDS = Array.from({ length: 10 }, (_, j) => Math.round(j / 9 * 47));
+function levels(file, gain) {
+  const channels = +execFileSync('ffprobe', ['-v', 'error', '-select_streams', 'a:0', '-show_entries', 'stream=channels', '-of', 'csv=p=0', file], { encoding: 'utf8' }).trim();
+  const mix = channels > 1 ? ['-af', 'pan=mono|c0=0.5*c0+0.5*c1'] : [];
+  const raw = execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-i', file, ...mix, '-ar', String(LEVEL_RATE), '-f', 'f32le', '-'], { maxBuffer: 1 << 30 });
+  const sound = new Float32Array(raw.buffer, raw.byteOffset, raw.byteLength / 4);
+  const hz = LEVEL_RATE / FFT, edge = i => Math.round(60 * Math.pow(200, i / 48) / hz);
+  const blackman = Float64Array.from({ length: FFT }, (_, i) => .42 - .5 * Math.cos(2 * Math.PI * i / FFT) + .08 * Math.cos(4 * Math.PI * i / FFT));
+  const re = new Float64Array(FFT), im = new Float64Array(FFT), kept = new Float64Array(FFT / 2);
+  const frames = Math.floor(sound.length / LEVEL_RATE * 60), out = new Uint8Array(Math.ceil(frames / 2) * LEVEL_BANDS.length);
+  for (let f = 0; f < frames; f++) {
+    const end = Math.round(f * LEVEL_RATE / 60);
+    for (let i = 0; i < FFT; i++) { const s = end - FFT + i; re[i] = s >= 0 ? sound[s] * gain * blackman[i] : 0; im[i] = 0; }
+    fft(re, im);
+    for (let k = 0; k < FFT / 2; k++) kept[k] = .75 * kept[k] + .25 * Math.hypot(re[k], im[k]) / FFT;
+    if (f % 2) continue;
+    LEVEL_BANDS.forEach((band, b) => {
+      let most = 0;
+      for (let k = edge(band); k < Math.max(edge(band) + 1, edge(band + 1)); k++) most = Math.max(most, kept[k] || 0);
+      out[f / 2 * LEVEL_BANDS.length + b] = Math.max(0, Math.min(255, Math.floor(255 / 70 * (20 * Math.log10(most) + 100))));
+    });
+  }
+  return out;
+}
+
 const slug = title => title.toLowerCase().replace(/['’]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const files = fs.readdirSync(MUSIC).filter(f => /\.mp3$/i.test(f)).sort((a, b) => a.localeCompare(b, 'en', { numeric: true }));
 if (!files.length) throw new Error('music/ has no mp3 files');
@@ -111,12 +151,14 @@ const songs = files.map(f => {
   fs.copyFileSync(from, path.join(AUDIO, name + '.mp3'));
   fs.writeFileSync(path.join(AUDIO, name + '.js'), `// Written by library/music.js from music/${f}. Do not edit.\nwindow.SONG_DATA = '${fs.readFileSync(from).toString('base64')}';\n`);
   const song = { title, file: name, source: f, seconds: +(sound.length / RATE).toFixed(1), gain: +Math.min(1, Math.pow(10, (TARGET - lufs) / 20)).toFixed(3), volume: (presets[title] ?? 100) / 100, notes: notes(sound) };
-  console.log(`${f}: ${song.seconds} s, ${lufs} LUFS, gain ${song.gain}, volume ${Math.round(song.volume * 100)}%, notes ${song.notes.join(' ')}`);
+  const level = levels(from, song.gain);
+  fs.writeFileSync(path.join(AUDIO, name + '.levels'), level);
+  console.log(`${f}: ${song.seconds} s, ${lufs} LUFS, gain ${song.gain}, volume ${Math.round(song.volume * 100)}%, notes ${song.notes.join(' ')}, levels ${Math.round(level.length / 1024)} kB`);
   return song;
 });
-// The copies of songs that are no longer in music/.
-const keep = new Set(songs.flatMap(s => [s.file + '.mp3', s.file + '.js']).concat('songs.js'));
-for (const f of fs.readdirSync(AUDIO)) if (/\.(mp3|js)$/.test(f) && !keep.has(f)) { fs.rmSync(path.join(AUDIO, f)); console.log(`Removed ui-ideas/audio/${f}.`); }
+// The copies and the levels of songs that are no longer in music/.
+const keep = new Set(songs.flatMap(s => [s.file + '.mp3', s.file + '.js', s.file + '.levels']).concat('songs.js'));
+for (const f of fs.readdirSync(AUDIO)) if (/\.(mp3|js|levels)$/.test(f) && !keep.has(f)) { fs.rmSync(path.join(AUDIO, f)); console.log(`Removed ui-ideas/audio/${f}.`); }
 fs.writeFileSync(path.join(AUDIO, 'songs.js'), `// Written by library/music.js from the songs in music/. Do not edit.
 // Each song: its title, the name of its files in this folder, its file in music/, its length in seconds, the gain that brings it
 // to the loudness of the others, its volume preset from music/volumes.json, the most the music's volume can be when it starts,

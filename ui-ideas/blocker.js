@@ -1,13 +1,14 @@
 // The view that sound.html shows, in place of the pages, on a phone, on a tablet, and in a browser that is not Google Chrome.
 // The user asked on 2026-10-21 that Wardens of the Swift open only on a computer, with a large screen, a keyboard, and a mouse
 // or a trackpad, and only in Chrome, the browser it is built and tested in. So on any other device or browser, sound.html loads
-// no page in its iframe, shows no loading view, and plays no sound. It shows only this view: the title, an emblem, a sentence
-// that says what the reader needs, the site's address, and a button that shares or copies the link, so the reader can open it
-// where it works. A phone or a tablet is told to use a computer, and a computer in another browser is told to use Chrome.
+// no page in its iframe, shows no loading view, and plays none of the sound of sound.js. It shows only this view.
+// On a phone or a tablet, the view is the music player of player.js, which the user asked for on 2026-10-23: a note that the
+// full experience is on a computer, then a player of every song. On a computer in another browser, the view is the title, an
+// emblem, a sentence that says the reader needs Chrome, the site's address, and a button that copies the link.
 // sound.html loads this script in its head, before anything else draws, so the loading view never shows there.
 // Blocker.on is true when the view shows, and loading.js and sound.html read it. Blocker.why is 'device' or 'browser'. The view
 // is built when the page has loaded, because it uses Title from title.js. Behind it is the Milky Way of galaxy.js, which this
-// script loads only here.
+// script loads only here. Blocker.link is the link to share or copy.
 
 const Blocker = (() => {
   const ua = navigator.userAgent || '', brands = (navigator.userAgentData && navigator.userAgentData.brands) || null;
@@ -33,18 +34,16 @@ const Blocker = (() => {
   const why = handheld ? 'device' : chrome ? null : 'browser';
   if (!why) return { on: false, why };
   // The class blocked on the root element hides the iframe and the loading view, and shows this view, from the first paint.
+  // On a phone or a tablet, the class listening shows the music player in it.
   document.documentElement.classList.add('blocked');
+  if (why === 'device') document.documentElement.classList.add('listening');
 
-  // What the view says, for each reason. get is a link to download Chrome.
-  const SAYS = {
-    device: { head: 'Made for a computer', text: 'Wardens of the Swift needs a large screen, a keyboard, and a mouse or a trackpad. Open it in Google Chrome on a computer to begin.', get: false },
-    browser: { head: 'Made for Chrome', text: 'Wardens of the Swift is built and tested in Google Chrome, and opens only there. Open this address in Chrome to begin.', get: true },
-  }[why];
+  // What the view says in another browser.
+  const SAYS = { head: 'Made for Chrome', text: 'Wardens of the Swift is built and tested in Google Chrome, and opens only there. Open this address in Chrome to begin.' };
 
-  // The emblem: the turning ring of the panels' emblems, around a disc of sky. On a phone or a tablet, the disc shows a computer
-  // as a fine gold outline: a screen with a small constellation on it, and a stand. In another browser, it shows the window of a
-  // browser: a bar at its top with three dots and a field for the address, and the same constellation in the window. Each has a
-  // small star at its top right, as the icons of the header have.
+  // The emblem: the turning ring of the panels' emblems, around a disc of sky. The disc shows the window of a browser, as a fine
+  // gold outline: a bar at its top with three dots and a field for the address, and a small constellation in the window. It has
+  // a small star at its top right, as the icons of the header have.
   const f = n => +n.toFixed(2);
   const sparkle = (x, y, r) => `M${f(x)} ${f(y - r)}L${f(x + r * .24)} ${f(y - r * .24)}L${f(x + r)} ${f(y)}L${f(x + r * .24)} ${f(y + r * .24)}L${f(x)} ${f(y + r)}L${f(x - r * .24)} ${f(y + r * .24)}L${f(x - r)} ${f(y)}L${f(x - r * .24)} ${f(y - r * .24)}Z`;
   const marks = Array.from({ length: 72 }, (_, i) => {
@@ -56,16 +55,11 @@ const Blocker = (() => {
   // stars are. dy moves them down into the window of the browser, under its bar.
   const STARS = [[-15, -8, 2.6], [-6, -14.5, 3.4], [4, -6, 2.4], [14.5, -12, 3], [8, 3.5, 2]];
   const EDGES = [[0, 1], [1, 2], [2, 3], [2, 4]];
-  const DRAWING = {
-    device: { dy: 0, star: [30.5, -27], art: `<rect class="bk-draw" x="-27" y="-23" width="54" height="35" rx="3.2" pathLength="1"/>
-      <rect class="bk-glass" x="-23.5" y="-19.5" width="47" height="28" rx="1.6"/>
-      <path class="bk-draw" d="M-4.5 12L-6.5 20.5M4.5 12L6.5 20.5M-15 21.5Q0 19.2 15 21.5" pathLength="1"/>` },
-    browser: { dy: 6.5, star: [31.5, -24], art: `<rect class="bk-draw" x="-28" y="-20" width="56" height="40" rx="3.5" pathLength="1"/>
+  const DRAWING = { dy: 6.5, star: [31.5, -24], art: `<rect class="bk-draw" x="-28" y="-20" width="56" height="40" rx="3.5" pathLength="1"/>
       <path class="bk-draw" d="M-28 -11.5H28" pathLength="1"/>
       <rect class="bk-glass" x="-25" y="-8.5" width="50" height="25.5" rx="1.4"/>
       <circle class="bk-dot" cx="-23" cy="-15.7" r="1.2"/><circle class="bk-dot" cx="-19" cy="-15.7" r="1.2"/><circle class="bk-dot" cx="-15" cy="-15.7" r="1.2"/>
-      <rect class="bk-bar" x="-9" y="-17.9" width="32" height="4.4" rx="2.2"/>` },
-  }[why];
+      <rect class="bk-bar" x="-9" y="-17.9" width="32" height="4.4" rx="2.2"/>` };
   const at = ([x, y, r]) => [x, y + DRAWING.dy, r];
   const EMBLEM = `<svg viewBox="-66 -66 132 132" aria-hidden="true">
     <g class="bk-ring"><animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="180s" repeatCount="indefinite"/>
@@ -85,28 +79,8 @@ const Blocker = (() => {
 
   function build() {
     const box = document.getElementById('blocker');
-    const svg = box.querySelector('.bk-title svg');
-    svg.setAttribute('viewBox', Title.box.join(' '));
-    svg.innerHTML = Title.svg();
-    box.querySelector('.bk-emblem').innerHTML = EMBLEM;
-    box.querySelector('.ytitle span').textContent = SAYS.head;
-    box.querySelector('.bk-text').textContent = SAYS.text;
-    box.querySelector('.bk-address').textContent = location.host || 'wardensoftheswift.com';
-    if (!SAYS.get) box.querySelector('.bk-get').remove();
-    // On a phone or a tablet, the button opens the device's own way to share the link, such as AirDrop, Messages, or Mail, so
-    // the reader can send it to their computer. On a computer, it copies the link, to paste into Chrome. A browser that can do
-    // neither shows no button, and a click on the address selects it.
-    const btn = box.querySelector('.ybtn'), word = btn.querySelector('span');
-    const share = why === 'device' && navigator.share;
-    if (share) word.textContent = 'Share the link';
-    else if (navigator.clipboard) word.textContent = 'Copy the link';
-    else btn.remove();
-    btn.addEventListener('click', async () => {
-      try {
-        if (share) await navigator.share({ title: 'Wardens of the Swift', url: link });
-        else { await navigator.clipboard.writeText(link); word.textContent = 'Link copied'; setTimeout(() => { word.textContent = 'Copy the link'; }, 2400); }
-      } catch (e) {}
-    });
+    if (why === 'device') Player.build(box);
+    else browserView(box);
     // The Milky Way, as the skill tree shows it, drawn once for each size of the window. Without WebGL, the view keeps the
     // dark sky of its own background.
     const s = document.createElement('script');
@@ -119,6 +93,22 @@ const Blocker = (() => {
     };
     document.head.appendChild(s);
   }
+  function browserView(box) {
+    const svg = box.querySelector('.bk-title svg');
+    svg.setAttribute('viewBox', Title.box.join(' '));
+    svg.innerHTML = Title.svg();
+    box.querySelector('.bk-emblem').innerHTML = EMBLEM;
+    box.querySelector('.ytitle span').textContent = SAYS.head;
+    box.querySelector('.bk-text').textContent = SAYS.text;
+    box.querySelector('.bk-address').textContent = location.host || 'wardensoftheswift.com';
+    // The button copies the link, to paste into Chrome. A browser that cannot copy shows no button, and a click on the address
+    // selects it.
+    const btn = box.querySelector('.ybtn'), word = btn.querySelector('span');
+    if (!navigator.clipboard) btn.remove();
+    btn.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(link); word.textContent = 'Link copied'; setTimeout(() => { word.textContent = 'Copy the link'; }, 2400); } catch (e) {}
+    });
+  }
   if (document.readyState === 'loading') addEventListener('DOMContentLoaded', build); else build();
-  return { on: true, why };
+  return { on: true, why, link };
 })();

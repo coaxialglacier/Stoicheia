@@ -21,7 +21,7 @@ const BUILD = path.join(__dirname, 'build.js');
 const PORT = Number(process.env.PORT) || 8772;
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
-  '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png',
+  '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.mp3': 'audio/mpeg',
 };
 const HEADERS = { 'Cache-Control': 'no-store', 'X-Stoicheia-Writes': 'known.json' };
 
@@ -97,6 +97,8 @@ function postKnown(req, res) {
 }
 
 // A file from ui-ideas/. The address / is index.html. No address can reach a file outside ui-ideas/.
+// A request with a Range header, such as bytes=0-1, gets only those bytes, with the status 206, as GitHub Pages sends them.
+// Safari on an iPhone asks for a song in ranges, and plays no song from a server that sends the whole file instead.
 function serveFile(req, res) {
   let rel;
   try { rel = decodeURIComponent(new URL(req.url, 'http://localhost').pathname); } catch (err) { rel = null; }
@@ -107,7 +109,16 @@ function serveFile(req, res) {
     // A folder's address without its last /, such as /archive, goes to /archive/, so the links in its index.html find their pages.
     if (err && err.code === 'EISDIR') { res.writeHead(301, { ...HEADERS, Location: `${encodeURI(rel)}/` }); return res.end(); }
     if (err) return sendJSON(res, 404, { problems: [`ui-ideas${rel} does not exist.`] });
-    res.writeHead(200, { ...HEADERS, 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream', 'Content-Length': data.length });
+    const head = { ...HEADERS, 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream', 'Accept-Ranges': 'bytes' };
+    const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || '');
+    if (range && (range[1] || range[2])) {
+      const start = range[1] ? +range[1] : Math.max(0, data.length - +range[2]);
+      const end = range[1] && range[2] ? Math.min(+range[2], data.length - 1) : data.length - 1;
+      if (start > end || start >= data.length) { res.writeHead(416, { ...head, 'Content-Range': `bytes */${data.length}` }); return res.end(); }
+      res.writeHead(206, { ...head, 'Content-Range': `bytes ${start}-${end}/${data.length}`, 'Content-Length': end - start + 1 });
+      return res.end(req.method === 'HEAD' ? undefined : data.subarray(start, end + 1));
+    }
+    res.writeHead(200, { ...head, 'Content-Length': data.length });
     res.end(req.method === 'HEAD' ? undefined : data);
   });
 }
