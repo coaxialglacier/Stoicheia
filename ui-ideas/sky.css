@@ -244,7 +244,14 @@ header>.caps{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellips
 .ynow span{margin-right:-.32em}
 .ynow i{width:5px;height:5px;border-radius:50%;background:var(--ink3);transition:background .3s,box-shadow .3s}
 .ynow.live i{background:var(--gold);box-shadow:0 0 8px var(--gold);animation:tw 1.6s ease-in-out infinite}
-.ysong{font-family:'EB Garamond',serif;font-style:italic;font-weight:400;font-size:31px;line-height:1.15;letter-spacing:.01em;color:#fff6e2;text-shadow:0 0 24px rgba(251,231,176,.32),0 1px 3px rgba(0,0,0,.6);margin:4px 0 20px;transition:opacity .3s}
+/* The name is always one line, 36 pixels tall, so a long name never makes the panel taller: sky.js sets a long name
+   smaller, and moves a name that is still too wide slowly to its end and back. The box has 16 pixels above and below the line,
+   which its margins take back, so the fade of a moving name, which cuts off what is outside the box, leaves the glow whole.
+   A moving name starts at the left edge, and each edge where letters are cut off fades, as wide as --l and --r. */
+.ysong{height:68px;padding:16px 0;margin:-12px 0 4px;white-space:nowrap;font-family:'EB Garamond',serif;font-style:italic;font-weight:400;font-size:31px;line-height:36px;letter-spacing:.01em;color:#fff6e2;text-shadow:0 0 24px rgba(251,231,176,.32),0 1px 3px rgba(0,0,0,.6);transition:opacity .3s}
+.ysong span{display:inline-block}
+.ysong.long{--l:0px;--r:22px;text-align:left;-webkit-mask-image:linear-gradient(90deg,transparent,#000 var(--l),#000 calc(100% - var(--r)),transparent);mask-image:linear-gradient(90deg,transparent,#000 var(--l),#000 calc(100% - var(--r)),transparent)}
+.ysong.long span{will-change:transform}
 .yprog{transition:opacity .3s}
 .yprog .ybar i{transition:width .3s linear}
 .ytimes{display:flex;justify-content:space-between;margin:9px 0 0;font-family:Jost;font-size:10px;letter-spacing:.16em;color:var(--ink3)}

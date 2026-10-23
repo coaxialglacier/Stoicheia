@@ -480,7 +480,7 @@ const Sky = (() => {
       body.className = 'ybody yv-music';
       const v = sound.musicVolume();
       body.innerHTML = `<div class="yemblem ymusic"></div><div class="ynow"><i></i><span>Now playing</span></div>
-        <div class="ysong">${song ? song.title : '&nbsp;'}</div>
+        <div class="ysong"><span>${song ? song.title : '&nbsp;'}</span></div>
         <div class="yprog"><div class="ybar"><i></i></div><div class="ytimes"><span class="yat">0:00</span><span class="ylen">0:00</span></div></div>
         <div class="ycontrols">
           <button class="yskip" data-act="previous" aria-label="Previous" title="Previous"><svg viewBox="0 0 24 24" width="22" height="22">${CONTROL.previous}</svg></button>
@@ -553,7 +553,7 @@ const Sky = (() => {
     // yet, is Paused, and the middle control is Play.
     if (!song) return;
     const write = (el, text) => { if (el.textContent !== text) el.textContent = text; };
-    write(body.querySelector('.ysong'), song.title);
+    showSong(body.querySelector('.ysong'), song.title, now);
     const state = song.playing ? 'Now playing' : 'Paused';
     write(body.querySelector('.ynow span'), song.of > 1 ? `${state} · ${song.number} of ${song.of}` : state);
     body.querySelector('.ynow').classList.toggle('live', live);
@@ -565,6 +565,40 @@ const Sky = (() => {
       middle.dataset.act = act; middle.classList.toggle('paused', act === 'play');
       middle.setAttribute('aria-label', name); middle.title = name;
     }
+  }
+  // The song's name is always one line, in a box of one height, so a long name never makes the panel taller. A name wider
+  // than the box is set smaller, from 31 pixels down to 23 at the least. A name still wider than the box at 23 pixels starts
+  // at the box's left edge, rests there for 2.5 seconds, moves slowly to its end, rests again, and moves back. Each edge of the
+  // box where letters are cut off fades them out, and the box's tooltip is the whole name. For a reader whose system asks for
+  // less motion, the name stays at its start. The name is measured again when it changes, when its font has loaded, and when
+  // the box changes width.
+  const SONG = 31, SONG_LEAST = 23, REST = 2500, SPEED = 24, FADE = 22;
+  const lessMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  let fit = null;
+  function showSong(box, title, now) {
+    const name = box.firstElementChild, room = box.clientWidth, key = `${title}|${document.fonts.status}|${room}`;
+    if (!room) return;
+    if (!fit || fit.name !== name || fit.key !== key) {
+      if (name.textContent !== title) name.textContent = title;
+      name.style.transform = ''; name.style.fontSize = SONG + 'px';
+      const size = Math.max(SONG_LEAST, Math.min(SONG, Math.floor(SONG * room / name.offsetWidth * 10) / 10));
+      name.style.fontSize = size + 'px';
+      const over = name.offsetWidth - room > 1 ? name.offsetWidth - room : 0;
+      fit = { name, key, over, start: now };
+      box.classList.toggle('long', over > 0);
+      box.title = over ? title : '';
+    }
+    if (!fit.over) return;
+    const move = Math.max(1600, fit.over / SPEED * 1000), ease = u => (1 - Math.cos(Math.PI * u)) / 2;
+    let t = lessMotion.matches ? 0 : (now - fit.start) % (2 * (REST + move)), p;
+    if (t < REST) p = 0;
+    else if ((t -= REST) < move) p = ease(t / move);
+    else if ((t -= move) < REST) p = 1;
+    else p = 1 - ease((t - REST) / move);
+    const x = fit.over * p;
+    name.style.transform = `translateX(${(-x).toFixed(2)}px)`;
+    box.style.setProperty('--l', (Math.min(1, x / 14) * FADE).toFixed(1) + 'px');
+    box.style.setProperty('--r', (Math.min(1, (fit.over - x) / 14) * FADE).toFixed(1) + 'px');
   }
   if (harp) {
     harp.innerHTML = HARP;
