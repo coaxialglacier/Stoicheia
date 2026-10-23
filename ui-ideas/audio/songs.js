@@ -22,9 +22,9 @@ const SONGS = [
   "notes": [ 50, 57, 59, 62, 64, 67, 69]
  },
  {
-  "title": "Heaventree",
-  "file": "heaventree",
-  "source": "3 Heaventree.mp3",
+  "title": "The Celestial City",
+  "file": "the-celestial-city",
+  "source": "3 The Celestial City.mp3",
   "seconds": 248.4,
   "gain": 0.569,
   "volume": 0.8,

@@ -22,9 +22,10 @@ const MUSIC = path.join(ROOT, 'music'), AUDIO = path.join(ROOT, 'ui-ideas', 'aud
 // made louder than it was recorded.
 const TARGET = -20.3;
 // The volume presets, in music/volumes.json: a song's title and the most the music's volume can be when that song starts, from
-// 1 to 100, on the scale of the music volume in the panels, such as { "Heaventree": 80 }. When Heaventree starts, a music
-// volume above 80 comes down to 80, and one at 80 or below stays. The reader can still move the volume while it plays, and the
-// next song starts at the reader's music volume again. A song that the file does not name has 100, which never lowers it.
+// 1 to 100, on the scale of the music volume in the panels, such as { "The Celestial City": 80 }. When The Celestial City
+// starts, a music volume above 80 comes down to 80, and one at 80 or below stays. The reader can still move the volume while it
+// plays, and the next song starts at the reader's music volume again. A song that the file does not name has 100, which never
+// lowers it.
 const PRESETS = path.join(MUSIC, 'volumes.json');
 const presets = fs.existsSync(PRESETS) ? JSON.parse(fs.readFileSync(PRESETS, 'utf8')) : {};
 

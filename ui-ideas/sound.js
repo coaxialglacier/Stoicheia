@@ -775,9 +775,9 @@ const Sound = (() => {
     navigator.mediaSession.playbackState = stopped ? 'paused' : 'playing';
   }
   // The music's volume now, from 0 to 1. It is the reader's music volume, set.musicVol, except that a song with a volume preset
-  // in music/volumes.json starts no louder than its preset. Heaventree, at 80, starts at 80 when the reader's volume is higher,
-  // and at the reader's volume when it is 80 or lower. The reader can still move the volume while the song plays, and that
-  // becomes their music volume. Each new song starts at the reader's music volume, or at its own preset when that is lower.
+  // in music/volumes.json starts no louder than its preset. The Celestial City, at 80, starts at 80 when the reader's volume is
+  // higher, and at the reader's volume when it is 80 or lower. The reader can still move the volume while the song plays, and
+  // that becomes their music volume. Each new song starts at the reader's music volume, or at its own preset when that is lower.
   // onVolume is called with each new volume, so that sound.html can show it on the page.
   let volume = set.musicVol;
   const api = { onVolume: null };
