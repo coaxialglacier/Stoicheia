@@ -113,7 +113,7 @@ const You = (() => {
       <label class="ycart"><i class="l"></i><i class="r"></i><span class="yfield"><input id="yName" placeholder="Your name" maxlength="24" autocomplete="nickname" spellcheck="false"></span></label>
       <p class="yhint">Each letter you type adds a star above.</p>
       <div>${button('login', 'dim')}</div><a class="yquiet" data-act="out">Cancel</a>
-      <p class="ynote">Stoicheia has no accounts yet. Your name is kept in this browser only, and is sent nowhere.</p>`;
+      <p class="ynote">Wardens of the Swift has no accounts yet. Your name is kept in this browser only, and is sent nowhere.</p>`;
     else if (view === 'settings') {
       // The music's volume is the volume now, which a song's volume preset can make lower than the reader's.
       const s = { ...Sky.sound.settings(), musicVol: Sky.sound.musicVolume() };
